@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=siglo
+Exec=siglo
+Terminal=false
+Type=Application
+Categories=GTK;
+StartupNotify=true

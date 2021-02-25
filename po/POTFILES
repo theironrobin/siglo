@@ -1,0 +1,7 @@
+data/org.gnome.siglo.desktop.in
+data/org.gnome.siglo.appdata.xml.in
+data/org.gnome.siglo.gschema.xml
+src/window.ui
+src/main.py
+src/window.py
+
