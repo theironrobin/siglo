@@ -1,25 +1,50 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-    <template class="SigloWindow" parent="GtkApplicationWindow">
-      <property name="default-width">600</property>
+  <object class="GtkMenu" id="menu1">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <property name="menu-type-hint">dropdown-menu</property>
+    <child>
+      <object class="GtkMenuItem" id="scan_button">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Scan</property>
+        <property name="use-underline">True</property>
+      </object>
+    </child>
+  </object>
+  <template class="SigloWindow" parent="GtkApplicationWindow">
+    <property name="can-focus">False</property>
+    <property name="default-width">600</property>
     <property name="default-height">300</property>
+    <child>
+      <object class="GtkListBox">
+        <property name="name">scan_list</property>
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+      </object>
+    </child>
     <child type="titlebar">
       <object class="GtkHeaderBar" id="header_bar">
         <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="title">Siglo</property>
         <property name="show-close-button">True</property>
-        <property name="title">Hello, World!</property>
+        <child>
+          <object class="GtkMenuButton">
+            <property name="visible">True</property>
+            <property name="can-focus">True</property>
+            <property name="focus-on-click">False</property>
+            <property name="receives-default">True</property>
+            <property name="popup">menu1</property>
+            <child>
+              <placeholder/>
+            </child>
+          </object>
+        </child>
       </object>
     </child>
-    <child>
-      <object class="GtkLabel" id="label">
-        <property name="label">Hello, World!</property>
-        <property name="visible">True</property>
-        <attributes>
-          <attribute name="weight" value="bold"/>
-          <attribute name="scale" value="2"/>
-        </attributes>
-      </object>
-    </child>
-    </template>
-  </interface>
+  </template>
+</interface>
