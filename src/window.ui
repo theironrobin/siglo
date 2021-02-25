@@ -7,7 +7,14 @@
     <property name="default-width">600</property>
     <property name="default-height">300</property>
     <child>
-      <placeholder/>
+      <object class="GtkButton" id="sync_button">
+        <property name="label" translatable="yes">Sync Time</property>
+        <property name="visible">True</property>
+        <property name="can-focus">True</property>
+        <property name="receives-default">True</property>
+        <property name="halign">center</property>
+        <property name="valign">center</property>
+      </object>
     </child>
     <child type="titlebar">
       <object class="GtkHeaderBar" id="header_bar">
