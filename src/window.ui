@@ -25,17 +25,4 @@
       </object>
     </child>
   </template>
-  <object class="GtkMenu" id="menu1">
-    <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <property name="menu-type-hint">dropdown-menu</property>
-    <child>
-      <object class="GtkMenuItem" id="scan_button">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="label" translatable="yes">Scan</property>
-        <property name="use-underline">True</property>
-      </object>
-    </child>
-  </object>
 </interface>
