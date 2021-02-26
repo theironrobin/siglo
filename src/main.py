@@ -24,3 +24,4 @@ class Application(Gtk.Application):
 def main(version):
     app = Application()
     return app.run(sys.argv)
+

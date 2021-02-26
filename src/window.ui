@@ -6,6 +6,7 @@
     <property name="can-focus">False</property>
     <property name="default-width">600</property>
     <property name="default-height">300</property>
+    <signal name="set-focus" handler="on_window_focus" swapped="no"/>
     <child>
       <object class="GtkButton" id="sync_button">
         <property name="label" translatable="yes">Sync Time</property>

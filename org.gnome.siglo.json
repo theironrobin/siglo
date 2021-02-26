@@ -23,6 +23,30 @@
     ],
     "modules" : [
         {
+            "name": "gatt",
+            "buildsystem": "simple",
+            "build-options": {
+                "build-args": [
+                    "--share=network"
+                ]
+            },
+            "build-commands": [
+                "pip3 install --prefix=/app --no-cache-dir gatt"
+            ]
+        },
+        {
+            "name": "dbus-python",
+            "buildsystem": "simple",
+            "build-options": {
+                "build-args": [
+                    "--share=network"
+                ]
+            },
+            "build-commands": [
+                "pip3 install --prefix=/app --no-cache-dir dbus-python"
+            ]
+        },
+        {
             "name" : "siglo",
             "builddir" : true,
             "buildsystem" : "meson",
