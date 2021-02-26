@@ -8,43 +8,19 @@
     <property name="default-height">300</property>
     <signal name="set-focus" handler="on_window_focus" swapped="no"/>
     <child>
-      <object class="GtkButton" id="sync_button">
-        <property name="label" translatable="yes">Sync Time</property>
-        <property name="can-focus">True</property>
-        <property name="receives-default">True</property>
-        <property name="halign">center</property>
-        <property name="valign">center</property>
-        <signal name="clicked" handler="sync_button_clicked" swapped="no"/>
-      </object>
-    </child>
-    <child type="titlebar">
-      <object class="GtkHeaderBar" id="header_bar">
+      <!-- n-columns=3 n-rows=2 -->
+      <object class="GtkGrid">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
-        <property name="title">Siglo</property>
-        <property name="show-close-button">True</property>
-      </object>
-    </child>
-  </template>
-  <object class="GtkMessageDialog">
-    <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <property name="title" translatable="yes">Before Proceeding</property>
-    <property name="type-hint">dialog</property>
-    <property name="text" translatable="yes">Be sure your InfiniTime is connected via Bluetooth!</property>
-    <property name="secondary-text" translatable="yes">Go to Settings-&gt;Bluetooth-&gt;Devices</property>
-    <child internal-child="vbox">
-      <object class="GtkBox">
-        <property name="can-focus">False</property>
-        <property name="orientation">vertical</property>
-        <property name="spacing">2</property>
-        <child internal-child="action_area">
+        <child>
           <object class="GtkButtonBox">
+            <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="homogeneous">True</property>
-            <property name="layout-style">end</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="layout-style">start</property>
             <child>
-              <object class="GtkButton" id="cancel_button">
+              <object class="GtkButton">
                 <property name="label" translatable="yes">Cancel</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -57,7 +33,7 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="ok_button">
+              <object class="GtkButton">
                 <property name="label" translatable="yes">OK</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
@@ -71,12 +47,46 @@
             </child>
           </object>
           <packing>
-            <property name="expand">False</property>
-            <property name="fill">False</property>
-            <property name="position">0</property>
+            <property name="left-attach">1</property>
+            <property name="top-attach">1</property>
           </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="ypad">100</property>
+            <property name="label" translatable="yes">Make sure your PinePhone is connected to your InfiniTime before continuing.
+
+To check, go to Settings-&gt;Bluetooth-&gt;InfiniTime</property>
+            <property name="justify">center</property>
+          </object>
+          <packing>
+            <property name="left-attach">1</property>
+            <property name="top-attach">0</property>
+          </packing>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
+        </child>
+        <child>
+          <placeholder/>
         </child>
       </object>
     </child>
-  </object>
+    <child type="titlebar">
+      <object class="GtkHeaderBar" id="header_bar">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="title">Siglo</property>
+        <property name="show-close-button">True</property>
+      </object>
+    </child>
+  </template>
 </interface>
