@@ -14,6 +14,7 @@
         <property name="receives-default">True</property>
         <property name="halign">center</property>
         <property name="valign">center</property>
+        <signal name="clicked" handler="sync_button_clicked" swapped="no"/>
       </object>
     </child>
     <child type="titlebar">

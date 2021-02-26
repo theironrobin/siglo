@@ -6,7 +6,11 @@ from gi.repository import Gtk
 class SigloWindow(Gtk.ApplicationWindow):
     __gtype_name__ = 'SigloWindow'
 
-    label = Gtk.Template.Child()
+    sync_button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
+
+    @Gtk.Template.Callback()
+    def sync_button_clicked(self, widget):
+        print("Hello World")
