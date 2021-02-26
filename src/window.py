@@ -21,9 +21,9 @@ class SigloWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback()
     def on_window_focus(self, widget, user_data):
         print("Hello world!")
-        manager = AnyDeviceManager(adapter_name='hci0')
-        manager.start_discovery()
-        manager.run()
+        #manager = AnyDeviceManager(adapter_name='hci0')
+        #manager.start_discovery()
+        #manager.run()
 
 class AnyDeviceManager(gatt.DeviceManager):
     def device_discovered(self, device):
