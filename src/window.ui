@@ -8,16 +8,31 @@
     <property name="default-height">300</property>
     <signal name="set-focus" handler="on_window_focus" swapped="no"/>
     <child>
-      <!-- n-columns=3 n-rows=2 -->
-      <object class="GtkGrid">
+      <object class="GtkBox">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
+        <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="vexpand">True</property>
+            <property name="label" translatable="yes">Make sure your PinePhone is connected to your InfiniTime
+
+To check, go to Settings-&gt;Bluetooth-&gt;Devices!</property>
+            <property name="justify">center</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
         <child>
           <object class="GtkButtonBox">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="halign">center</property>
-            <property name="valign">center</property>
+            <property name="halign">end</property>
             <property name="layout-style">start</property>
             <child>
               <object class="GtkButton">
@@ -47,36 +62,10 @@
             </child>
           </object>
           <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">1</property>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">1</property>
           </packing>
-        </child>
-        <child>
-          <object class="GtkLabel">
-            <property name="visible">True</property>
-            <property name="can-focus">False</property>
-            <property name="ypad">100</property>
-            <property name="label" translatable="yes">Make sure your PinePhone is connected to your InfiniTime before continuing.
-
-To check, go to Settings-&gt;Bluetooth-&gt;InfiniTime</property>
-            <property name="justify">center</property>
-          </object>
-          <packing>
-            <property name="left-attach">1</property>
-            <property name="top-attach">0</property>
-          </packing>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
-        </child>
-        <child>
-          <placeholder/>
         </child>
       </object>
     </child>
