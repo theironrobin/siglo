@@ -22,7 +22,7 @@
 To check, go to Settings-&gt;Bluetooth-&gt;Devices</property>
             <property name="justify">center</property>
             <attributes>
-              <attribute name="font-desc" value="Courier New 14"/>
+              <attribute name="font-desc" value="Courier New 10"/>
             </attributes>
           </object>
           <packing>
