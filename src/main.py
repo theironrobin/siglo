@@ -1,21 +1,15 @@
-
 import sys
 import gi
-import gatt
-import dbus
 
 gi.require_version('Gtk', '3.0')
 
 from gi.repository import Gtk, Gio
-
 from .window import SigloWindow
-
-class AnyDeviceManager(gatt.DeviceManager):
-    def device_discovered(self, device):
-        print("Discovered [%s] %s" % (device.mac_address, device.alias()))
+from .bluetooth import AnyDeviceManager
 
 class Application(Gtk.Application):
-    def __init__(self):
+    def __init__(self, manager):
+        self.manager = manager
         super().__init__(application_id='org.gnome.siglo',
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
 
@@ -24,12 +18,14 @@ class Application(Gtk.Application):
         if not win:
             win = SigloWindow(application=self)
         win.present()
-        manager = AnyDeviceManager(adapter_name='hci0')
-        manager.start_discovery()
-        manager.run()
+        self.manager.start_discovery()
+        self.manager.run()
+
+    def do_window_removed(self, window):
+        self.manager.stop()
 
 def main(version):
-    app = Application()
+    manager = AnyDeviceManager(adapter_name='hci0')
+    app = Application(manager)
     return app.run(sys.argv)
-
 

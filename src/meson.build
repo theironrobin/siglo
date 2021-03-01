@@ -29,6 +29,7 @@ siglo_sources = [
   '__init__.py',
   'main.py',
   'window.py',
+  'bluetooth.py',
 ]
 
 install_data(siglo_sources, install_dir: moduledir)
