@@ -13,8 +13,22 @@
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
         <child>
-          <object class="GtkLabel">
+          <object class="GtkSpinner" id="bt_spinner">
             <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="vexpand">True</property>
+            <property name="active">True</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkLabel">
             <property name="can-focus">False</property>
             <property name="vexpand">True</property>
             <property name="label" translatable="yes">Make sure PinePhone is connected to InfiniTime!
@@ -28,7 +42,7 @@ To check, go to Settings-&gt;Bluetooth-&gt;Devices</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">0</property>
+            <property name="position">1</property>
           </packing>
         </child>
         <child>
@@ -68,7 +82,7 @@ To check, go to Settings-&gt;Bluetooth-&gt;Devices</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">1</property>
+            <property name="position">2</property>
           </packing>
         </child>
       </object>
