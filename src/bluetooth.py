@@ -2,10 +2,6 @@ import gatt
 import dbus
 import time
 
-#class AnyDeviceManager(gatt.DeviceManager):
-#    def device_discovered(self, device):
-#        print("Discovered [%s] %s" % (device.mac_address, device.alias()))
-
 class InfiniTimeManager(gatt.DeviceManager):
     def __init__(self, adapter_name):
         self.connected = False
