@@ -43,3 +43,4 @@ class SigloWindow(Gtk.ApplicationWindow):
             print("Sync Time button clicked...")
             device = InfiniTimeDevice(manager=self.manager, mac_address=self.manager.get_mac_address())
             device.connect()
+            self.info_scan_pass.set_text("InfiniTime Syncing! You may now close Siglo.")
