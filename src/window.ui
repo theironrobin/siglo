@@ -31,9 +31,11 @@
           <object class="GtkLabel">
             <property name="can-focus">False</property>
             <property name="vexpand">True</property>
-            <property name="label" translatable="yes">Make sure PinePhone is connected to InfiniTime!
+            <property name="label" translatable="yes">Make sure PinePhone is NOT connected to InfiniTime
 
-To check, go to Settings-&gt;Bluetooth-&gt;Devices</property>
+To check, go to Settings-&gt;Bluetooth-&gt;Devices
+
+Forget InfiniTime, reboot your watch, and rescan</property>
             <property name="justify">center</property>
             <attributes>
               <attribute name="font-desc" value="Courier New 9"/>
