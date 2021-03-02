@@ -20,11 +20,10 @@ cd build
 sudo ninja install
 ```
 
-Make sure Bluetooth Adapter is enabled before running
-e.g.,
+Make sure Bluetooth Adapter is enabled in Settings->Bluetooth 
+or you can do this if you have bluez-utils:
 ```
 echo "power on" | sudo bluetoothctl
 ```
-or enable via Settings->Bluetooth
 
 Icons by svgrepo.com
