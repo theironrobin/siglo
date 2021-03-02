@@ -64,19 +64,6 @@ Might take a few scans.</property>
             <property name="vexpand">True</property>
             <property name="layout-style">start</property>
             <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Cancel</property>
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkButton" id="rescan_button">
                 <property name="label" translatable="yes">Rescan</property>
                 <property name="visible">True</property>
@@ -87,7 +74,7 @@ Might take a few scans.</property>
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
-                <property name="position">1</property>
+                <property name="position">0</property>
               </packing>
             </child>
           </object>
