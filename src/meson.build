@@ -30,7 +30,6 @@ siglo_sources = [
   'main.py',
   'window.py',
   'bluetooth.py',
-  'hex_time.py',
 ]
 
 install_data(siglo_sources, install_dir: moduledir)

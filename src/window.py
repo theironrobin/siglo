@@ -10,6 +10,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     bbox_scan_fail = Gtk.Template.Child()
     bbox_scan_pass = Gtk.Template.Child()
     bt_spinner = Gtk.Template.Child()
+    sync_time_button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.manager = None
@@ -43,4 +44,8 @@ class SigloWindow(Gtk.ApplicationWindow):
             print("Sync Time button clicked...")
             device = InfiniTimeDevice(manager=self.manager, mac_address=self.manager.get_mac_address())
             device.connect()
-            self.info_scan_pass.set_text("InfiniTime Syncing! You may now close Siglo.")
+            self.info_scan_pass.set_text("InfiniTime Syncing... Success!")
+            self.bbox_scan_pass.set_visible(False)
+            self.sync_time_button.set_visible(False)
+
+

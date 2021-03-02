@@ -104,16 +104,17 @@ class InfiniTimeDevice(gatt.Device):
         super().disconnect_succeeded()
         print("[%s] Disconnected" % (self.mac_address))
 
+    def characteristic_write_value_succeeded(self, characteristic):
+        self.disconnect()
+
     def services_resolved(self):
         super().services_resolved()
+        serv = next(
+            s for s in self.services
+            if s.uuid == "00001805-0000-1000-8000-00805f9b34fb")
+        char = next(
+            c for c in serv.characteristics
+            if c.uuid == "00002a2b-0000-1000-8000-00805f9b34fb")
 
-        print("[%s] Resolved services" % (self.mac_address))
-        for service in self.services:
-            print("[%s]  Service [%s]" % (self.mac_address, service.uuid))
-            for characteristic in service.characteristics:
-                if characteristic.uuid == "00002a2b-0000-1000-8000-00805f9b34fb":
-                    print("Current Time")
-                    value = get_current_time()
-                    characteristic.write_value(value)
-                print("[%s]    Characteristic [%s]" % (self.mac_address, characteristic.uuid))
-
+        char.write_value(get_current_time())
+                
