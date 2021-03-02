@@ -10,7 +10,7 @@ pip3 install gatt
 pip3 install dbus-python
 ```
 
-Build
+Build/Install
 ```
 git clone https://github.com/alexr4535/siglo.git
 cd siglo
