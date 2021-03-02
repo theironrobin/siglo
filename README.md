@@ -17,15 +17,11 @@ cd siglo
 mkdir build
 meson build/
 cd build
-ninja
-```
-
-Install
-```
 sudo ninja install
 ```
+
 Make sure Bluetooth Adapter is enabled before running
-E.g.,
+e.g.,
 ```
 echo "power on" | sudo bluetoothctl
 ```
