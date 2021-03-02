@@ -24,4 +24,10 @@ Install
 ```
 sudo ninja install
 ```
+Make sure Bluetooth Adapter is enabled before running
+E.g.,
+```
+echo "power on" | sudo bluetoothctl
+```
+
 Icons by svgrepo.com
