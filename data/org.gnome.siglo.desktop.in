@@ -1,8 +1,8 @@
 [Desktop Entry]
-Name=siglo
+Name=Siglo
 Exec=siglo
 Terminal=false
 Type=Application
 Categories=GTK;
 StartupNotify=true
-Icon=../siglo/org.gnome.siglo.svg
+Icon=/usr/local/share/siglo/org.gnome.siglo.svg
