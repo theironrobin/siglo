@@ -14,6 +14,8 @@ if desktop_utils.found()
   )
 endif
 
+install_data('org.gnome.siglo.svg')
+
 appstream_file = i18n.merge_file(
   input: 'org.gnome.siglo.appdata.xml.in',
   output: 'org.gnome.siglo.appdata.xml',
