@@ -1,6 +1,5 @@
 import sys
 import gi
-import time
 
 gi.require_version('Gtk', '3.0')
 
