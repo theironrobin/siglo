@@ -15,7 +15,7 @@ class Application(Gtk.Application):
 
     def scan_for_infinitime(self, win):
         self.manager.start_discovery()
-        self.manager.set_timeout(3 * 1000)
+        self.manager.set_timeout(10 * 1000)
         self.manager.run()
         found = self.manager.get_scan_result()
         if (found):
