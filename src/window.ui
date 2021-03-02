@@ -30,10 +30,12 @@
         <child>
           <object class="GtkLabel" id="info_scan_pass">
             <property name="can-focus">False</property>
+            <property name="vexpand">True</property>
             <property name="label" translatable="yes">default scan pass text</property>
+            <property name="justify">center</property>
           </object>
           <packing>
-            <property name="expand">True</property>
+            <property name="expand">False</property>
             <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
@@ -48,35 +50,21 @@ To check, go to Settings-&gt;Bluetooth-&gt;Devices
 
 Forget InfiniTime, reboot your watch, and rescan</property>
             <property name="justify">center</property>
-            <attributes>
-              <attribute name="font-desc" value="Courier New 9"/>
-            </attributes>
           </object>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">2</property>
           </packing>
         </child>
         <child>
-          <object class="GtkButtonBox" id="bb_scan_fail">
+          <object class="GtkButtonBox" id="bbox_scan_fail">
             <property name="can-focus">False</property>
-            <property name="halign">end</property>
-            <property name="margin-bottom">34</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="margin-bottom">35</property>
+            <property name="orientation">vertical</property>
             <property name="layout-style">start</property>
-            <child>
-              <object class="GtkButton">
-                <property name="label" translatable="yes">Cancel</property>
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
             <child>
               <object class="GtkButton" id="rescan_button">
                 <property name="label" translatable="yes">Rescan</property>
@@ -88,7 +76,52 @@ Forget InfiniTime, reboot your watch, and rescan</property>
               <packing>
                 <property name="expand">True</property>
                 <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton">
+                <property name="label" translatable="yes">Cancel</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
                 <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkButtonBox" id="bbox_scan_pass">
+            <property name="width-request">-1</property>
+            <property name="height-request">-1</property>
+            <property name="can-focus">False</property>
+            <property name="halign">center</property>
+            <property name="valign">center</property>
+            <property name="margin-bottom">35</property>
+            <property name="orientation">vertical</property>
+            <property name="layout-style">start</property>
+            <child>
+              <object class="GtkButton" id="sync_button">
+                <property name="label" translatable="yes">Time Sync</property>
+                <property name="width-request">-1</property>
+                <property name="height-request">-1</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
               </packing>
             </child>
           </object>
