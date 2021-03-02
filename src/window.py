@@ -18,7 +18,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         if (scan_result):
-            self.info_scan_pass.set_text("InfiniTime Found!\nMac Address: " + manager.get_mac_address() + "\nConnecting...")
+            self.info_scan_pass.set_text("InfiniTime Found!\nMac Address: " + manager.get_mac_address())
             self.info_scan_pass.set_visible(True)
             self.bbox_scan_pass.set_visible(True)
         else:
@@ -35,5 +35,4 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.bbox_scan_fail.set_visible(False)
             self.manager.scan_for_infinitime()
             self.done_scanning(self.manager)
-
 
