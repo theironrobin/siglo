@@ -36,3 +36,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.manager.scan_for_infinitime()
             self.done_scanning(self.manager)
 
+    @Gtk.Template.Callback()
+    def sync_time_button_clicked(self, widget):
+        print("Sync Time button clicked...")
