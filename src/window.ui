@@ -44,11 +44,11 @@
           <object class="GtkLabel" id="info_scan_fail">
             <property name="can-focus">False</property>
             <property name="vexpand">True</property>
-            <property name="label" translatable="yes">Make sure PinePhone is NOT connected to InfiniTime
+            <property name="label" translatable="yes">Make sure InfiniTime is ON but not connected
 
 To check, go to Settings-&gt;Bluetooth-&gt;Devices
 
-Forget InfiniTime, reboot your watch, and rescan</property>
+Might take a few scans.</property>
             <property name="justify">center</property>
           </object>
           <packing>
