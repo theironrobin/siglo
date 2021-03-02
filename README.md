@@ -24,3 +24,4 @@ Install
 ```
 sudo ninja install
 ```
+Icons by svgrepo.com
