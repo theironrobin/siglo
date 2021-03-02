@@ -25,5 +25,6 @@ e.g.,
 ```
 echo "power on" | sudo bluetoothctl
 ```
+or enable via Settings->Bluetooth
 
 Icons by svgrepo.com
