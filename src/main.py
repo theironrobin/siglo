@@ -19,6 +19,7 @@ class Application(Gtk.Application):
             win = SigloWindow(application=self)
         win.present()
         self.manager.scan_for_infinitime()
+
         win.done_scanning(self.manager)
 
     def do_window_removed(self, window):

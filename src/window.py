@@ -1,5 +1,6 @@
 
 from gi.repository import Gtk
+from .bluetooth import InfiniTimeDevice
 
 @Gtk.Template(resource_path='/org/gnome/siglo/window.ui')
 class SigloWindow(Gtk.ApplicationWindow):
@@ -15,6 +16,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
 
     def done_scanning(self, manager):
+        self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         if (scan_result):
@@ -22,7 +24,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.info_scan_pass.set_visible(True)
             self.bbox_scan_pass.set_visible(True)
         else:
-            self.manager = manager
             self.info_scan_fail.set_visible(True)
             self.bbox_scan_fail.set_visible(True)
 
@@ -38,4 +39,7 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def sync_time_button_clicked(self, widget):
-        print("Sync Time button clicked...")
+        if self.manager is not None:
+            print("Sync Time button clicked...")
+            device = InfiniTimeDevice(manager=self.manager, mac_address=self.manager.get_mac_address())
+            device.connect()
