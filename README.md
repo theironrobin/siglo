@@ -8,7 +8,6 @@ Dependancies
 sudo pacman -S meson python-pip base-devel
 pip3 install gatt
 pip3 install dbus-python
-pip3 install bleson
 ```
 
 Build/Install
@@ -19,10 +18,6 @@ mkdir build
 meson build/
 cd build
 sudo ninja install
-```
-Allow python3 access to BLE adapter
-```
-sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
 ```
 
 Make sure Bluetooth Adapter is enabled in Settings->Bluetooth 
