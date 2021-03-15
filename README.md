@@ -20,7 +20,7 @@ meson build/
 cd build
 sudo ninja install
 ```
-Give python3 necessary permissions to access the Bluetooth LE adapter
+Allow python3 access to BLE adapter
 ```
 sudo setcap cap_net_raw,cap_net_admin+eip $(eval readlink -f `which python3`)
 ```
