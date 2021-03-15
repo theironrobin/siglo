@@ -6,12 +6,17 @@ gi.require_version('Gtk', '3.0')
 from gi.repository import Gtk, Gio
 from .window import SigloWindow
 from .bluetooth import InfiniTimeManager
-from bleson import get_provider
+import subprocess
+
 
 def get_adapter_name():
-    adapter = get_provider().get_adapter(0)
-    id = adapter.device_id
-    return "hci" + str(id)
+    first = ['btmgmt', 'info']
+    second = ["awk", "-F", ":", "NR==2{print $1}"]
+    p1 = subprocess.Popen(first, stdout=subprocess.PIPE)
+    p2 = subprocess.Popen(second, stdin=p1.stdout, stdout=subprocess.PIPE)
+    output = p2.stdout.read()
+    return output.decode("utf-8").rstrip()
+
 
 class Application(Gtk.Application):
     def __init__(self, manager):
@@ -19,6 +24,7 @@ class Application(Gtk.Application):
         super().__init__(application_id='org.gnome.siglo',
                          flags=Gio.ApplicationFlags.FLAGS_NONE)
 
+        
     def do_activate(self):
         win = self.props.active_window
         if not win:
@@ -27,9 +33,11 @@ class Application(Gtk.Application):
         self.manager.scan_for_infinitime()
         win.done_scanning(self.manager)
 
+        
     def do_window_removed(self, window):
         self.manager.stop()
 
+        
 def main(version):
     manager = InfiniTimeManager(adapter_name=get_adapter_name())
     app = Application(manager)
