@@ -1,8 +1,14 @@
 import gatt
-import dbus
-import time
+import subprocess
 import datetime
 from gi.repository import GObject
+
+def get_adapter_name():
+    cmd = ["btmgmt info | awk -F : 'NR==2{print $1}'"]
+    p1 = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
+    output = p1.stdout.read()
+    name = output.decode("utf-8").rstrip()
+    return name
 
 def get_current_time():
     now = datetime.datetime.now()
