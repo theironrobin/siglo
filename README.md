@@ -5,7 +5,7 @@ GTK app to sync InfiniTime watch with PinePhone
 
 Dependancies
 ```
-sudo pacman -S meson python-pip base-devel
+sudo pacman -S meson python-pip base-devel bluez bluez-utils
 pip3 install gatt
 pip3 install dbus-python
 ```
@@ -20,8 +20,7 @@ cd build
 sudo ninja install
 ```
 
-Make sure Bluetooth Adapter is enabled in Settings->Bluetooth 
-or you can do this if you have bluez-utils:
+Make sure Bluetooth Adapter is enabled in Settings->Bluetooth:
 ```
 echo "power on" | sudo bluetoothctl
 ```
