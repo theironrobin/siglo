@@ -25,6 +25,7 @@ class Application(Gtk.Application):
 
     def do_window_removed(self, window):
         self.manager.stop()
+        self.quit()
 
 
 def main(version):
