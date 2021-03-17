@@ -23,6 +23,7 @@ sudo ninja install
 Make sure Bluetooth Adapter is enabled in Settings->Bluetooth, or:
 ```
 sudo systemctl start bluetooth
+echo "power on" | sudo bluetoothctl
 ```
 
 Icons by svgrepo.com
