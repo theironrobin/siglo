@@ -5,7 +5,8 @@ gi.require_version("Gtk", "3.0")
 
 from gi.repository import Gtk, Gio
 from .window import SigloWindow
-from .bluetooth import InfiniTimeManager, get_adapter_name
+from .bluetooth import InfiniTimeManager
+
 
 class Application(Gtk.Application):
     def __init__(self, manager):
@@ -27,6 +28,6 @@ class Application(Gtk.Application):
 
 
 def main(version):
-    manager = InfiniTimeManager(adapter_name=get_adapter_name())
+    manager = InfiniTimeManager()
     app = Application(manager)
     return app.run(sys.argv)

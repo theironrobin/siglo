@@ -1,38 +1,41 @@
 import gatt
-import subprocess
 import datetime
 import struct
-from gi.repository import GObject
-
-def get_adapter_name():
-    cmd = ["btmgmt info | awk -F : 'NR==2{print $1}'"]
-    p1 = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
-    output = p1.stdout.read()
-    name = output.decode("utf-8").rstrip()
-    return name
+from gi.repository import GObject, Gio, GLib
 
 
 def get_current_time():
     now = datetime.datetime.now()
-    
+
     # https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Characteristics/org.bluetooth.characteristic.current_time.xml
-    return bytearray(struct.pack('HBBBBBBBB',
-        now.year,
-        now.month,
-        now.day,
-        now.hour,
-        now.minute,
-        now.second,
-        now.weekday()+1, # numbered 1-7
-        int(now.microsecond/1e6*256), # 1/256th of a second
-        0b0001, # adjust reason
-    ))
+    return bytearray(
+        struct.pack(
+            "HBBBBBBBB",
+            now.year,
+            now.month,
+            now.day,
+            now.hour,
+            now.minute,
+            now.second,
+            now.weekday() + 1,  # numbered 1-7
+            int(now.microsecond / 1e6 * 256),  # 1/256th of a second
+            0b0001,  # adjust reason
+        )
+    )
+
 
 class InfiniTimeManager(gatt.DeviceManager):
-    def __init__(self, adapter_name):
+    def __init__(self):
+        cmd = "btmgmt info"
+        btmgmt_proc = Gio.Subprocess.new(
+            cmd.split(),
+            Gio.SubprocessFlags.STDIN_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
+        )
+        _, stdout, stderr = btmgmt_proc.communicate_utf8()
+        self.adapter_name = stdout.splitlines()[1].split(":")[0]
         self.scan_result = False
         self.mac_address = None
-        super().__init__(adapter_name)
+        super().__init__(self.adapter_name)
 
     def get_scan_result(self):
         return self.scan_result
@@ -54,6 +57,7 @@ class InfiniTimeManager(gatt.DeviceManager):
         self.set_timeout(5 * 1000)
         self.run()
 
+
 class InfiniTimeDevice(gatt.Device):
     def connect_succeeded(self):
         super().connect_succeeded()
@@ -73,11 +77,12 @@ class InfiniTimeDevice(gatt.Device):
     def services_resolved(self):
         super().services_resolved()
         serv = next(
-            s for s in self.services
-            if s.uuid == "00001805-0000-1000-8000-00805f9b34fb")
+            s for s in self.services if s.uuid == "00001805-0000-1000-8000-00805f9b34fb"
+        )
         char = next(
-            c for c in serv.characteristics
-            if c.uuid == "00002a2b-0000-1000-8000-00805f9b34fb")
+            c
+            for c in serv.characteristics
+            if c.uuid == "00002a2b-0000-1000-8000-00805f9b34fb"
+        )
 
         char.write_value(get_current_time())
-                
