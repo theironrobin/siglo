@@ -8,10 +8,26 @@
     <property name="default-height">300</property>
     <signal name="set-focus" handler="on_window_focus" swapped="no"/>
     <child>
-      <object class="GtkBox">
+      <object class="GtkBox" id="main_box">
         <property name="visible">True</property>
         <property name="can-focus">False</property>
         <property name="orientation">vertical</property>
+        <child>
+          <object class="GtkLabel" id="main_info">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-top">20</property>
+            <property name="label" translatable="yes">Scanning...</property>
+            <attributes>
+              <attribute name="weight" value="heavy"/>
+            </attributes>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">0</property>
+          </packing>
+        </child>
         <child>
           <object class="GtkSpinner" id="bt_spinner">
             <property name="visible">True</property>
@@ -24,103 +40,57 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">0</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkLabel" id="info_scan_pass">
-            <property name="can-focus">False</property>
-            <property name="vexpand">True</property>
-            <property name="label" translatable="yes">default scan pass text</property>
-            <property name="justify">center</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
             <property name="position">1</property>
           </packing>
         </child>
         <child>
-          <object class="GtkLabel" id="info_scan_fail">
+          <object class="GtkBox" id="scan_pass_box">
             <property name="can-focus">False</property>
-            <property name="vexpand">True</property>
-            <property name="label" translatable="yes">Make sure InfiniTime is ON but NOT connected
-
-To check, go to Settings-&gt;Bluetooth-&gt;Devices
-
-Might take a few scans.</property>
-            <property name="justify">center</property>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">2</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkButtonBox" id="bbox_scan_fail">
-            <property name="can-focus">False</property>
-            <property name="halign">center</property>
-            <property name="vexpand">True</property>
-            <property name="layout-style">start</property>
-            <child>
-              <object class="GtkButton" id="rescan_button">
-                <property name="label" translatable="yes">Rescan</property>
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-                <signal name="clicked" handler="rescan_button_clicked" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="position">3</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkButtonBox" id="bbox_scan_pass">
-            <property name="width-request">-1</property>
-            <property name="height-request">-1</property>
-            <property name="can-focus">False</property>
-            <property name="halign">center</property>
-            <property name="vexpand">True</property>
             <property name="orientation">vertical</property>
-            <property name="layout-style">start</property>
             <child>
-              <object class="GtkButton" id="ota_update_button">
-                <property name="label" translatable="yes">OTA Update</property>
+              <object class="GtkLabel" id="info_scan_pass">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-                <property name="valign">start</property>
-                <property name="margin-bottom">10</property>
+                <property name="can-focus">False</property>
+                <property name="vexpand">True</property>
+                <property name="label" translatable="yes">default scan pass text</property>
+                <property name="justify">center</property>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="sync_time_button">
-                <property name="label" translatable="yes">Time Sync</property>
+              <object class="GtkButtonBox" id="bbox_scan_pass">
                 <property name="width-request">-1</property>
                 <property name="height-request">-1</property>
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-                <property name="valign">start</property>
-                <signal name="clicked" handler="sync_time_button_clicked" swapped="no"/>
+                <property name="can-focus">False</property>
+                <property name="halign">center</property>
+                <property name="orientation">vertical</property>
+                <property name="layout-style">start</property>
+                <child>
+                  <object class="GtkButton" id="sync_time_button">
+                    <property name="label" translatable="yes">Time Sync</property>
+                    <property name="width-request">-1</property>
+                    <property name="height-request">-1</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <property name="valign">start</property>
+                    <property name="vexpand">True</property>
+                    <signal name="clicked" handler="sync_time_button_clicked" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
               </object>
               <packing>
-                <property name="expand">True</property>
+                <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">1</property>
               </packing>
@@ -129,7 +99,64 @@ Might take a few scans.</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">4</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
+          <object class="GtkBox" id="scan_fail_box">
+            <property name="can-focus">False</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel" id="info_scan_fail">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="vexpand">True</property>
+                <property name="label" translatable="yes">Make sure InfiniTime is ON but NOT connected
+
+To check, go to Settings-&gt;Bluetooth-&gt;Devices
+
+Might take a few scans.</property>
+                <property name="justify">center</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButtonBox" id="bbox_scan_fail">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="halign">center</property>
+                <property name="vexpand">True</property>
+                <property name="layout-style">start</property>
+                <child>
+                  <object class="GtkButton" id="rescan_button">
+                    <property name="label" translatable="yes">Rescan</property>
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <signal name="clicked" handler="rescan_button_clicked" swapped="no"/>
+                  </object>
+                  <packing>
+                    <property name="expand">True</property>
+                    <property name="fill">True</property>
+                    <property name="position">0</property>
+                  </packing>
+                </child>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">3</property>
           </packing>
         </child>
       </object>
