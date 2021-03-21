@@ -33,6 +33,7 @@ class InfiniTimeManager(gatt.DeviceManager):
         )
         _, stdout, stderr = btmgmt_proc.communicate_utf8()
         self.adapter_name = stdout.splitlines()[1].split(":")[0]
+        self.alias = None
         self.scan_result = False
         self.mac_address = None
         super().__init__(self.adapter_name)
@@ -47,7 +48,8 @@ class InfiniTimeManager(gatt.DeviceManager):
         GObject.timeout_add(timeout, self.stop)
 
     def device_discovered(self, device):
-        if device.alias() == "InfiniTime":
+        if device.alias() in ("InfiniTime", "Pinetime-JF"):
+            self.alias = device.alias()
             self.scan_result = True
             self.mac_address = device.mac_address
             self.stop()
