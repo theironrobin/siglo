@@ -71,13 +71,11 @@
                 <property name="orientation">vertical</property>
                 <property name="layout-style">start</property>
                 <child>
-                  <object class="GtkButton" id="open_file_chooser_button">
-                    <property name="label" translatable="yes">OTA Update (.zip)</property>
+                  <object class="GtkFileChooserButton" id="ota_chooser_button">
                     <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="valign">start</property>
+                    <property name="can-focus">False</property>
                     <property name="margin-bottom">10</property>
+                    <property name="title" translatable="yes">OTA Update File (.zip)</property>
                   </object>
                   <packing>
                     <property name="expand">True</property>
