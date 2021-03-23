@@ -77,7 +77,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     def ota_file_selected(self, widget):
         filename = widget.get_filename()
         self.ota_file = filename
-        self.main_info.set_text("File Chosen: " + filename)
+        self.main_info.set_text("File Chosen: " + filename.split("/")[-1])
         self.ota_picked_box.set_visible(True)
         self.ota_selection_box.set_visible(False)
 
@@ -125,7 +125,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.sync_time_button.set_visible(True)
     
     def slow_load(self):
-        self.main_info.set_text("Starting OTA Update...")
+        self.main_info.set_text("Updating Firmware...")
         self.bt_spinner.set_visible(True)
         self.ota_picked_box.set_visible(False)
         self.sync_time_button.set_visible(False)
