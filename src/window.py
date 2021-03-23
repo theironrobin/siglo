@@ -46,3 +46,8 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.main_info.set_text("InfiniTime Sync... Success!")
             self.scan_pass_box.set_visible(False)
 
+    @Gtk.Template.Callback()
+    def ota_file_selected(self, widget):
+        filename= widget.get_filename()
+        print("File Choosen: ", filename)
+        
