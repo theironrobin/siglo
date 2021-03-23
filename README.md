@@ -8,6 +8,7 @@ Dependancies
 sudo pacman -S meson python-pip base-devel bluez bluez-utils
 pip3 install gatt
 pip3 install dbus-python
+pip3 install pexpect
 ```
 
 Build/Install
