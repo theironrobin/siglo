@@ -30,6 +30,10 @@ siglo_sources = [
   'main.py',
   'window.py',
   'bluetooth.py',
+  'ota/ble_legacy_dfu_controller.py',
+  'ota/util.py',
+  'ota/nrf_ble_dfu_controller.py',
+  'ota/unpacker.py',
 ]
 
 install_data(siglo_sources, install_dir: moduledir)
