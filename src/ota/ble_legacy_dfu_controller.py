@@ -3,9 +3,9 @@ import pexpect
 import time
 
 from array import array
-from util  import *
+from .util  import *
 
-from nrf_ble_dfu_controller import NrfBleDfuController
+from .nrf_ble_dfu_controller import NrfBleDfuController
 
 verbose = False
 
@@ -98,7 +98,7 @@ class BleDfuControllerLegacy(NrfBleDfuController):
         self._dfu_send_command(Procedures.START_DFU, [0x04])
 
         # Transmit binary image size
-        # Need to pad the byte array with eight zero bytes 
+        # Need to pad the byte array with eight zero bytes
         # (because that's what the bootloader is expecting...)
         hex_size_array_lsb = uint32_to_bytes_le(len(self.bin_array))
         zero_pad_array_le(hex_size_array_lsb, 8)
@@ -126,7 +126,7 @@ class BleDfuControllerLegacy(NrfBleDfuController):
         prn = uint16_to_bytes_le(self.pkt_receipt_interval)
         self._dfu_send_command(Procedures.PRN_REQUEST, prn)
 
-        # Send 'RECEIVE FIRMWARE IMAGE' command to set DFU in firmware receive state. 
+        # Send 'RECEIVE FIRMWARE IMAGE' command to set DFU in firmware receive state.
         self._dfu_send_command(Procedures.RECEIVE_FIRMWARE_IMAGE)
 
         # Send bin_array contents as as series of packets (burst mode).

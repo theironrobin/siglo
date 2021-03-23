@@ -4,7 +4,7 @@ import re
 
 from abc   import ABCMeta, abstractmethod
 from array import array
-from util  import *
+from .util  import *
 
 verbose = False
 
@@ -84,8 +84,8 @@ class NrfBleDfuController(object, metaclass=ABCMeta):
         self._dfu_send_image()
 
     # --------------------------------------------------------------------------
-    # Initialize: 
-    #    Hex: read and convert hexfile into bin_array 
+    # Initialize:
+    #    Hex: read and convert hexfile into bin_array
     #    Bin: read binfile into bin_array
     # --------------------------------------------------------------------------
     def input_setup(self):

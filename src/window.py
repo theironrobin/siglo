@@ -29,6 +29,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     info_scan_pass = Gtk.Template.Child()
     scan_fail_box = Gtk.Template.Child()
     scan_pass_box = Gtk.Template.Child()
+    sync_time_button = Gtk.Template.Child()
     ota_picked_box = Gtk.Template.Child()
     ota_selection_box = Gtk.Template.Child()
     main_info = Gtk.Template.Child()
@@ -121,11 +122,13 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu.disconnect()
         self.main_info.set_text("OTA Update Complete")
         self.bt_spinner.set_visible(False)
+        self.sync_time_button.set_visible(True)
     
     def slow_load(self):
         self.main_info.set_text("Starting OTA Update...")
         self.bt_spinner.set_visible(True)
         self.ota_picked_box.set_visible(False)
+        self.sync_time_button.set_visible(False)
         self.ble_dfu.start()
 
         
