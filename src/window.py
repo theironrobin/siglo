@@ -1,6 +1,9 @@
 
 from gi.repository import Gtk
 from .bluetooth import InfiniTimeDevice
+#import lib.ble_legacy_dfu_controller as BLDC
+from .ble_legacy_dfu_controller import BleDfuControllerLegacy
+from .unpacker import Unpacker
 
 @Gtk.Template(resource_path='/org/gnome/siglo/window.ui')
 class SigloWindow(Gtk.ApplicationWindow):
@@ -14,6 +17,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     bt_spinner = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
+        self.ota_file = None
         self.manager = None
         super().__init__(**kwargs)
 
@@ -50,8 +54,8 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def ota_file_selected(self, widget):
-        filename= widget.get_filename()
-        print("File Choosen: ", filename)
+        filename = widget.get_filename()
+        self.ota_file = filename
         self.main_info.set_text("File Chosen: " + filename)
         self.ota_picked_box.set_visible(True)
         self.ota_selection_box.set_visible(False)
@@ -61,5 +65,46 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.main_info.set_text("Choose another OTA File")
         self.ota_picked_box.set_visible(False)
         self.ota_selection_box.set_visible(True)
+
+    @Gtk.Template.Callback()
+    def flash_it_button_clicked(self, widget):
+        self.main_info.set_text("Starting OTA Update...")
+        self.bt_spinner.set_visible(True)
+        self.ota_picked_box.set_visible(False)
+        unpacker = Unpacker()
+        try:
+            hexfile, datfile = unpacker.unpack_zipfile(self.ota_file)	
+        except Exception as e:
+            print("ERR")
+            print(e)
+            pass
+        ble_dfu = BleDfuControllerLegacy(self.manager.get_mac_address(), hexfile, datfile)
+
+        ble_dfu.input_setup()
+
+        # Connect to peer device. Assume application mode.
+        if ble_dfu.scan_and_connect():
+            if not ble_dfu.check_DFU_mode():
+                print("Need to switch to DFU mode")
+                success = ble_dfu.switch_to_dfu_mode()
+                if not success:
+                    print("Couldn't reconnect")
+        else:
+            # The device might already be in DFU mode (MAC + 1)
+            ble_dfu.target_mac_increase(1)
+
+            # Try connection with new address
+            print("Couldn't connect, will try DFU MAC")
+            if not ble_dfu.scan_and_connect():
+                raise Exception("Can't connect to device")
+        GObject.threads_init()
+        Gio.io_scheduler_push_job(slow_stuff, None, GLib.PRIORITY_DEFAULT, None)
+        
+        ble_dfu.start()
+
+        # Disconnect from peer device if not done already and clean up.
+        ble_dfu.disconnect()
+        self.main_info.set_text("OTA Update Complete")
+        self.bt_spinner.set_visible(False)
 
         
