@@ -8,6 +8,8 @@ class SigloWindow(Gtk.ApplicationWindow):
     info_scan_pass = Gtk.Template.Child()
     scan_fail_box = Gtk.Template.Child()
     scan_pass_box = Gtk.Template.Child()
+    ota_picked_box = Gtk.Template.Child()
+    ota_selection_box = Gtk.Template.Child()
     main_info = Gtk.Template.Child()
     bt_spinner = Gtk.Template.Child()
 
@@ -50,4 +52,14 @@ class SigloWindow(Gtk.ApplicationWindow):
     def ota_file_selected(self, widget):
         filename= widget.get_filename()
         print("File Choosen: ", filename)
+        self.main_info.set_text("File Chosen: " + filename)
+        self.ota_picked_box.set_visible(True)
+        self.ota_selection_box.set_visible(False)
+
+    @Gtk.Template.Callback()
+    def ota_cancel_button_clicked(self, widget):
+        self.main_info.set_text("Choose another OTA File")
+        self.ota_picked_box.set_visible(False)
+        self.ota_selection_box.set_visible(True)
+
         
