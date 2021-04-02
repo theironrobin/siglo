@@ -11,10 +11,11 @@ class InfiniTimeDFU(gatt.Device):
     UUID_PACKET = "00001532-1212-efde-1523-785feabcd123"
     UUID_VERSION = "00001534-1212-efde-1523-785feabcd123"
 
-    def __init__(self, mac_address, manager, firmware_path, datfile_path, verbose):
+    def __init__(self, mac_address, manager, window, firmware_path, datfile_path, verbose):
         self.firmware_path = firmware_path
         self.datfile_path = datfile_path
         self.target_mac = mac_address
+        self.window = window
         self.verbose = verbose
         self.current_step = 0
         self.pkt_receipt_interval = 10
@@ -210,6 +211,7 @@ class InfiniTimeDFU(gatt.Device):
         self.current_step = 9
         print("[INFO ] Activate and reset")
         self.ctrl_point_char.write_value(bytearray.fromhex("05"))
+        self.window.show_complete()
 
     def get_init_bin_array(self):
         # Open the DAT file and create array of its contents

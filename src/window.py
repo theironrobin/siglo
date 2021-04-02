@@ -99,6 +99,10 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def flash_it_button_clicked(self, widget):
+        self.main_info.set_text("Updating Firmware...")
+        self.bt_spinner.set_visible(True)
+        self.ota_picked_box.set_visible(False)
+        self.sync_time_button.set_visible(False)
         unpacker = Unpacker()
         try:
             binfile, datfile = unpacker.unpack_zipfile(self.ota_file)
@@ -109,6 +113,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu = InfiniTimeDFU(
             mac_address=self.manager.get_mac_address(),
             manager=self.manager,
+            window = self,
             firmware_path=binfile,
             datfile_path=datfile,
             verbose=False,
@@ -121,6 +126,11 @@ class SigloWindow(Gtk.ApplicationWindow):
     def slow_complete(self, results, errors):
         # Disconnect from peer device if not done already and clean up.
         self.ble_dfu.disconnect()
+        self.main_info.set_text("OTA Update Complete")
+        self.bt_spinner.set_visible(False)
+        self.sync_time_button.set_visible(True)
+
+    def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
         self.bt_spinner.set_visible(False)
         self.sync_time_button.set_visible(True)
