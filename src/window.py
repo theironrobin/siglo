@@ -2,7 +2,6 @@ import threading
 from gi.repository import Gtk, GObject
 from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
-from .ble_legacy_dfu_controller import BleDfuControllerLegacy
 from .unpacker import Unpacker
 
 # calls f on another thread
