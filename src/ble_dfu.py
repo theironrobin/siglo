@@ -111,8 +111,8 @@ class InfiniTimeDFU(gatt.Device):
             self.packet_recipt_count += 1
             self.total_receipt_size += self.size_per_receipt
             print("[INFO ] receipt count", str(self.packet_recipt_count))
-	        print("[INFO ] receipt size", self.total_receipt_size, "out of", self.image_size)
-	        print("[INFO ] progress:", (self.total_receipt_size / self.image_size)*100, "%")
+            print("[INFO ] receipt size", self.total_receipt_size, "out of", self.image_size)
+            print("[INFO ] progress:", (self.total_receipt_size / self.image_size)*100, "%")
             if self.done != True:
                 self.i += self.pkt_payload_size
                 self.step_seven()
