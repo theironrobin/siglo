@@ -111,7 +111,8 @@ class InfiniTimeDFU(gatt.Device):
             self.packet_recipt_count += 1
             self.total_receipt_size += self.size_per_receipt
             if self.packet_recipt_count % self.pkt_receipt_interval == 0:
-                self.window.update_progress_bar(self.total_receipt_size / self.image_size)
+                self.window.update_progress_bar((self.total_receipt_size, self.image_size))
+                #self.window.update_progress_bar((self.total_receipt_size / self.image_size)
             if self.verbose:
                 print("[INFO ] receipt count", str(self.packet_recipt_count))
                 print("[INFO ] receipt size", self.total_receipt_size, "out of", self.image_size)

@@ -103,8 +103,10 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu.input_setup()
         self.ble_dfu.connect()
 
-    def update_progress_bar(self, progress):
-        self.dfu_progress_bar.set_fraction(progress)
+    def update_progress_bar(self, prog_tup):
+        self.dfu_progress_bar.set_fraction(prog_tup[0] / prog_tup[1])
+        prog_text = str(str(prog_tup[0], "out of", str(prog_tup[1])))
+        self.dfu_progress_bar.set_text(prog_text)
 
     def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
