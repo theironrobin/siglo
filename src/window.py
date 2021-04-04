@@ -18,6 +18,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     main_info = Gtk.Template.Child()
     bt_spinner = Gtk.Template.Child()
     dfu_progress_bar = Gtk.Template.Child()
+    dfu_progress_text = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -101,16 +102,20 @@ class SigloWindow(Gtk.ApplicationWindow):
             verbose=False,
         )
         self.ble_dfu.input_setup()
+        self.dfu_progress_text.set_text(self.get_prog_text())
         self.ble_dfu.connect()
 
-    def update_progress_bar(self, prog_tup):
-        self.dfu_progress_bar.set_fraction(prog_tup[0] / prog_tup[1])
-        prog_text = str(str(prog_tup[0], "out of", str(prog_tup[1])))
-        self.dfu_progress_bar.set_text(prog_text)
+    def update_progress_bar(self):
+        self.dfu_progress_bar.set_fraction(self.ble_dfu.total_receipt_size / self.ble_dfu.image_size)
+        self.dfu_progress_text.set_text(self.get_prog_text())
+
+    def get_prog_text(self):
+        return str(self.ble_dfu.total_receipt_size) + " / " + str(self.ble_dfu.image_size) + " packets recieved"
 
     def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
         self.bt_spinner.set_visible(False)
         self.sync_time_button.set_visible(True)
+        self.dfu_progress_box.set_visible(False)
 
 
