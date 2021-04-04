@@ -110,7 +110,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.dfu_progress_text.set_text(self.get_prog_text())
 
     def get_prog_text(self):
-        return str(self.ble_dfu.total_receipt_size) + " / " + str(self.ble_dfu.image_size) + " packets recieved"
+        return str(self.ble_dfu.total_receipt_size) + " / " + str(self.ble_dfu.image_size) + " bytes recieved"
 
     def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
