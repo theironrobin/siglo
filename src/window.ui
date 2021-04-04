@@ -44,6 +44,43 @@
           </packing>
         </child>
         <child>
+          <object class="GtkBox" id="dfu_progress_box">
+            <property name="can-focus">False</property>
+            <property name="margin-start">50</property>
+            <property name="margin-end">50</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkProgressBar" id="dfu_progress_bar">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="padding">10</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel" id="dfu_progress_text">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">0 / 0</property>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkBox" id="scan_pass_box">
             <property name="can-focus">False</property>
             <property name="orientation">vertical</property>
@@ -184,7 +221,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
@@ -241,7 +278,7 @@ Might take a few scans.</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">4</property>
           </packing>
         </child>
       </object>

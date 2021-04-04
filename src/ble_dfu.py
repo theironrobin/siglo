@@ -20,8 +20,10 @@ class InfiniTimeDFU(gatt.Device):
         self.current_step = 0
         self.pkt_receipt_interval = 10
         self.pkt_payload_size = 20
+        self.size_per_receipt = self.pkt_payload_size * self.pkt_receipt_interval
         self.done = False
         self.packet_recipt_count = 0
+        self.total_receipt_size = 0
 
         super().__init__(mac_address, manager)
 
@@ -107,11 +109,15 @@ class InfiniTimeDFU(gatt.Device):
 
         if array_to_hex_string(value)[0:2] == "11":
             self.packet_recipt_count += 1
-            print("[INFO ] receipt count", str(self.packet_recipt_count))
+            self.total_receipt_size += self.size_per_receipt
+            self.window.update_progress_bar()
+            if self.verbose:
+                print("[INFO ] receipt count", str(self.packet_recipt_count))
+                print("[INFO ] receipt size", self.total_receipt_size, "out of", self.image_size)
+                print("[INFO ] progress:", (self.total_receipt_size / self.image_size)*100, "%")
             if self.done != True:
                 self.i += self.pkt_payload_size
                 self.step_seven()
-
         if array_to_hex_string(value)[2:-2] == "04":
             self.step_nine()
 

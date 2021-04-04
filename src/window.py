@@ -4,25 +4,6 @@ from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
 from .unpacker import Unpacker
 
-# calls f on another thread
-def async_call(f, on_done):
-    if not on_done:
-        on_done = lambda r, e: None
-
-    def do_call():
-        result = None
-        error = None
-
-        try:
-            result = f()
-        except Exception as err:
-            error = err
-
-        GObject.idle_add(lambda: on_done(result, error))
-
-    thread = threading.Thread(target=do_call)
-    thread.start()
-
 
 @Gtk.Template(resource_path="/org/gnome/siglo/window.ui")
 class SigloWindow(Gtk.ApplicationWindow):
@@ -33,8 +14,11 @@ class SigloWindow(Gtk.ApplicationWindow):
     sync_time_button = Gtk.Template.Child()
     ota_picked_box = Gtk.Template.Child()
     ota_selection_box = Gtk.Template.Child()
+    dfu_progress_box = Gtk.Template.Child()
     main_info = Gtk.Template.Child()
     bt_spinner = Gtk.Template.Child()
+    dfu_progress_bar = Gtk.Template.Child()
+    dfu_progress_text = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -86,7 +70,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     def ota_file_selected(self, widget):
         filename = widget.get_filename()
         self.ota_file = filename
-        self.main_info.set_text("File Chosen: " + filename.split("/")[-1])
+        self.main_info.set_text("File: " + filename.split("/")[-1])
         self.ota_picked_box.set_visible(True)
         self.ota_selection_box.set_visible(False)
 
@@ -99,8 +83,8 @@ class SigloWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback()
     def flash_it_button_clicked(self, widget):
         self.main_info.set_text("Updating Firmware...")
-        self.bt_spinner.set_visible(True)
         self.ota_picked_box.set_visible(False)
+        self.dfu_progress_box.set_visible(True)
         self.sync_time_button.set_visible(False)
         unpacker = Unpacker()
         try:
@@ -118,25 +102,20 @@ class SigloWindow(Gtk.ApplicationWindow):
             verbose=False,
         )
         self.ble_dfu.input_setup()
+        self.dfu_progress_text.set_text(self.get_prog_text())
         self.ble_dfu.connect()
 
-        # async_call(self.slow_load, self.slow_complete)
+    def update_progress_bar(self):
+        self.dfu_progress_bar.set_fraction(self.ble_dfu.total_receipt_size / self.ble_dfu.image_size)
+        self.dfu_progress_text.set_text(self.get_prog_text())
 
-    def slow_complete(self, results, errors):
-        # Disconnect from peer device if not done already and clean up.
-        self.ble_dfu.disconnect()
-        self.main_info.set_text("OTA Update Complete")
-        self.bt_spinner.set_visible(False)
-        self.sync_time_button.set_visible(True)
+    def get_prog_text(self):
+        return str(self.ble_dfu.total_receipt_size) + " / " + str(self.ble_dfu.image_size) + " bytes recieved"
 
     def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
         self.bt_spinner.set_visible(False)
         self.sync_time_button.set_visible(True)
+        self.dfu_progress_box.set_visible(False)
 
-    def slow_load(self):
-        self.main_info.set_text("Updating Firmware...")
-        self.bt_spinner.set_visible(True)
-        self.ota_picked_box.set_visible(False)
-        self.sync_time_button.set_visible(False)
-        self.ble_dfu.start()
+
