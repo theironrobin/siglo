@@ -17,6 +17,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     dfu_progress_box = Gtk.Template.Child()
     main_info = Gtk.Template.Child()
     bt_spinner = Gtk.Template.Child()
+    dfu_progress_bar = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -101,6 +102,9 @@ class SigloWindow(Gtk.ApplicationWindow):
         )
         self.ble_dfu.input_setup()
         self.ble_dfu.connect()
+
+    def update_progress_bar(self, progress):
+        self.dfu_progress_bar.set_fraction(progress)
 
     def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
