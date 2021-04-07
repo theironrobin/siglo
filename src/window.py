@@ -33,7 +33,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         if scan_result:
-            info_suffix = "\n[INFO ]Scan Succeeded"
+            info_suffix = "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
                 manager.alias
                 + " Found!\n\nAdapter Name: "
