@@ -1,4 +1,5 @@
 import threading
+import gatt
 from gi.repository import Gtk, GObject
 from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
@@ -27,12 +28,12 @@ class SigloWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
         GObject.threads_init()
 
-    def done_scanning(self, manager):
+    def done_scanning(self, manager, info_prefix):
         self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         if scan_result:
-            self.main_info.set_text("Done Scanning...Success")
+            info_suffix = "\n[INFO ]Scan Succeeded"
             self.info_scan_pass.set_text(
                 manager.alias
                 + " Found!\n\nAdapter Name: "
@@ -42,8 +43,9 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
         else:
-            self.main_info.set_text("Done Scanning...Failed")
+            info_suffix = "\n[INFO ] Scan Failed"
             self.scan_fail_box.set_visible(True)
+        self.main_info.set_text(info_prefix + info_suffix)
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
@@ -52,8 +54,12 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.main_info.set_text("Rescanning...")
             self.bt_spinner.set_visible(True)
             self.scan_fail_box.set_visible(False)
-            self.manager.scan_for_infinitime()
-            self.done_scanning(self.manager)
+            info_prefix = "[INFO ] Done Scanning"
+            try:
+                self.manager.scan_for_infinitime()
+            except gatt.errors.NotReady:
+                info_prefix = "[WARN ] Bluetooth is disabled"
+            self.done_scanning(self.manager, info_prefix)
 
     @Gtk.Template.Callback()
     def sync_time_button_clicked(self, widget):
