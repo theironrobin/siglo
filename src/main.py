@@ -2,6 +2,7 @@ import sys
 import gi
 import gatt
 import configparser
+
 gi.require_version("Gtk", "3.0")
 
 from pathlib import Path
@@ -14,7 +15,7 @@ class Application(Gtk.Application):
     def __init__(self):
         self.manager = None
         config = self.configuration_setup()
-        self.mode = config['settings']['mode']
+        self.mode = config["settings"]["mode"]
         super().__init__(
             application_id="org.gnome.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
@@ -27,8 +28,8 @@ class Application(Gtk.Application):
             Path.mkdir(Path(configDir))
         configFile = configDir + "/siglo.ini"
         if not Path(configFile).is_file():
-            config['settings'] = {'mode': 'singleton'}
-            with open (configFile, 'w') as f:
+            config["settings"] = {"mode": "singleton"}
+            with open(configFile, "w") as f:
                 config.write(f)
         config.read(configFile)
         return config
@@ -64,8 +65,9 @@ def main(version):
         Gtk.StyleContext.add_provider_for_screen(
             Gdk.Screen.get_default(),
             style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
+
     gtk_style()
     app = Application()
     return app.run(sys.argv)

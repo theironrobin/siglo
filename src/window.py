@@ -1,5 +1,7 @@
 import threading
 import gatt
+import configparser
+from pathlib import Path
 from gi.repository import Gtk, GObject
 from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
@@ -31,10 +33,9 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.mode = mode
         super().__init__(**kwargs)
         GObject.threads_init()
-        if self.mode == "multi":
+        if mode == "multi":
+            self.auto_switch = True
             self.multi_device_switch.set_active(True)
-        if self.mode == "singleton":
-            self.multi_device_switch.set_active(False)
 
     def depopulate_listbox(self):
         children = self.multi_device_listbox.get_children()
@@ -76,7 +77,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
-        info_suffix = "\n[INFO ] Single-Device Mode (default)"
+        info_suffix = "\n[INFO ] Single-Device Mode"
         if scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
@@ -154,7 +155,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu = InfiniTimeDFU(
             mac_address=self.manager.get_mac_address(),
             manager=self.manager,
-            window = self,
+            window=self,
             firmware_path=binfile,
             datfile_path=datfile,
             verbose=False,
@@ -163,17 +164,47 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.dfu_progress_text.set_text(self.get_prog_text())
         self.ble_dfu.connect()
 
+    @Gtk.Template.Callback()
+    def mode_toggled(self, widget):
+        if self.mode == "multi" and self.auto_switch == True:
+            self.auto_switch = False
+        else:
+            current_mode = self.mode
+            print("current_mode", current_mode)
+            config = configparser.ConfigParser()
+            home = str(Path.home())
+            configDir = home + "/.config/siglo"
+            configFile = configDir + "/siglo.ini"
+            if current_mode == "singleton":
+                config["settings"] = {"mode": "multi"}
+                self.mode = "multi"
+            if current_mode == "multi":
+                config["settings"] = {"mode": "singleton"}
+                self.mode = "singleton"
+            with open(configFile, "w") as f:
+                config.write(f)
+            self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
+            self.rescan_button.set_visible(False)
+            self.scan_pass_box.set_visible(False)
+            self.depopulate_listbox()
+            self.scan_fail_box.set_visible(False)
+
     def update_progress_bar(self):
-        self.dfu_progress_bar.set_fraction(self.ble_dfu.total_receipt_size / self.ble_dfu.image_size)
+        self.dfu_progress_bar.set_fraction(
+            self.ble_dfu.total_receipt_size / self.ble_dfu.image_size
+        )
         self.dfu_progress_text.set_text(self.get_prog_text())
 
     def get_prog_text(self):
-        return str(self.ble_dfu.total_receipt_size) + " / " + str(self.ble_dfu.image_size) + " bytes recieved"
+        return (
+            str(self.ble_dfu.total_receipt_size)
+            + " / "
+            + str(self.ble_dfu.image_size)
+            + " bytes recieved"
+        )
 
     def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
         self.bt_spinner.set_visible(False)
         self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
-
-
