@@ -17,7 +17,7 @@ class Application(Gtk.Application):
 
     def do_activate(self):
         win = self.props.active_window
-        mode = "singleton"
+        mode = "multi"
         if not win:
             win = SigloWindow(application=self)
         win.present()

@@ -21,6 +21,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     dfu_progress_bar = Gtk.Template.Child()
     dfu_progress_text = Gtk.Template.Child()
     multi_device_listbox = Gtk.Template.Child()
+    rescan_button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -28,6 +29,12 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.manager = None
         super().__init__(**kwargs)
         GObject.threads_init()
+
+    def depopulate_listbox(self):
+        children = self.multi_device_listbox.get_children()
+        for child in children:
+            self.multi_device_listbox.remove(child)
+        self.multi_device_listbox.set_visible(False)
 
     def populate_listbox(self):
         for mac_addr in self.manager.device_set:
@@ -49,6 +56,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
+        self.rescan_button.set_visible(True)
         info_suffix = "\n[INFO ] Multi-Device Mode"
         if scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
@@ -75,6 +83,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.scan_pass_box.set_visible(True)
         else:
             info_suffix += "\n[INFO ] Scan Failed"
+            self.rescan_button.set_visible(True)
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
 
@@ -82,9 +91,11 @@ class SigloWindow(Gtk.ApplicationWindow):
     def rescan_button_clicked(self, widget):
         if self.manager is not None:
             print("[INFO ] Rescan button clicked")
+            self.depopulate_listbox()
             self.main_info.set_text("Rescanning...")
             self.bt_spinner.set_visible(True)
             self.scan_fail_box.set_visible(False)
+            self.rescan_button.set_visible(False)
             info_prefix = "[INFO ] Done Scanning"
             self.manager.scan_result = False
             try:
