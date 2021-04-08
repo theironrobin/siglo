@@ -17,26 +17,25 @@ class Application(Gtk.Application):
         home = str(Path.home())
         configFile = home + "/.config/siglo/siglo.ini"
         self.config.read(configFile)
+        self.mode = self.config['settings']['mode']
         super().__init__(
             application_id="org.gnome.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
 
     def do_activate(self):
         win = self.props.active_window
-        #mode = "multi"
-        mode = self.config['settings']['mode']
         if not win:
-            win = SigloWindow(application=self)
+            win = SigloWindow(application=self, mode=self.mode)
         win.present()
-        self.manager = InfiniTimeManager(mode)
+        self.manager = InfiniTimeManager(self.mode)
         info_prefix = "[INFO ] Done Scanning"
         try:
             self.manager.scan_for_infinitime()
         except gatt.errors.NotReady:
             info_prefix = "[WARN ] Bluetooth is disabled"
-        if mode == "singleton":
+        if self.mode == "singleton":
             win.done_scanning_singleton(self.manager, info_prefix)
-        if mode == "multi":
+        if self.mode == "multi":
             win.done_scanning_multi(self.manager, info_prefix)
 
     def do_window_removed(self, window):

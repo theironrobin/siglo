@@ -22,13 +22,19 @@ class SigloWindow(Gtk.ApplicationWindow):
     dfu_progress_text = Gtk.Template.Child()
     multi_device_listbox = Gtk.Template.Child()
     rescan_button = Gtk.Template.Child()
+    multi_device_switch = Gtk.Template.Child()
 
-    def __init__(self, **kwargs):
+    def __init__(self, mode, **kwargs):
         self.ble_dfu = None
         self.ota_file = None
         self.manager = None
+        self.mode = mode
         super().__init__(**kwargs)
         GObject.threads_init()
+        if self.mode == "multi":
+            self.multi_device_switch.set_active(True)
+        if self.mode == "singleton":
+            self.multi_device_switch.set_active(False)
 
     def depopulate_listbox(self):
         children = self.multi_device_listbox.get_children()
