@@ -25,13 +25,15 @@ def get_current_time():
 
 
 class InfiniTimeManager(gatt.DeviceManager):
-    def __init__(self):
+    def __init__(self, mode):
         cmd = "btmgmt info"
         btmgmt_proc = Gio.Subprocess.new(
             cmd.split(),
             Gio.SubprocessFlags.STDIN_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
         )
         _, stdout, stderr = btmgmt_proc.communicate_utf8()
+        self.mode = mode
+        self.device_set = set()
         self.adapter_name = stdout.splitlines()[1].split(":")[0]
         self.alias = None
         self.scan_result = False
@@ -41,6 +43,9 @@ class InfiniTimeManager(gatt.DeviceManager):
     def get_scan_result(self):
         return self.scan_result
 
+    def set_mac_address(self, mac_address):
+        self.mac_address = mac_address
+
     def get_mac_address(self):
         return self.mac_address
 
@@ -49,14 +54,18 @@ class InfiniTimeManager(gatt.DeviceManager):
 
     def device_discovered(self, device):
         if device.alias() in ("InfiniTime", "Pinetime-JF"):
-            self.alias = device.alias()
             self.scan_result = True
-            self.mac_address = device.mac_address
-            self.stop()
+            self.alias = device.alias()
+            if self.mode == "singleton":
+                self.mac_address = device.mac_address
+                self.stop()
+
+            if self.mode == "multi":
+                self.device_set.add(device.mac_address)
 
     def scan_for_infinitime(self):
         self.start_discovery()
-        self.set_timeout(5 * 1000)
+        self.set_timeout(4.5 * 1000)
         self.run()
 
 

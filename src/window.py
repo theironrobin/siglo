@@ -1,5 +1,7 @@
 import threading
 import gatt
+import configparser
+from pathlib import Path
 from gi.repository import Gtk, GObject
 from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
@@ -20,20 +22,64 @@ class SigloWindow(Gtk.ApplicationWindow):
     bt_spinner = Gtk.Template.Child()
     dfu_progress_bar = Gtk.Template.Child()
     dfu_progress_text = Gtk.Template.Child()
+    multi_device_listbox = Gtk.Template.Child()
+    rescan_button = Gtk.Template.Child()
+    multi_device_switch = Gtk.Template.Child()
 
-    def __init__(self, **kwargs):
+    def __init__(self, mode, **kwargs):
         self.ble_dfu = None
         self.ota_file = None
         self.manager = None
+        self.mode = mode
         super().__init__(**kwargs)
         GObject.threads_init()
+        if mode == "multi":
+            self.auto_switch = True
+            self.multi_device_switch.set_active(True)
 
-    def done_scanning(self, manager, info_prefix):
+    def depopulate_listbox(self):
+        children = self.multi_device_listbox.get_children()
+        for child in children:
+            self.multi_device_listbox.remove(child)
+        self.multi_device_listbox.set_visible(False)
+
+    def populate_listbox(self):
+        for mac_addr in self.manager.device_set:
+            label = Gtk.Label(xalign=0)
+            label.set_use_markup(True)
+            label.set_name("multi_mac_label")
+            label.set_text(mac_addr)
+            label.set_justify(Gtk.Justification.LEFT)
+            self.multi_device_listbox.add(label)
+            try:
+                label.set_margin_start(10)
+            except AttributeError:
+                label.set_margin_left(10)
+            label.set_width_chars(20)
+            self.multi_device_listbox.set_visible(True)
+            self.multi_device_listbox.show_all()
+
+    def done_scanning_multi(self, manager, info_prefix):
         self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
+        self.rescan_button.set_visible(True)
+        info_suffix = "\n[INFO ] Multi-Device Mode"
         if scan_result:
-            info_suffix = "\n[INFO ] Scan Succeeded"
+            info_suffix += "\n[INFO ] Scan Succeeded"
+            self.populate_listbox()
+        else:
+            info_suffix += "\n[INFO ] Scan Failed"
+            self.scan_fail_box.set_visible(True)
+        self.main_info.set_text(info_prefix + info_suffix)
+
+    def done_scanning_singleton(self, manager, info_prefix):
+        self.manager = manager
+        scan_result = manager.get_scan_result()
+        self.bt_spinner.set_visible(False)
+        info_suffix = "\n[INFO ] Single-Device Mode"
+        if scan_result:
+            info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
                 manager.alias
                 + " Found!\n\nAdapter Name: "
@@ -43,23 +89,31 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
         else:
-            info_suffix = "\n[INFO ] Scan Failed"
+            info_suffix += "\n[INFO ] Scan Failed"
+            self.rescan_button.set_visible(True)
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
         if self.manager is not None:
-            print("Rescan button clicked...")
+            print("[INFO ] Rescan button clicked")
+            self.depopulate_listbox()
             self.main_info.set_text("Rescanning...")
             self.bt_spinner.set_visible(True)
             self.scan_fail_box.set_visible(False)
+            self.rescan_button.set_visible(False)
+            self.scan_pass_box.set_visible(False)
             info_prefix = "[INFO ] Done Scanning"
+            self.manager.scan_result = False
             try:
                 self.manager.scan_for_infinitime()
             except gatt.errors.NotReady:
                 info_prefix = "[WARN ] Bluetooth is disabled"
-            self.done_scanning(self.manager, info_prefix)
+            if self.manager.mode == "singleton":
+                self.done_scanning_singleton(self.manager, info_prefix)
+            if self.manager.mode == "multi":
+                self.done_scanning_multi(self.manager, info_prefix)
 
     @Gtk.Template.Callback()
     def sync_time_button_clicked(self, widget):
@@ -102,7 +156,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu = InfiniTimeDFU(
             mac_address=self.manager.get_mac_address(),
             manager=self.manager,
-            window = self,
+            window=self,
             firmware_path=binfile,
             datfile_path=datfile,
             verbose=False,
@@ -111,17 +165,62 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.dfu_progress_text.set_text(self.get_prog_text())
         self.ble_dfu.connect()
 
+    @Gtk.Template.Callback()
+    def mode_toggled(self, widget):
+        if self.mode == "multi" and self.auto_switch == True:
+            self.auto_switch = False
+        else:
+            current_mode = self.mode
+            config = configparser.ConfigParser()
+            home = str(Path.home())
+            configDir = home + "/.config/siglo"
+            configFile = configDir + "/siglo.ini"
+            if current_mode == "singleton":
+                config["settings"] = {"mode": "multi"}
+                self.mode = "multi"
+            if current_mode == "multi":
+                config["settings"] = {"mode": "singleton"}
+                self.mode = "singleton"
+            with open(configFile, "w") as f:
+                config.write(f)
+            self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
+            self.rescan_button.set_visible(False)
+            self.scan_pass_box.set_visible(False)
+            self.depopulate_listbox()
+            self.scan_fail_box.set_visible(False)
+
+    @Gtk.Template.Callback()
+    def multi_listbox_row_selected(self, list_box, row):
+        if row is not None:
+            mac_add = row.get_child().get_label()
+            self.manager.set_mac_address(mac_add)
+            self.info_scan_pass.set_text(
+                    self.manager.alias
+                    + " Found!\n\nAdapter Name: "
+                    + self.manager.adapter_name
+                    + "\nMac Address: "
+                    + self.manager.get_mac_address()
+                )
+            self.scan_pass_box.set_visible(True)
+            self.multi_device_listbox.set_visible(False)
+
+
     def update_progress_bar(self):
-        self.dfu_progress_bar.set_fraction(self.ble_dfu.total_receipt_size / self.ble_dfu.image_size)
+        self.dfu_progress_bar.set_fraction(
+            self.ble_dfu.total_receipt_size / self.ble_dfu.image_size
+        )
         self.dfu_progress_text.set_text(self.get_prog_text())
 
     def get_prog_text(self):
-        return str(self.ble_dfu.total_receipt_size) + " / " + str(self.ble_dfu.image_size) + " bytes recieved"
+        return (
+            str(self.ble_dfu.total_receipt_size)
+            + " / "
+            + str(self.ble_dfu.image_size)
+            + " bytes recieved"
+        )
 
     def show_complete(self):
         self.main_info.set_text("OTA Update Complete")
         self.bt_spinner.set_visible(False)
         self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
-
-
