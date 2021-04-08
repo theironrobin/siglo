@@ -29,27 +29,30 @@ class SigloWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
         GObject.threads_init()
 
+    def populate_listbox(self):
+        for mac_addr in self.manager.device_set:
+            label = Gtk.Label(xalign=0)
+            label.set_use_markup(True)
+            label.set_name("multi_mac_label")
+            label.set_text(mac_addr)
+            label.set_justify(Gtk.Justification.LEFT)
+            self.multi_device_listbox.add(label)
+            try:
+                label.set_margin_start(10)
+            except AttributeError:
+                label.set_margin_left(10)
+            label.set_width_chars(20)
+            self.multi_device_listbox.set_visible(True)
+            self.multi_device_listbox.show_all()
+
     def done_scanning_multi(self, manager, info_prefix):
         self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         info_suffix = "\n[INFO ] Multi-Device Mode"
         if scan_result:
-            for mac_addr in manager.device_set:
-                label = Gtk.Label(xalign=0)
-                label.set_use_markup(True)
-                label.set_name("multi_mac_label")
-                label.set_text(mac_addr)
-                label.set_justify(Gtk.Justification.LEFT)
-                self.multi_device_listbox.add(label)
-                try:
-                    label.set_margin_start(10)
-                except AttributeError:
-                    label.set_margin_left(10)
-                label.set_width_chars(20)
             info_suffix += "\n[INFO ] Scan Succeeded"
-            self.multi_device_listbox.set_visible(True)
-            self.multi_device_listbox.show_all()
+            self.populate_listbox()
         else:
             info_suffix += "\n[INFO ] Scan Failed"
             self.scan_fail_box.set_visible(True)
@@ -59,7 +62,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
-        info_suffix = "\n[INFO ] Single-Device Mode"
+        info_suffix = "\n[INFO ] Single-Device Mode (default)"
         if scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
@@ -78,16 +81,20 @@ class SigloWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
         if self.manager is not None:
-            print("Rescan button clicked...")
+            print("[INFO ] Rescan button clicked")
             self.main_info.set_text("Rescanning...")
             self.bt_spinner.set_visible(True)
             self.scan_fail_box.set_visible(False)
             info_prefix = "[INFO ] Done Scanning"
+            self.manager.scan_result = False
             try:
                 self.manager.scan_for_infinitime()
             except gatt.errors.NotReady:
                 info_prefix = "[WARN ] Bluetooth is disabled"
-            self.done_scanning(self.manager, info_prefix)
+            if self.manager.mode == "singleton":
+                self.done_scanning_singleton(self.manager, info_prefix)
+            if self.manager.mode == "multi":
+                self.done_scanning_multi(self.manager, info_prefix)
 
     @Gtk.Template.Callback()
     def sync_time_button_clicked(self, widget):
