@@ -13,14 +13,25 @@ from .bluetooth import InfiniTimeManager
 class Application(Gtk.Application):
     def __init__(self):
         self.manager = None
-        self.config = configparser.ConfigParser()
-        home = str(Path.home())
-        configFile = home + "/.config/siglo/siglo.ini"
-        self.config.read(configFile)
-        self.mode = self.config['settings']['mode']
+        config = self.configuration_setup()
+        self.mode = config['settings']['mode']
         super().__init__(
             application_id="org.gnome.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
+
+    def configuration_setup(self):
+        config = configparser.ConfigParser()
+        home = str(Path.home())
+        configDir = home + "/.config/siglo"
+        if not Path(configDir).is_dir():
+            Path.mkdir(Path(configDir))
+        configFile = configDir + "/siglo.ini"
+        if not Path(configFile).is_file():
+            with open(configFile, 'w') as f:
+                f.write("[settings]\n")
+                f.write("mode = singleton\n")
+        config.read(configFile)
+        return config
 
     def do_activate(self):
         win = self.props.active_window
