@@ -171,7 +171,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.auto_switch = False
         else:
             current_mode = self.mode
-            print("current_mode", current_mode)
             config = configparser.ConfigParser()
             home = str(Path.home())
             configDir = home + "/.config/siglo"
@@ -192,17 +191,19 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def multi_listbox_row_selected(self, list_box, row):
-        mac_add = row.get_child().get_label()
-        self.manager.set_mac_address(mac_add)
-        self.info_scan_pass.set_text(
-                self.manager.alias
-                + " Found!\n\nAdapter Name: "
-                + self.manager.adapter_name
-                + "\nMac Address: "
-                + self.manager.get_mac_address()
-            )
-        self.scan_pass_box.set_visible(True)
-        self.depopulate_listbox()
+        if row is not None:
+            mac_add = row.get_child().get_label()
+            self.manager.set_mac_address(mac_add)
+            self.info_scan_pass.set_text(
+                    self.manager.alias
+                    + " Found!\n\nAdapter Name: "
+                    + self.manager.adapter_name
+                    + "\nMac Address: "
+                    + self.manager.get_mac_address()
+                )
+            self.scan_pass_box.set_visible(True)
+            self.multi_device_listbox.set_visible(False)
+
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
