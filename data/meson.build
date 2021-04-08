@@ -14,7 +14,12 @@ if desktop_utils.found()
   )
 endif
 
-install_data('org.gnome.siglo.svg')
+#install_data('org.gnome.siglo.svg')
+
+install_data(
+  join_paths('icons', 'org.gnome.siglo.svg'),
+  install_dir: join_paths(get_option('datadir'), 'icons')
+)
 
 appstream_file = i18n.merge_file(
   input: 'org.gnome.siglo.appdata.xml.in',
