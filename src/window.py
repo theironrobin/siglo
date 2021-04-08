@@ -20,6 +20,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     bt_spinner = Gtk.Template.Child()
     dfu_progress_bar = Gtk.Template.Child()
     dfu_progress_text = Gtk.Template.Child()
+    multi_device_listbox = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -27,6 +28,24 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.manager = None
         super().__init__(**kwargs)
         GObject.threads_init()
+
+    def show_multi_device_listbox(self, manager):
+        self.manager = manager
+        self.bt_spinner.set_visible(False)
+        for mac_addr in manager.device_set:
+            label = Gtk.Label(xalign=0)
+            label.set_use_markup(True)
+            label.set_name("multi_mac_label")
+            label.set_text(mac_addr)
+            label.set_justify(Gtk.Justification.LEFT)
+            self.multi_device_listbox.add(label)
+            try:
+                label.set_margin_start(10)
+            except AttributeError:
+                label.set_margin_left(10)
+            label.set_width_chars(20)
+        self.multi_device_listbox.set_visible(True)
+        self.multi_device_listbox.show_all()
 
     def done_scanning(self, manager, info_prefix):
         self.manager = manager

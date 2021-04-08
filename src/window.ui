@@ -11,7 +11,6 @@
         <property name="can-focus">False</property>
         <property name="label" translatable="yes">Multi-Device Mode</property>
         <property name="use-underline">True</property>
-        <property name="active">True</property>
       </object>
     </child>
   </object>
@@ -57,6 +56,17 @@
           </packing>
         </child>
         <child>
+          <object class="GtkListBox" id="multi_device_listbox">
+            <property name="name">SS</property>
+            <property name="can-focus">False</property>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">False</property>
+            <property name="position">2</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkBox" id="dfu_progress_box">
             <property name="can-focus">False</property>
             <property name="margin-start">50</property>
@@ -90,7 +100,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">2</property>
+            <property name="position">3</property>
           </packing>
         </child>
         <child>
@@ -234,7 +244,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">3</property>
+            <property name="position">5</property>
           </packing>
         </child>
         <child>
@@ -291,7 +301,7 @@ Might take a few scans.</property>
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
-            <property name="position">4</property>
+            <property name="position">6</property>
           </packing>
         </child>
       </object>
