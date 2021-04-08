@@ -51,9 +51,9 @@ class InfiniTimeManager(gatt.DeviceManager):
 
     def device_discovered(self, device):
         if device.alias() in ("InfiniTime", "Pinetime-JF"):
+            self.scan_result = True
             if self.mode == "singleton":
                 self.alias = device.alias()
-                self.scan_result = True
                 self.mac_address = device.mac_address
                 self.stop()
 
@@ -62,7 +62,7 @@ class InfiniTimeManager(gatt.DeviceManager):
 
     def scan_for_infinitime(self):
         self.start_discovery()
-        self.set_timeout(5 * 1000)
+        self.set_timeout(4.5 * 1000)
         self.run()
 
 

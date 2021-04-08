@@ -28,9 +28,9 @@ class Application(Gtk.Application):
         except gatt.errors.NotReady:
             info_prefix = "[WARN ] Bluetooth is disabled"
         if mode == "singleton":
-            win.done_scanning(self.manager, info_prefix)
+            win.done_scanning_singleton(self.manager, info_prefix)
         if mode == "multi":
-            win.show_multi_device_listbox(self.manager)
+            win.done_scanning_multi(self.manager, info_prefix)
 
     def do_window_removed(self, window):
         self.manager.stop()

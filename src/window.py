@@ -29,30 +29,39 @@ class SigloWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
         GObject.threads_init()
 
-    def show_multi_device_listbox(self, manager):
-        self.manager = manager
-        self.bt_spinner.set_visible(False)
-        for mac_addr in manager.device_set:
-            label = Gtk.Label(xalign=0)
-            label.set_use_markup(True)
-            label.set_name("multi_mac_label")
-            label.set_text(mac_addr)
-            label.set_justify(Gtk.Justification.LEFT)
-            self.multi_device_listbox.add(label)
-            try:
-                label.set_margin_start(10)
-            except AttributeError:
-                label.set_margin_left(10)
-            label.set_width_chars(20)
-        self.multi_device_listbox.set_visible(True)
-        self.multi_device_listbox.show_all()
-
-    def done_scanning(self, manager, info_prefix):
+    def done_scanning_multi(self, manager, info_prefix):
         self.manager = manager
         scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
+        info_suffix = "\n[INFO ] Multi-Device Mode"
         if scan_result:
-            info_suffix = "\n[INFO ] Scan Succeeded"
+            for mac_addr in manager.device_set:
+                label = Gtk.Label(xalign=0)
+                label.set_use_markup(True)
+                label.set_name("multi_mac_label")
+                label.set_text(mac_addr)
+                label.set_justify(Gtk.Justification.LEFT)
+                self.multi_device_listbox.add(label)
+                try:
+                    label.set_margin_start(10)
+                except AttributeError:
+                    label.set_margin_left(10)
+                label.set_width_chars(20)
+            info_suffix += "\n[INFO ] Scan Succeeded"
+            self.multi_device_listbox.set_visible(True)
+            self.multi_device_listbox.show_all()
+        else:
+            info_suffix += "\n[INFO ] Scan Failed"
+            self.scan_fail_box.set_visible(True)
+        self.main_info.set_text(info_prefix + info_suffix)
+
+    def done_scanning_singleton(self, manager, info_prefix):
+        self.manager = manager
+        scan_result = manager.get_scan_result()
+        self.bt_spinner.set_visible(False)
+        info_suffix = "\n[INFO ] Single-Device Mode"
+        if scan_result:
+            info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
                 manager.alias
                 + " Found!\n\nAdapter Name: "
@@ -62,7 +71,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
         else:
-            info_suffix = "\n[INFO ] Scan Failed"
+            info_suffix += "\n[INFO ] Scan Failed"
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
 
