@@ -59,6 +59,7 @@
         <child>
           <object class="GtkListBox" id="multi_device_listbox">
             <property name="can-focus">False</property>
+            <signal name="row-selected" handler="multi_listbox_row_selected" swapped="no"/>
           </object>
           <packing>
             <property name="expand">False</property>

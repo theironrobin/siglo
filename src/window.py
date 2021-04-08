@@ -103,6 +103,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.bt_spinner.set_visible(True)
             self.scan_fail_box.set_visible(False)
             self.rescan_button.set_visible(False)
+            self.scan_pass_box.set_visible(False)
             info_prefix = "[INFO ] Done Scanning"
             self.manager.scan_result = False
             try:
@@ -188,6 +189,20 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.scan_pass_box.set_visible(False)
             self.depopulate_listbox()
             self.scan_fail_box.set_visible(False)
+
+    @Gtk.Template.Callback()
+    def multi_listbox_row_selected(self, list_box, row):
+        mac_add = row.get_child().get_label()
+        self.manager.set_mac_address(mac_add)
+        self.info_scan_pass.set_text(
+                self.manager.alias
+                + " Found!\n\nAdapter Name: "
+                + self.manager.adapter_name
+                + "\nMac Address: "
+                + self.manager.get_mac_address()
+            )
+        self.scan_pass_box.set_visible(True)
+        self.depopulate_listbox()
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
