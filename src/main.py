@@ -27,9 +27,9 @@ class Application(Gtk.Application):
             Path.mkdir(Path(configDir))
         configFile = configDir + "/siglo.ini"
         if not Path(configFile).is_file():
-            with open(configFile, 'w') as f:
-                f.write("[settings]\n")
-                f.write("mode = singleton\n")
+            config['settings'] = {'mode': 'singleton'}
+            with open (configFile, 'w') as f:
+                config.write(f)
         config.read(configFile)
         return config
 
