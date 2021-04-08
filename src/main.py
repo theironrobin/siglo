@@ -1,8 +1,10 @@
 import sys
 import gi
 import gatt
+import configparser
 gi.require_version("Gtk", "3.0")
 
+from pathlib import Path
 from gi.repository import Gtk, Gio, Gdk
 from .window import SigloWindow
 from .bluetooth import InfiniTimeManager
@@ -11,13 +13,18 @@ from .bluetooth import InfiniTimeManager
 class Application(Gtk.Application):
     def __init__(self):
         self.manager = None
+        self.config = configparser.ConfigParser()
+        home = str(Path.home())
+        configFile = home + "/.config/siglo/siglo.ini"
+        self.config.read(configFile)
         super().__init__(
             application_id="org.gnome.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
 
     def do_activate(self):
         win = self.props.active_window
-        mode = "multi"
+        #mode = "multi"
+        mode = self.config['settings']['mode']
         if not win:
             win = SigloWindow(application=self)
         win.present()
