@@ -50,5 +50,7 @@ def get_assets_by_tag(tag, full_list):
             asset_list.append(element["name"])
     return asset_list
 
-def get_download_url_by_name(name):
-    pass
+def get_download_url(name, tag, full_list):
+    for element in full_list:
+        if tag == element["tag_name"] and name == element["name"]:
+            return element["browser_download_url"]

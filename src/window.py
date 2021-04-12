@@ -37,7 +37,8 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ota_file = None
         self.manager = None
         self.asset = None
-        self.Tag = None
+        self.asset_download_url = None
+        self.tag = None
         self.mode = mode
         self.deploy_type = deploy_type
         super().__init__(**kwargs)
@@ -74,9 +75,9 @@ class SigloWindow(Gtk.ApplicationWindow):
         for tag in get_tags(self.full_list):
             self.ota_pick_tag_combobox.append_text(tag)
 
-    def populate_assetbox(self, tag):
+    def populate_assetbox(self):
         self.ota_pick_asset_combobox.remove_all()
-        for asset in get_assets_by_tag(tag, self.full_list):
+        for asset in get_assets_by_tag(self.tag, self.full_list):
             self.ota_pick_asset_combobox.append_text(asset)
 
     def done_scanning_multi(self, manager, info_prefix):
@@ -122,16 +123,19 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def ota_pick_tag_combobox_changed_cb(self, widget):
-        tag = self.ota_pick_tag_combobox.get_active_text()
-        self.populate_assetbox(tag)
+        self.tag = self.ota_pick_tag_combobox.get_active_text()
+        self.populate_assetbox()
 
     @Gtk.Template.Callback()
     def ota_pick_asset_combobox_changed_cb(self, widget):
         asset = self.ota_pick_asset_combobox.get_active_text()
         if asset is not None:
             self.ota_picked_box.set_sensitive(True)
+            self.asset_download_url = get_download_url(asset, self.tag, self.full_list)
+            print(self.asset_download_url)
         else:
             self.ota_picked_box.set_sensitive(False)
+            self.asset_download_url = None
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
