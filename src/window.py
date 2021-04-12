@@ -29,6 +29,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     auto_bbox_scan_pass = Gtk.Template.Child()
     bbox_scan_pass = Gtk.Template.Child()
     ota_pick_tag_combobox = Gtk.Template.Child()
+    ota_pick_asset_combobox = Gtk.Template.Child()
 
     def __init__(self, mode, deploy_type, **kwargs):
         self.ble_dfu = None
@@ -65,10 +66,13 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.multi_device_listbox.show_all()
 
     def populate_tagbox(self):
-        x = get_tag_set()
-        self.ota_pick_tag_combobox.set_entry_text_column(0)
-        for tag in x:
+        for tag in get_tags():
             self.ota_pick_tag_combobox.append_text(tag)
+
+    def populate_assetbox(self, tag):
+        self.ota_pick_asset_combobox.remove_all()
+        for asset in get_assets_by_tag(tag):
+            self.ota_pick_asset_combobox.append_text(asset)
 
     def done_scanning_multi(self, manager, info_prefix):
         self.manager = manager
@@ -109,6 +113,12 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.rescan_button.set_visible(True)
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
+
+    @Gtk.Template.Callback()
+    def ota_pick_tag_combobox_changed_cb(self, widget):
+        model = self.ota_pick_tag_combobox.get_model()
+        tag = model[self.ota_pick_tag_combobox.get_active()][0]
+        self.populate_assetbox(tag)
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
@@ -211,15 +221,14 @@ class SigloWindow(Gtk.ApplicationWindow):
             mac_add = row.get_child().get_label()
             self.manager.set_mac_address(mac_add)
             self.info_scan_pass.set_text(
-                    self.manager.alias
-                    + " Found!\n\nAdapter Name: "
-                    + self.manager.adapter_name
-                    + "\nMac Address: "
-                    + self.manager.get_mac_address()
-                )
+                self.manager.alias
+                + " Found!\n\nAdapter Name: "
+                + self.manager.adapter_name
+                + "\nMac Address: "
+                + self.manager.get_mac_address()
+            )
             self.scan_pass_box.set_visible(True)
             self.multi_device_listbox.set_visible(False)
-
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
