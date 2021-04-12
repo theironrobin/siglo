@@ -42,6 +42,8 @@ class SigloWindow(Gtk.ApplicationWindow):
         if mode == "multi":
             self.auto_switch = True
             self.multi_device_switch.set_active(True)
+        if self.deploy_type == "quick":
+            self.full_list = get_quick_deploy_list()
 
     def depopulate_listbox(self):
         children = self.multi_device_listbox.get_children()
@@ -66,12 +68,12 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.multi_device_listbox.show_all()
 
     def populate_tagbox(self):
-        for tag in get_tags():
+        for tag in get_tags(self.full_list):
             self.ota_pick_tag_combobox.append_text(tag)
 
     def populate_assetbox(self, tag):
         self.ota_pick_asset_combobox.remove_all()
-        for asset in get_assets_by_tag(tag):
+        for asset in get_assets_by_tag(tag, self.full_list):
             self.ota_pick_asset_combobox.append_text(asset)
 
     def done_scanning_multi(self, manager, info_prefix):

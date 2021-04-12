@@ -37,15 +37,13 @@ def get_quick_deploy_list():
     return quick_deploy_list
 
 
-def get_tags():
-    full_list = get_quick_deploy_list()
+def get_tags(full_list):
     tags = set()
     for element in full_list:
         tags.add(element["tag_name"])
     return sorted(tags, reverse=True)
 
-def get_assets_by_tag(tag):
-    full_list = get_quick_deploy_list()
+def get_assets_by_tag(tag, full_list):
     asset_list = []
     for element in full_list:
         if tag == element["tag_name"]:
