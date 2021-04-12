@@ -244,6 +244,7 @@
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
                         <property name="active-id">0</property>
+                        <signal name="changed" handler="ota_pick_asset_combobox_changed_cb" swapped="no"/>
                       </object>
                       <packing>
                         <property name="expand">True</property>

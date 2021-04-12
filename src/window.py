@@ -30,11 +30,14 @@ class SigloWindow(Gtk.ApplicationWindow):
     bbox_scan_pass = Gtk.Template.Child()
     ota_pick_tag_combobox = Gtk.Template.Child()
     ota_pick_asset_combobox = Gtk.Template.Child()
+    ota_pick_asset_combobox = Gtk.Template.Child()
 
     def __init__(self, mode, deploy_type, **kwargs):
         self.ble_dfu = None
         self.ota_file = None
         self.manager = None
+        self.asset = None
+        self.Tag = None
         self.mode = mode
         self.deploy_type = deploy_type
         super().__init__(**kwargs)
@@ -118,9 +121,14 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def ota_pick_tag_combobox_changed_cb(self, widget):
-        model = self.ota_pick_tag_combobox.get_model()
-        tag = model[self.ota_pick_tag_combobox.get_active()][0]
+        tag = self.ota_pick_tag_combobox.get_active_text()
         self.populate_assetbox(tag)
+
+    @Gtk.Template.Callback()
+    def ota_pick_asset_combobox_changed_cb(self, widget):
+        asset = self.ota_pick_asset_combobox.get_active_text()
+        print(asset)
+
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
