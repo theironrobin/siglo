@@ -24,23 +24,23 @@ class Application(Gtk.Application):
     def configuration_setup(self):
         config = configparser.ConfigParser()
         home = str(Path.home())
-        configDir = home + "/.config/siglo"
-        if not Path(configDir).is_dir():
-            Path.mkdir(Path(configDir))
-        configFile = configDir + "/siglo.ini"
-        if not self.config_is_valid(config, configFile):
+        config_dir = home + "/.config/siglo"
+        if not Path(config_dir).is_dir():
+            Path.mkdir(Path(config_dir))
+        config_file = config_dir + "/siglo.ini"
+        if not self.config_file_is_valid(config, config_file):
             config["settings"] = {"mode": "singleton", "deploy_type": "quick"}
-            with open(configFile, "w") as f:
+            with open(config_file, "w") as f:
                 config.write(f)
-        config.read(configFile)
+        config.read(config_file)
         return config
 
-    def config_is_valid(self, config, configFile):
+    def config_file_is_valid(self, config, config_file):
         keys = ("mode", "deploy_type")
-        if not Path(configFile).is_file():
+        if not Path(config_file).is_file():
             return False
         else:
-            config.read(configFile)
+            config.read(config_file)
             for key in keys:
                 if not key in config["settings"]:
                     return False
