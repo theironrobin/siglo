@@ -6,6 +6,7 @@ from gi.repository import Gtk, GObject
 from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
 from .unpacker import Unpacker
+from .quick_deploy import *
 
 
 @Gtk.Template(resource_path="/org/gnome/siglo/window.ui")
@@ -25,6 +26,9 @@ class SigloWindow(Gtk.ApplicationWindow):
     multi_device_listbox = Gtk.Template.Child()
     rescan_button = Gtk.Template.Child()
     multi_device_switch = Gtk.Template.Child()
+    auto_bbox_scan_pass = Gtk.Template.Child()
+    bbox_scan_pass = Gtk.Template.Child()
+    ota_pick_tag_combobox = Gtk.Template.Child()
 
     def __init__(self, mode, deploy_type, **kwargs):
         self.ble_dfu = None
@@ -60,6 +64,12 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.multi_device_listbox.set_visible(True)
             self.multi_device_listbox.show_all()
 
+    def populate_tagbox(self):
+        x = get_tag_set()
+        self.ota_pick_tag_combobox.set_entry_text_column(0)
+        for tag in x:
+            self.ota_pick_tag_combobox.append_text(tag)
+
     def done_scanning_multi(self, manager, info_prefix):
         self.manager = manager
         scan_result = manager.get_scan_result()
@@ -89,6 +99,11 @@ class SigloWindow(Gtk.ApplicationWindow):
                 + manager.get_mac_address()
             )
             self.scan_pass_box.set_visible(True)
+            if self.deploy_type == "quick":
+                self.auto_bbox_scan_pass.set_visible(True)
+                self.populate_tagbox()
+            if self.deploy_type == "manual":
+                self.bbox_scan_pass.set_visible(True)
         else:
             info_suffix += "\n[INFO ] Scan Failed"
             self.rescan_button.set_visible(True)

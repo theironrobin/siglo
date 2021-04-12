@@ -27,6 +27,7 @@ configure_file(
 
 siglo_sources = [
   '__init__.py',
+  'quick_deploy.py',
   'main.py',
   'window.py',
   'bluetooth.py',

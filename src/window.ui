@@ -127,7 +127,6 @@
               <object class="GtkButtonBox" id="bbox_scan_pass">
                 <property name="width-request">-1</property>
                 <property name="height-request">-1</property>
-                <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="halign">center</property>
                 <property name="margin-end">15</property>
@@ -217,23 +216,7 @@
                   </packing>
                 </child>
                 <child>
-                  <object class="GtkButton" id="sync_time_button">
-                    <property name="label" translatable="yes">Time Sync</property>
-                    <property name="width-request">-1</property>
-                    <property name="height-request">-1</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="valign">start</property>
-                    <property name="margin-top">10</property>
-                    <property name="vexpand">True</property>
-                    <signal name="clicked" handler="sync_time_button_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">2</property>
-                  </packing>
+                  <placeholder/>
                 </child>
               </object>
               <packing>
@@ -244,7 +227,6 @@
             </child>
             <child>
               <object class="GtkButtonBox" id="auto_bbox_scan_pass">
-                <property name="visible">True</property>
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
                 <property name="layout-style">start</property>
@@ -268,6 +250,11 @@
                       <object class="GtkComboBoxText" id="ota_pick_tag_combobox">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
+                        <property name="tooltip-text" translatable="yes">Tag</property>
+                        <property name="active-id">0</property>
+                        <items>
+                          <item translatable="yes"/>
+                        </items>
                       </object>
                       <packing>
                         <property name="expand">False</property>
@@ -293,6 +280,26 @@
                 <property name="expand">False</property>
                 <property name="fill">True</property>
                 <property name="position">2</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="sync_time_button">
+                <property name="label" translatable="yes">Time Sync</property>
+                <property name="width-request">-1</property>
+                <property name="height-request">-1</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="halign">center</property>
+                <property name="valign">start</property>
+                <property name="margin-top">10</property>
+                <property name="vexpand">True</property>
+                <signal name="clicked" handler="sync_time_button_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">3</property>
               </packing>
             </child>
           </object>
