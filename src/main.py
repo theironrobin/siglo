@@ -16,6 +16,7 @@ class Application(Gtk.Application):
         self.manager = None
         config = self.configuration_setup()
         self.mode = config["settings"]["mode"]
+        self.deploy_type = config["settings"]["deploy_type"]
         super().__init__(
             application_id="org.gnome.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
@@ -27,17 +28,30 @@ class Application(Gtk.Application):
         if not Path(configDir).is_dir():
             Path.mkdir(Path(configDir))
         configFile = configDir + "/siglo.ini"
-        if not Path(configFile).is_file():
-            config["settings"] = {"mode": "singleton"}
+        if not self.config_is_valid(config, configFile):
+            config["settings"] = {"mode": "singleton", "deploy_type": "quick"}
             with open(configFile, "w") as f:
                 config.write(f)
         config.read(configFile)
         return config
 
+    def config_is_valid(self, config, configFile):
+        keys = ("mode", "deploy_type")
+        if not Path(configFile).is_file():
+            return False
+        else:
+            config.read(configFile)
+            for key in keys:
+                if not key in config["settings"]:
+                    return False
+            return True
+
     def do_activate(self):
         win = self.props.active_window
         if not win:
-            win = SigloWindow(application=self, mode=self.mode)
+            win = SigloWindow(
+                application=self, mode=self.mode, deploy_type=self.deploy_type
+            )
         win.present()
         self.manager = InfiniTimeManager(self.mode)
         info_prefix = "[INFO ] Done Scanning"

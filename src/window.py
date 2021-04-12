@@ -26,11 +26,12 @@ class SigloWindow(Gtk.ApplicationWindow):
     rescan_button = Gtk.Template.Child()
     multi_device_switch = Gtk.Template.Child()
 
-    def __init__(self, mode, **kwargs):
+    def __init__(self, mode, deploy_type, **kwargs):
         self.ble_dfu = None
         self.ota_file = None
         self.manager = None
         self.mode = mode
+        self.deploy_type = deploy_type
         super().__init__(**kwargs)
         GObject.threads_init()
         if mode == "multi":
