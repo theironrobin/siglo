@@ -108,6 +108,7 @@ class SigloWindow(Gtk.ApplicationWindow):
                 + manager.get_mac_address()
             )
             self.scan_pass_box.set_visible(True)
+            self.ota_picked_box.set_visible(True)
             if self.deploy_type == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
                 self.populate_tagbox()
@@ -127,8 +128,10 @@ class SigloWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback()
     def ota_pick_asset_combobox_changed_cb(self, widget):
         asset = self.ota_pick_asset_combobox.get_active_text()
-        print(asset)
-
+        if asset is not None:
+            self.ota_picked_box.set_sensitive(True)
+        else:
+            self.ota_picked_box.set_sensitive(False)
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
@@ -172,9 +175,15 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def ota_cancel_button_clicked(self, widget):
-        self.main_info.set_text("Choose another OTA File")
-        self.ota_picked_box.set_visible(False)
-        self.ota_selection_box.set_visible(True)
+        if self.deploy_type == "quick":
+            self.ota_pick_asset_combobox.remove_all()
+            self.ota_pick_tag_combobox.remove_all()
+            self.populate_tagbox()
+            self.ota_picked_box.set_sensitive(False)
+        if self.deploy_type == "manual":
+            self.main_info.set_text("Choose another OTA File")
+            self.ota_picked_box.set_visible(False)
+            self.ota_selection_box.set_visible(True)
 
     @Gtk.Template.Callback()
     def flash_it_button_clicked(self, widget):
