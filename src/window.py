@@ -126,6 +126,28 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.main_info.set_text(info_prefix + info_suffix)
 
     @Gtk.Template.Callback()
+    def multi_listbox_row_selected(self, list_box, row):
+        if row is not None:
+            mac_add = row.get_child().get_label()
+            self.manager.set_mac_address(mac_add)
+            self.info_scan_pass.set_text(
+                self.manager.alias
+                + " Found!\n\nAdapter Name: "
+                + self.manager.adapter_name
+                + "\nMac Address: "
+                + self.manager.get_mac_address()
+            )
+            print("deploy type!", self.deploy_type)
+            self.scan_pass_box.set_visible(True)
+            self.ota_picked_box.set_visible(True)
+            if self.deploy_type == "manual":
+                self.bbox_scan_pass.set_visible(True)
+            if self.deploy_type == "quick":
+                self.auto_bbox_scan_pass.set_visible(True)
+                self.populate_tagbox()
+            self.multi_device_listbox.set_visible(False)
+
+    @Gtk.Template.Callback()
     def ota_pick_tag_combobox_changed_cb(self, widget):
         self.tag = self.ota_pick_tag_combobox.get_active_text()
         self.populate_assetbox()
@@ -276,21 +298,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.scan_pass_box.set_visible(False)
             self.depopulate_listbox()
             self.scan_fail_box.set_visible(False)
-
-    @Gtk.Template.Callback()
-    def multi_listbox_row_selected(self, list_box, row):
-        if row is not None:
-            mac_add = row.get_child().get_label()
-            self.manager.set_mac_address(mac_add)
-            self.info_scan_pass.set_text(
-                self.manager.alias
-                + " Found!\n\nAdapter Name: "
-                + self.manager.adapter_name
-                + "\nMac Address: "
-                + self.manager.get_mac_address()
-            )
-            self.scan_pass_box.set_visible(True)
-            self.multi_device_listbox.set_visible(False)
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
