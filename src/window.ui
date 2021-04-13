@@ -14,6 +14,15 @@
         <signal name="toggled" handler="mode_toggled" swapped="no"/>
       </object>
     </child>
+    <child>
+      <object class="GtkCheckMenuItem" id="deploy_type_switch">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Manual OTA File</property>
+        <property name="use-underline">True</property>
+        <signal name="toggled" handler="deploy_type_toggled" swapped="no"/>
+      </object>
+    </child>
   </object>
   <template class="SigloWindow" parent="GtkApplicationWindow">
     <property name="can-focus">False</property>
