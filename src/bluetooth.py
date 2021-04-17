@@ -53,7 +53,7 @@ class InfiniTimeManager(gatt.DeviceManager):
         GObject.timeout_add(timeout, self.stop)
 
     def device_discovered(self, device):
-        if device.alias() in ("InfiniTime", "Pinetime-JF"):
+        if device.alias() in ("InfiniTime", "Pinetime-JF", "PineTime"):
             self.scan_result = True
             self.alias = device.alias()
             if self.mode == "singleton":
