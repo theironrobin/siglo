@@ -32,4 +32,8 @@ sudo systemctl start bluetooth
 echo "power on" | sudo bluetoothctl
 ```
 
+## Donation
+If this project helped you, you can give me a cup of coffee :)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/ironrobin)
+
 Icons by svgrepo.com
