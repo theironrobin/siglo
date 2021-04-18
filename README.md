@@ -36,5 +36,6 @@ echo "power on" | sudo bluetoothctl
 If this project helped you, you can give me a cup of coffee :)
 <br/><br/>
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/ironrobin)
-
+<br/><br/>
+DOGE address: DLDNfkXoJeueb2GRx4scnmRc12SX1H22VW
 Icons by svgrepo.com
