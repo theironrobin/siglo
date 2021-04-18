@@ -31,5 +31,11 @@ Make sure Bluetooth Adapter is enabled in Settings->Bluetooth, or:
 sudo systemctl start bluetooth
 echo "power on" | sudo bluetoothctl
 ```
-
 Icons by svgrepo.com
+
+## Tips
+If this project helped you, you can buy me a cup of coffee :)
+<br/><br/>
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/ironrobin)
+<br/><br/>
+DOGE address: DLDNfkXoJeueb2GRx4scnmRc12SX1H22VW
