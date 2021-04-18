@@ -33,8 +33,8 @@ echo "power on" | sudo bluetoothctl
 ```
 Icons by svgrepo.com
 
-## Donation
-If this project helped you, you can give me a cup of coffee :)
+## Tips
+If this project helped you, you can buy me a cup of coffee :)
 <br/><br/>
 [![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://paypal.me/ironrobin)
 <br/><br/>
