@@ -1,7 +1,5 @@
 import gatt
-import configparser
 import urllib.request
-from pathlib import Path
 from gi.repository import Gtk, GObject
 from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
@@ -44,14 +42,17 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.conf = config()
         super().__init__(**kwargs)
         GObject.threads_init()
+        self.full_list = get_quick_deploy_list()
         if self.conf.get_property("mode") == "multi":
             self.auto_switch_mode = True
             self.multi_device_switch.set_active(True)
-        if self.conf.get_property("deploy_type") == "quick":
-            self.full_list = get_quick_deploy_list()
+        else:
+            self.auto_switch_mode = False
         if self.conf.get_property("deploy_type") == "manual":
             self.auto_switch_deploy_type = True
             self.deploy_type_switch.set_active(True)
+        else:
+            self.auto_switch_deploy_type = False
 
     def depopulate_listbox(self):
         children = self.multi_device_listbox.get_children()
@@ -170,6 +171,8 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.depopulate_listbox()
             self.main_info.set_text("Rescanning...")
             self.bt_spinner.set_visible(True)
+            self.bbox_scan_pass.set_visible(False)
+            self.auto_bbox_scan_pass.set_visible(False)
             self.scan_fail_box.set_visible(False)
             self.rescan_button.set_visible(False)
             self.scan_pass_box.set_visible(False)
@@ -258,12 +261,7 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.conf.set_property("deploy_type", "manual")
             else:
                 self.conf.set_property("deploy_type", "quick")
-            self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
-            self.rescan_button.set_visible(False)
-            self.scan_pass_box.set_visible(False)
-            self.depopulate_listbox()
-            self.scan_fail_box.set_visible(False)
-            self.auto_bbox_scan_pass.set_visible(False)
+            self.rescan_button.emit("clicked")
 
     @Gtk.Template.Callback()
     def mode_toggled(self, widget):
@@ -274,11 +272,7 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.conf.set_property("mode", "multi")
             else:
                 self.conf.set_property("mode", "singleton")
-            self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
-            self.rescan_button.set_visible(False)
-            self.scan_pass_box.set_visible(False)
-            self.depopulate_listbox()
-            self.scan_fail_box.set_visible(False)
+            self.rescan_button.emit("clicked")
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
