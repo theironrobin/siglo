@@ -9,7 +9,7 @@ class config:
     config_dir = home_dir + "/.config/siglo"
     config_file = config_dir + "/siglo.ini"
 
-    def __init__(self):
+    def load_defaults(self):
         if not Path(self.config_dir).is_dir():
             Path.mkdir(Path(self.config_dir))
         # if config file is not valid, load defaults

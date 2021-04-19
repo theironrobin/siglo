@@ -1,7 +1,8 @@
 import gatt
 import datetime
 import struct
-from gi.repository import GObject, Gio, GLib
+from gi.repository import GObject, Gio
+from .config import config
 
 
 def get_current_time():
@@ -25,14 +26,14 @@ def get_current_time():
 
 
 class InfiniTimeManager(gatt.DeviceManager):
-    def __init__(self, mode):
+    def __init__(self):
         cmd = "btmgmt info"
         btmgmt_proc = Gio.Subprocess.new(
             cmd.split(),
             Gio.SubprocessFlags.STDIN_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
         )
         _, stdout, stderr = btmgmt_proc.communicate_utf8()
-        self.mode = mode
+        self.conf = config()
         self.device_set = set()
         self.adapter_name = stdout.splitlines()[1].split(":")[0]
         self.alias = None
@@ -56,11 +57,10 @@ class InfiniTimeManager(gatt.DeviceManager):
         if device.alias() in ("InfiniTime", "Pinetime-JF", "PineTime"):
             self.scan_result = True
             self.alias = device.alias()
-            if self.mode == "singleton":
+            if self.conf.get_property("mode") == "singleton":
                 self.mac_address = device.mac_address
                 self.stop()
-
-            if self.mode == "multi":
+            if self.conf.get_property("mode") == "multi":
                 self.device_set.add(device.mac_address)
 
     def scan_for_infinitime(self):

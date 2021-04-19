@@ -137,7 +137,6 @@ class SigloWindow(Gtk.ApplicationWindow):
                 + "\nMac Address: "
                 + self.manager.get_mac_address()
             )
-            print("deploy type!", self.deploy_type)
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
             if self.deploy_type == "manual":
@@ -180,9 +179,9 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.manager.scan_for_infinitime()
             except gatt.errors.NotReady:
                 info_prefix = "[WARN ] Bluetooth is disabled"
-            if self.manager.mode == "singleton":
+            if self.mode == "singleton":
                 self.done_scanning_singleton(self.manager, info_prefix)
-            if self.manager.mode == "multi":
+            if self.mode == "multi":
                 self.done_scanning_multi(self.manager, info_prefix)
 
     @Gtk.Template.Callback()

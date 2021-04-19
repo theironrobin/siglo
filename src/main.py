@@ -14,6 +14,7 @@ class Application(Gtk.Application):
     def __init__(self):
         self.manager = None
         self.conf = config()
+        self.conf.load_defaults()
         super().__init__(
             application_id="org.gnome.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
@@ -27,7 +28,7 @@ class Application(Gtk.Application):
                 deploy_type=self.conf.get_property("deploy_type"),
             )
         win.present()
-        self.manager = InfiniTimeManager(self.conf.get_property("mode"))
+        self.manager = InfiniTimeManager()
         info_prefix = "[INFO ] Done Scanning"
         try:
             self.manager.scan_for_infinitime()
