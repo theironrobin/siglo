@@ -256,7 +256,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         else:
             if self.conf.get_property("deploy_type") == "quick":
                 self.conf.set_property("deploy_type", "manual")
-            if self.conf.get_property("deploy_type") == "manual":
+            else:
                 self.conf.set_property("deploy_type", "quick")
             self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
             self.rescan_button.set_visible(False)
@@ -272,7 +272,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         else:
             if self.conf.get_property("mode") == "singleton":
                 self.conf.set_property("mode", "multi")
-            if self.conf.get_property("mode") == "multi":
+            else:
                 self.conf.set_property("mode", "singleton")
             self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
             self.rescan_button.set_visible(False)
