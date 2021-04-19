@@ -29,6 +29,7 @@ siglo_sources = [
   '__init__.py',
   'quick_deploy.py',
   'main.py',
+  'config.py',
   'window.py',
   'bluetooth.py',
   'ble_dfu.py',

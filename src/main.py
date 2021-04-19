@@ -1,67 +1,41 @@
 import sys
 import gi
 import gatt
-import configparser
 
 gi.require_version("Gtk", "3.0")
 
-from pathlib import Path
 from gi.repository import Gtk, Gio, Gdk
 from .window import SigloWindow
 from .bluetooth import InfiniTimeManager
+from .config import config
 
 
 class Application(Gtk.Application):
     def __init__(self):
         self.manager = None
-        config = self.configuration_setup()
-        self.mode = config["settings"]["mode"]
-        self.deploy_type = config["settings"]["deploy_type"]
+        self.conf = config()
         super().__init__(
             application_id="org.gnome.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
-
-    def configuration_setup(self):
-        config = configparser.ConfigParser()
-        home = str(Path.home())
-        config_dir = home + "/.config/siglo"
-        if not Path(config_dir).is_dir():
-            Path.mkdir(Path(config_dir))
-        config_file = config_dir + "/siglo.ini"
-        if not self.config_file_is_valid(config, config_file):
-            config["settings"] = {"mode": "singleton", "deploy_type": "quick"}
-            with open(config_file, "w") as f:
-                config.write(f)
-        config.read(config_file)
-        return config
-
-    def config_file_is_valid(self, config, config_file):
-        keys = ("mode", "deploy_type")
-        if not Path(config_file).is_file():
-            return False
-        else:
-            config.read(config_file)
-            for key in keys:
-                if not key in config["settings"]:
-                    return False
-            return True
 
     def do_activate(self):
         win = self.props.active_window
         if not win:
             win = SigloWindow(
-                application=self, mode=self.mode, deploy_type=self.deploy_type
+                application=self,
+                mode=self.conf.get_property("mode"),
+                deploy_type=self.conf.get_property("deploy_type"),
             )
         win.present()
-        self.manager = InfiniTimeManager(self.mode)
+        self.manager = InfiniTimeManager(self.conf.get_property("mode"))
         info_prefix = "[INFO ] Done Scanning"
         try:
             self.manager.scan_for_infinitime()
         except gatt.errors.NotReady:
             info_prefix = "[WARN ] Bluetooth is disabled"
-        if self.mode == "singleton":
+        if self.conf.get_property("mode") == "singleton":
             win.done_scanning_singleton(self.manager, info_prefix)
-        if self.mode == "multi":
+        if self.conf.get_property("mode") == "multi":
             win.done_scanning_multi(self.manager, info_prefix)
 
     def do_window_removed(self, window):
