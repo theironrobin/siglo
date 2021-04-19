@@ -7,6 +7,7 @@ from .bluetooth import InfiniTimeDevice
 from .ble_dfu import InfiniTimeDFU
 from .unpacker import Unpacker
 from .quick_deploy import *
+from .config import config
 
 
 @Gtk.Template(resource_path="/org/gnome/siglo/window.ui")
@@ -33,23 +34,22 @@ class SigloWindow(Gtk.ApplicationWindow):
     ota_pick_asset_combobox = Gtk.Template.Child()
     deploy_type_switch = Gtk.Template.Child()
 
-    def __init__(self, mode, deploy_type, **kwargs):
+    def __init__(self, **kwargs):
         self.ble_dfu = None
         self.ota_file = None
         self.manager = None
         self.asset = None
         self.asset_download_url = None
         self.tag = None
-        self.mode = mode
-        self.deploy_type = deploy_type
+        self.conf = config()
         super().__init__(**kwargs)
         GObject.threads_init()
-        if mode == "multi":
+        if self.conf.get_property("mode") == "multi":
             self.auto_switch_mode = True
             self.multi_device_switch.set_active(True)
-        if deploy_type == "quick":
+        if self.conf.get_property("deploy_type") == "quick":
             self.full_list = get_quick_deploy_list()
-        if deploy_type == "manual":
+        if self.conf.get_property("deploy_type") == "manual":
             self.auto_switch_deploy_type = True
             self.deploy_type_switch.set_active(True)
 
@@ -114,10 +114,10 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
-            if self.deploy_type == "quick":
+            if self.conf.get_property("deploy_type") == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
                 self.populate_tagbox()
-            if self.deploy_type == "manual":
+            if self.conf.get_property("deploy_type") == "manual":
                 self.bbox_scan_pass.set_visible(True)
         else:
             info_suffix += "\n[INFO ] Scan Failed"
@@ -139,9 +139,9 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
-            if self.deploy_type == "manual":
+            if self.conf.get_property("deploy_type") == "manual":
                 self.bbox_scan_pass.set_visible(True)
-            if self.deploy_type == "quick":
+            if self.conf.get_property("deploy_type") == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
                 self.populate_tagbox()
             self.multi_device_listbox.set_visible(False)
@@ -179,9 +179,9 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.manager.scan_for_infinitime()
             except gatt.errors.NotReady:
                 info_prefix = "[WARN ] Bluetooth is disabled"
-            if self.mode == "singleton":
+            if self.conf.get_property("mode") == "singleton":
                 self.done_scanning_singleton(self.manager, info_prefix)
-            if self.mode == "multi":
+            if self.conf.get_property("mode") == "multi":
                 self.done_scanning_multi(self.manager, info_prefix)
 
     @Gtk.Template.Callback()
@@ -206,19 +206,19 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def ota_cancel_button_clicked(self, widget):
-        if self.deploy_type == "quick":
+        if self.conf.get_property("deploy_type") == "quick":
             self.ota_pick_asset_combobox.remove_all()
             self.ota_pick_tag_combobox.remove_all()
             self.populate_tagbox()
             self.ota_picked_box.set_sensitive(False)
-        if self.deploy_type == "manual":
+        if self.conf.get_property("deploy_type") == "manual":
             self.main_info.set_text("Choose another OTA File")
             self.ota_picked_box.set_visible(False)
             self.ota_selection_box.set_visible(True)
 
     @Gtk.Template.Callback()
     def flash_it_button_clicked(self, widget):
-        if self.deploy_type == "quick":
+        if self.conf.get_property("deploy_type") == "quick":
             file_name = "/tmp/" + self.asset
             local_filename, headers = urllib.request.urlretrieve(
                 self.asset_download_url, file_name
@@ -251,22 +251,13 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):
-        if self.deploy_type == "manual" and self.auto_switch_deploy_type:
+        if self.conf.get_property("deploy_type") == "manual" and self.auto_switch_deploy_type:
             self.auto_switch_deploy_type = False
         else:
-            current_deploy_type = self.deploy_type
-            config = configparser.ConfigParser()
-            home = str(Path.home())
-            configDir = home + "/.config/siglo"
-            configFile = configDir + "/siglo.ini"
-            if current_deploy_type == "quick":
-                config["settings"] = {"mode": self.mode, "deploy_type": "manual"}
-                self.deploy_type = "manual"
-            if current_deploy_type == "manual":
-                config["settings"] = {"mode": self.mode, "deploy_type": "quick"}
-                self.deploy_type = "quick"
-            with open(configFile, "w") as f:
-                config.write(f)
+            if self.conf.get_property("deploy_type") == "quick":
+                self.conf.set_property("deploy_type", "manual")
+            if self.conf.get_property("deploy_type") == "manual":
+                self.conf.set_property("deploy_type", "quick")
             self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
             self.rescan_button.set_visible(False)
             self.scan_pass_box.set_visible(False)
@@ -276,22 +267,13 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def mode_toggled(self, widget):
-        if self.mode == "multi" and self.auto_switch_mode == True:
+        if self.conf.get_property("mode") == "multi" and self.auto_switch_mode == True:
             self.auto_switch_mode = False
         else:
-            current_mode = self.mode
-            config = configparser.ConfigParser()
-            home = str(Path.home())
-            configDir = home + "/.config/siglo"
-            configFile = configDir + "/siglo.ini"
-            if current_mode == "singleton":
-                config["settings"] = {"mode": "multi", "deploy_type": self.deploy_type}
-                self.mode = "multi"
-            if current_mode == "multi":
-                config["settings"] = {"mode": "singleton", "deploy_type": self.deploy_type}
-                self.mode = "singleton"
-            with open(configFile, "w") as f:
-                config.write(f)
+            if self.conf.get_property("mode") == "singleton":
+                self.conf.set_property("mode", "multi")
+            if self.conf.get_property("mode") == "multi":
+                self.conf.set_property("mode", "singleton")
             self.main_info.set_text("[WARN ] Settings changed, please restart Siglo")
             self.rescan_button.set_visible(False)
             self.scan_pass_box.set_visible(False)
@@ -317,5 +299,5 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.bt_spinner.set_visible(False)
         self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
-        if (self.deploy_type == "quick"):
+        if (self.conf.get_property("deploy_type") == "quick"):
             self.auto_bbox_scan_pass.set_visible(True)

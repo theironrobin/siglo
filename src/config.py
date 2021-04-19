@@ -34,3 +34,11 @@ class config:
         config = configparser.ConfigParser()
         config.read(self.config_file)
         return config["settings"][key]
+
+    def set_property(self, key, val):
+        config = configparser.ConfigParser()
+        config.read(self.config_file)
+        config["settings"][key] = val
+        with open(self.config_file, "w") as f:
+            config.write(f)
+

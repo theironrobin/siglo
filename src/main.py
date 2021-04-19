@@ -22,11 +22,7 @@ class Application(Gtk.Application):
     def do_activate(self):
         win = self.props.active_window
         if not win:
-            win = SigloWindow(
-                application=self,
-                mode=self.conf.get_property("mode"),
-                deploy_type=self.conf.get_property("deploy_type"),
-            )
+            win = SigloWindow(application=self)
         win.present()
         self.manager = InfiniTimeManager()
         info_prefix = "[INFO ] Done Scanning"
