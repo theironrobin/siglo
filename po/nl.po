@@ -1,0 +1,93 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the siglo package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: siglo\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2021-04-22 18:15+0200\n"
+"PO-Revision-Date: 2021-04-22 18:18+0200\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 2.4.2\n"
+"Last-Translator: Heimen Stoffels <vistausss@fastmail.com>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"Language: nl\n"
+
+#: data/org.gnome.siglo.desktop.in:3
+msgid "Siglo"
+msgstr "Siglo"
+
+#: src/window.ui:12
+msgid "Multi-Device Mode"
+msgstr "Meerdere apparaten"
+
+#: src/window.ui:21
+msgid "Manual OTA File"
+msgstr "Eigen ota-bestand"
+
+#: src/window.ui:42
+msgid "Scanning..."
+msgstr "Bezig met zoeken…"
+
+#: src/window.ui:102
+msgid "0 / 0"
+msgstr "0 / 0"
+
+#: src/window.ui:127
+msgid "default scan pass text"
+msgstr "standaard scantekst"
+
+#: src/window.ui:158
+msgid "OTA Update:"
+msgstr "OTA-update:"
+
+#: src/window.ui:170
+msgid "OTA Update (.zip)"
+msgstr "OTA-update (.zip)"
+
+#: src/window.ui:208
+msgid "Tag: "
+msgstr "Label: "
+
+#: src/window.ui:220
+msgid "Tag"
+msgstr "Label"
+
+#: src/window.ui:245
+msgid "Asset: "
+msgstr "Waarde: "
+
+#: src/window.ui:289
+msgid "Cancel"
+msgstr "Annuleren"
+
+#: src/window.ui:306
+msgid "Flash It!"
+msgstr "Flashen!"
+
+#: src/window.ui:330
+msgid "Time Sync"
+msgstr "Tijdsynchronisatie"
+
+#: src/window.ui:364
+msgid ""
+"Make sure InfiniTime is ON but NOT connected\n"
+"\n"
+"To check, go to Settings->Bluetooth->Devices\n"
+"\n"
+"Might take a few scans."
+msgstr ""
+"Zorg dat InfiniTime aan staat, maar niet verbonden is\n"
+"\n"
+"Controleer dit via Settings → Bluetooth → Devices\n"
+"\n"
+"Wellicht moet je een paar keer opnieuw zoeken."
+
+#: src/window.ui:386
+msgid "Rescan"
+msgstr "Opnieuw zoeken"
