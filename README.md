@@ -6,9 +6,8 @@ GTK app to sync InfiniTime watch with PinePhone
 ## Dependancies
 ### Arch Linux
 ```
-sudo pacman -S meson python-pip base-devel bluez bluez-utils
+sudo pacman -S meson python-pip base-devel bluez bluez-utils dbus-python
 pip3 install gatt
-pip3 install dbus-python
 ```
 ### Ubuntu
 ```
