@@ -32,6 +32,38 @@ echo "power on" | sudo bluetoothctl
 ```
 Icons by svgrepo.com
 
+## Building and installing Flatpak app
+
+### Building and installing on target architecture
+
+```
+flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak install --user flathub org.gnome.Sdk//3.38 org.gnome.Platform//3.38
+
+flatpak-builder --repo=repo --force-clean build-dir/ org.gnome.siglo.json
+flatpak build-bundle ./repo/ siglo.flatpak org.gnome.siglo
+flatpak install --user ./siglo.flatpak
+```
+
+### Cross-compiling for PinePhone
+
+Example cross-compiling for PinePhone on an `x86_64` Fedora machine:
+
+```
+sudo dnf install qemu-system-arm qemu-user-static
+flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
+flatpak install --user flathub org.gnome.Sdk/aarch64/3.38 org.gnome.Platform/aarch64/3.38
+
+flatpak-builder --arch=aarch64 --repo=repo --force-clean build-dir org.gnome.siglo.json
+flatpak build-bundle --arch=aarch64 ./repo/ siglo.flatpak org.gnome.siglo
+```
+
+Transfer the `siglo.flatpak` file on the PinePhone and install it with the following command:
+
+```
+sudo flatpak install ./siglo.flatpak
+```
+
 ##
 If this project helped you, you can buy me a cup of coffee :)
 <br/><br/>
