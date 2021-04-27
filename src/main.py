@@ -6,7 +6,7 @@ gi.require_version("Gtk", "3.0")
 
 from gi.repository import Gtk, Gio, Gdk
 from .window import SigloWindow
-from .bluetooth import InfiniTimeManager
+from .bluetooth import InfiniTimeManager, NoAdapterFound
 from .config import config
 
 
@@ -24,19 +24,22 @@ class Application(Gtk.Application):
         if not win:
             win = SigloWindow(application=self)
         win.present()
-        self.manager = InfiniTimeManager()
         info_prefix = "[INFO ] Done Scanning"
         try:
+            self.manager = InfiniTimeManager()
             self.manager.scan_for_infinitime()
         except gatt.errors.NotReady:
             info_prefix = "[WARN ] Bluetooth is disabled"
+        except NoAdapterFound:
+            info_prefix = "[WARN ] No Bluetooth adapter found"
         if self.conf.get_property("mode") == "singleton":
             win.done_scanning_singleton(self.manager, info_prefix)
         if self.conf.get_property("mode") == "multi":
             win.done_scanning_multi(self.manager, info_prefix)
 
     def do_window_removed(self, window):
-        self.manager.stop()
+        if self.manager:
+            self.manager.stop()
         self.quit()
 
 

@@ -42,6 +42,8 @@ class InfiniTimeManager(gatt.DeviceManager):
         self.conf = config()
         self.device_set = set()
         self.adapter_name = get_default_adapter()
+        if not self.adapter_name:
+            raise NoAdapterFound
         self.alias = None
         self.scan_result = False
         self.mac_address = None
@@ -103,3 +105,7 @@ class InfiniTimeDevice(gatt.Device):
         )
 
         char.write_value(get_current_time())
+
+
+class NoAdapterFound(Exception):
+    pass
