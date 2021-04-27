@@ -87,11 +87,12 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def done_scanning_multi(self, manager, info_prefix):
         self.manager = manager
-        scan_result = manager.get_scan_result()
+        if manager:
+            scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         self.rescan_button.set_visible(True)
         info_suffix = "\n[INFO ] Multi-Device Mode"
-        if scan_result:
+        if manager and scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.populate_listbox()
         else:
@@ -101,10 +102,11 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def done_scanning_singleton(self, manager, info_prefix):
         self.manager = manager
-        scan_result = manager.get_scan_result()
+        if manager:
+            scan_result = manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         info_suffix = "\n[INFO ] Single-Device Mode"
-        if scan_result:
+        if manager and scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
                 manager.alias

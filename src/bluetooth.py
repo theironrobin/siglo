@@ -25,17 +25,25 @@ def get_current_time():
     )
 
 
+def get_default_adapter():
+    """ https://stackoverflow.com/a/49017827 """
+    import dbus
+    bus = dbus.SystemBus()
+    manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+    for path, ifaces in manager.GetManagedObjects().items():
+        if ifaces.get('org.bluez.Adapter1') is None:
+            continue
+        return path.split('/')[-1]
+    return None
+
+
 class InfiniTimeManager(gatt.DeviceManager):
     def __init__(self):
-        cmd = "btmgmt info"
-        btmgmt_proc = Gio.Subprocess.new(
-            cmd.split(),
-            Gio.SubprocessFlags.STDIN_PIPE | Gio.SubprocessFlags.STDOUT_PIPE,
-        )
-        _, stdout, stderr = btmgmt_proc.communicate_utf8()
         self.conf = config()
         self.device_set = set()
-        self.adapter_name = stdout.splitlines()[1].split(":")[0]
+        self.adapter_name = get_default_adapter()
+        if not self.adapter_name:
+            raise NoAdapterFound
         self.alias = None
         self.scan_result = False
         self.mac_address = None
@@ -97,3 +105,7 @@ class InfiniTimeDevice(gatt.Device):
         )
 
         char.write_value(get_current_time())
+
+
+class NoAdapterFound(Exception):
+    pass
