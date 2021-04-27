@@ -5,9 +5,11 @@
     "sdk" : "org.gnome.Sdk",
     "command" : "siglo",
     "finish-args" : [
+        "--allow=bluetooth",
         "--share=network",
         "--share=ipc",
         "--socket=fallback-x11",
+        "--socket=system-bus",
         "--socket=wayland"
     ],
     "cleanup" : [
@@ -47,13 +49,38 @@
             ]
         },
         {
+            "name": "python3-requests",
+            "buildsystem": "simple",
+            "build-options": {
+                "build-args": [
+                    "--share=network"
+                ]
+            },
+            "build-commands": [
+                "pip3 install --prefix=/app --no-cache-dir requests"
+            ]
+        },
+        {
+            "name": "python3-pyxdg",
+            "buildsystem": "simple",
+            "build-options": {
+                "build-args": [
+                    "--share=network"
+                ]
+            },
+            "build-commands": [
+                "pip3 install --prefix=/app --no-cache-dir pyxdg"
+            ]
+        },
+        {
             "name" : "siglo",
             "builddir" : true,
             "buildsystem" : "meson",
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "file:///home/malex/Projects/siglo"
+                    "url" : "https://github.com/alexr4535/siglo",
+                    "tag" : "v0.6.2"
                 }
             ]
         }

@@ -1,12 +1,12 @@
 import configparser
+import xdg.BaseDirectory
 from pathlib import Path
 
 
 class config:
     # Class constants
     default_config = {"mode": "singleton", "deploy_type": "quick"}
-    home_dir = str(Path.home())
-    config_dir = home_dir + "/.config/siglo"
+    config_dir = xdg.BaseDirectory.xdg_config_home
     config_file = config_dir + "/siglo.ini"
 
     def load_defaults(self):
