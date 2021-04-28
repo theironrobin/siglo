@@ -1,7 +1,7 @@
-import gatt
+import gatt.errors
 import urllib.request
 from gi.repository import Gtk, GObject
-from .bluetooth import InfiniTimeDevice
+from .bluetooth import InfiniTimeDevice, InfiniTimeManager, BluetoothDisabled, NoAdapterFound
 from .ble_dfu import InfiniTimeDFU
 from .unpacker import Unpacker
 from .quick_deploy import *
@@ -54,6 +54,41 @@ class SigloWindow(Gtk.ApplicationWindow):
         else:
             self.auto_switch_deploy_type = False
 
+    def destroy_manager(self):
+        if self.manager:
+            self.manager.stop()
+            self.manager = None
+
+    def do_scanning(self):
+        info_prefix = "[INFO ] Done Scanning"
+        if not self.manager:
+            # create manager if not present yet
+            try:
+                self.manager = InfiniTimeManager()
+            except (gatt.errors.NotReady, BluetoothDisabled):
+                info_prefix = "[WARN ] Bluetooth is disabled"
+            except NoAdapterFound:
+                info_prefix = "[WARN ] No Bluetooth adapter found"
+        if self.manager:
+            self.depopulate_listbox()
+            self.main_info.set_text("Rescanning...")
+            self.bt_spinner.set_visible(True)
+            self.bbox_scan_pass.set_visible(False)
+            self.auto_bbox_scan_pass.set_visible(False)
+            self.scan_fail_box.set_visible(False)
+            self.rescan_button.set_visible(False)
+            self.scan_pass_box.set_visible(False)
+            self.manager.scan_result = False
+            try:
+                self.manager.scan_for_infinitime()
+            except (gatt.errors.NotReady, gatt.errors.Failed):
+                info_prefix = "[WARN ] Bluetooth is disabled"
+                self.destroy_manager()
+        if self.conf.get_property("mode") == "singleton":
+            self.done_scanning_singleton(info_prefix)
+        if self.conf.get_property("mode") == "multi":
+            self.done_scanning_multi(info_prefix)
+
     def depopulate_listbox(self):
         children = self.multi_device_listbox.get_children()
         for child in children:
@@ -85,14 +120,13 @@ class SigloWindow(Gtk.ApplicationWindow):
         for asset in get_assets_by_tag(self.tag, self.full_list):
             self.ota_pick_asset_combobox.append_text(asset)
 
-    def done_scanning_multi(self, manager, info_prefix):
-        self.manager = manager
-        if manager:
-            scan_result = manager.get_scan_result()
+    def done_scanning_multi(self, info_prefix):
+        if self.manager:
+            scan_result = self.manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         self.rescan_button.set_visible(True)
         info_suffix = "\n[INFO ] Multi-Device Mode"
-        if manager and scan_result:
+        if self.manager and scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.populate_listbox()
         else:
@@ -100,20 +134,19 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
 
-    def done_scanning_singleton(self, manager, info_prefix):
-        self.manager = manager
-        if manager:
-            scan_result = manager.get_scan_result()
+    def done_scanning_singleton(self, info_prefix):
+        if self.manager:
+            scan_result = self.manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         info_suffix = "\n[INFO ] Single-Device Mode"
-        if manager and scan_result:
+        if self.manager and scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
-                manager.alias
+                self.manager.alias
                 + " Found!\n\nAdapter Name: "
-                + manager.adapter_name
+                + self.manager.adapter_name
                 + "\nMac Address: "
-                + manager.get_mac_address()
+                + self.manager.get_mac_address()
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
@@ -168,26 +201,8 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
-        if self.manager is not None:
-            print("[INFO ] Rescan button clicked")
-            self.depopulate_listbox()
-            self.main_info.set_text("Rescanning...")
-            self.bt_spinner.set_visible(True)
-            self.bbox_scan_pass.set_visible(False)
-            self.auto_bbox_scan_pass.set_visible(False)
-            self.scan_fail_box.set_visible(False)
-            self.rescan_button.set_visible(False)
-            self.scan_pass_box.set_visible(False)
-            info_prefix = "[INFO ] Done Scanning"
-            self.manager.scan_result = False
-            try:
-                self.manager.scan_for_infinitime()
-            except (gatt.errors.NotReady, gatt.errors.Failed):
-                info_prefix = "[WARN ] Bluetooth is disabled"
-            if self.conf.get_property("mode") == "singleton":
-                self.done_scanning_singleton(self.manager, info_prefix)
-            if self.conf.get_property("mode") == "multi":
-                self.done_scanning_multi(self.manager, info_prefix)
+        print("[INFO ] Rescan button clicked")
+        self.do_scanning()
 
     @Gtk.Template.Callback()
     def sync_time_button_clicked(self, widget):
@@ -199,6 +214,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             device.connect()
             self.main_info.set_text("InfiniTime Sync... Success!")
             self.scan_pass_box.set_visible(False)
+            self.rescan_button.set_visible(True)
 
     @Gtk.Template.Callback()
     def ota_file_selected(self, widget):
