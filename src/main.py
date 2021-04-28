@@ -6,7 +6,7 @@ gi.require_version("Gtk", "3.0")
 
 from gi.repository import Gtk, Gio, Gdk
 from .window import SigloWindow
-from .bluetooth import InfiniTimeManager, NoAdapterFound
+from .bluetooth import InfiniTimeManager, NoAdapterFound, BluetoothDisabled
 from .config import config
 
 
@@ -28,7 +28,7 @@ class Application(Gtk.Application):
         try:
             self.manager = InfiniTimeManager()
             self.manager.scan_for_infinitime()
-        except gatt.errors.NotReady:
+        except (gatt.errors.NotReady, BluetoothDisabled):
             info_prefix = "[WARN ] Bluetooth is disabled"
         except NoAdapterFound:
             info_prefix = "[WARN ] No Bluetooth adapter found"

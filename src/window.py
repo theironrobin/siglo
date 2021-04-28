@@ -182,7 +182,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.manager.scan_result = False
             try:
                 self.manager.scan_for_infinitime()
-            except gatt.errors.NotReady:
+            except (gatt.errors.NotReady, gatt.errors.Failed):
                 info_prefix = "[WARN ] Bluetooth is disabled"
             if self.conf.get_property("mode") == "singleton":
                 self.done_scanning_singleton(self.manager, info_prefix)
