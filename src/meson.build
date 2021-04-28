@@ -27,6 +27,7 @@ configure_file(
 
 siglo_sources = [
   '__init__.py',
+  'daemon.py',
   'quick_deploy.py',
   'main.py',
   'config.py',

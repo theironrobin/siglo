@@ -20,9 +20,9 @@ def main():
     p.add_argument('--daemon', '-d', required=False, action='store_true', help="run as a service")
     args = p.parse_args()
 
-    daemon = args.daemon
-    if daemon:
-        print("daemon time")
+    if args.daemon:
+        from siglo import daemon
+        daemon.start()
     else:
         import gi
 
