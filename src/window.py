@@ -212,7 +212,10 @@ class SigloWindow(Gtk.ApplicationWindow):
                 manager=self.manager, mac_address=self.manager.get_mac_address()
             )
             device.connect()
-            self.main_info.set_text("InfiniTime Sync... Success!")
+            if device.successful_connection:
+                self.main_info.set_text("InfiniTime Sync... Success!")
+            else:
+                self.main_info.set_text("InfiniTime Sync... Failed!")
             self.scan_pass_box.set_visible(False)
             self.rescan_button.set_visible(True)
 

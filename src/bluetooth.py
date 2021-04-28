@@ -81,12 +81,17 @@ class InfiniTimeManager(gatt.DeviceManager):
 
 
 class InfiniTimeDevice(gatt.Device):
+    def connect(self):
+        self.successful_connection = True
+        super().connect()
+
     def connect_succeeded(self):
         super().connect_succeeded()
         print("[%s] Connected" % (self.mac_address))
 
     def connect_failed(self, error):
         super().connect_failed(error)
+        self.successful_connection = False
         print("[%s] Connection failed: %s" % (self.mac_address, str(error)))
 
     def disconnect_succeeded(self):
