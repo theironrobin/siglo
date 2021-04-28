@@ -3,6 +3,7 @@ import gatt
 import os
 from .util import *
 import math
+from struct import unpack
 
 class InfiniTimeDFU(gatt.Device):
     # Class constants
@@ -87,14 +88,11 @@ class InfiniTimeDFU(gatt.Device):
             )
         if self.current_step == 1:
             self.step_two()
-
-        if self.current_step == 3:
+        elif self.current_step == 3:
             self.step_four()
-
-        if self.current_step == 5:
+        elif self.current_step == 5:
             self.step_six()
-
-        if self.current_step == 6:
+        elif self.current_step == 6:
             print("Begin DFU")
             self.step_seven()
 
@@ -113,15 +111,32 @@ class InfiniTimeDFU(gatt.Device):
                 print("Characteristic value was updated for Packet Characteristic")
             print("New value is:", value)
 
-        if array_to_hex_string(value)[2:-2] == "01":
-            self.step_three()
+        hexval = array_to_hex_string(value)
 
-        if array_to_hex_string(value)[2:-2] == "02":
-            self.step_five()
-
-        if array_to_hex_string(value)[0:2] == "11":
+        if hexval[:4] == "1001":
+            # Response::StartDFU
+            if hexval[4:] == "01":
+                self.step_three()
+            else:
+                print("[WARN ] StartDFU failed")
+                self.disconnect()
+        elif hexval[:4] == "1002":
+            # Response::InitDFUParameters
+            if hexval[4:] == "01":
+                self.step_five()
+            else:
+                print("[WARN ] InitDFUParameters failed")
+                self.disconnect()
+        elif hexval[:2] == "11":
+            # PacketReceiptNotification
             self.packet_recipt_count += 1
             self.total_receipt_size += self.size_per_receipt
+            # verify that the returned size correspond to what was sent
+            ack_size = unpack('<I', value[1:])[0]
+            if ack_size != self.total_receipt_size:
+                print("[WARN ] PacketReceiptNotification failed")
+                print("        acknowledged {} : expected {}".format(ack_size, self.total_receipt_size))
+                self.disconnect()
             self.window.update_progress_bar()
             if self.verbose:
                 print("[INFO ] receipt count", str(self.packet_recipt_count))
@@ -130,8 +145,20 @@ class InfiniTimeDFU(gatt.Device):
             if self.done != True:
                 self.i += self.pkt_payload_size
                 self.step_seven()
-        if array_to_hex_string(value)[2:-2] == "04":
-            self.step_nine()
+        elif hexval[:4] == "1003":
+            # Response::ReceiveFirmwareImage::NoError
+            if hexval[4:] == "01":
+                self.step_eight()
+            else:
+                print("[WARN ] ReceiveFirmwareImage failed")
+                self.disconnect()
+        elif hexval[:4] == "1004":
+            # Response::ValidateFirmware
+            if hexval[4:] == "01":
+                self.step_nine()
+            else:
+                print("[WARN ] ValidateFirmware failed")
+                self.disconnect()
 
     def services_resolved(self):
         super().services_resolved()
@@ -213,13 +240,12 @@ class InfiniTimeDFU(gatt.Device):
         self.segment_count += 1
         if self.segment_count == self.segment_total:
             self.done = True
-            self.step_eight()
         elif (self.segment_count % self.pkt_receipt_interval) != 0:
             self.i += self.pkt_payload_size
             self.step_seven()
         else:
             if self.verbose:
-                print("[INFO ] Waiting for Packet Reciept Notifiation")
+                print("[INFO ] Waiting for Packet Receipt Notifiation")
 
     def step_eight(self):
         self.current_step = 8
