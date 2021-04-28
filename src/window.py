@@ -107,10 +107,11 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.bt_spinner.set_visible(False)
         info_suffix = "\n[INFO ] Single-Device Mode"
         if manager and scan_result:
+            self.conf.set_property("last_paired_device", manager.get_mac_address())
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
                 manager.alias
-                + " Found!\n\nAdapter Name: "
+                + "\nAdapter Name: "
                 + manager.adapter_name
                 + "\nMac Address: "
                 + manager.get_mac_address()
@@ -133,9 +134,10 @@ class SigloWindow(Gtk.ApplicationWindow):
         if row is not None:
             mac_add = row.get_child().get_label()
             self.manager.set_mac_address(mac_add)
+            self.conf.set_property("last_paired_device", mac_add)
             self.info_scan_pass.set_text(
                 self.manager.alias
-                + " Found!\n\nAdapter Name: "
+                + "\nAdapter Name: "
                 + self.manager.adapter_name
                 + "\nMac Address: "
                 + self.manager.get_mac_address()

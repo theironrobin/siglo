@@ -5,7 +5,11 @@ from pathlib import Path
 
 class config:
     # Class constants
-    default_config = {"mode": "singleton", "deploy_type": "quick"}
+    default_config = {
+        "mode": "singleton",
+        "deploy_type": "quick",
+        "last_paired_device": "None",
+    }
     config_dir = xdg.BaseDirectory.xdg_config_home
     config_file = config_dir + "/siglo.ini"
 
@@ -41,5 +45,3 @@ class config:
         config["settings"][key] = val
         with open(self.config_file, "w") as f:
             config.write(f)
-        
-
