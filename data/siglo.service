@@ -2,3 +2,4 @@
 Description=siglo service
 [Service]
 ExecStart=siglo --daemon
+Environment=PYTHONUNBUFFERED=1
