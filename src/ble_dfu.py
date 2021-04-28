@@ -24,8 +24,13 @@ class InfiniTimeDFU(gatt.Device):
         self.done = False
         self.packet_recipt_count = 0
         self.total_receipt_size = 0
+        self.update_in_progress = False
 
         super().__init__(mac_address, manager)
+
+    def connect(self):
+        self.successful_connection = True
+        super().connect()
 
     def input_setup(self):
         """Bin: read binfile into bin_array"""
@@ -58,11 +63,13 @@ class InfiniTimeDFU(gatt.Device):
 
     def connect_failed(self, error):
         super().connect_failed(error)
+        self.successful_connection = False
         print("[%s] Connection failed: %s" % (self.mac_address, str(error)))
 
     def disconnect_succeeded(self):
         super().disconnect_succeeded()
         print("[%s] Disconnected" % (self.mac_address))
+        self.window.show_complete(success=(not self.update_in_progress))
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
         if self.verbose and characteristic.uuid == self.UUID_CTRL_POINT:
@@ -90,6 +97,11 @@ class InfiniTimeDFU(gatt.Device):
         if self.current_step == 6:
             print("Begin DFU")
             self.step_seven()
+
+    def characteristic_write_value_failed(self, characteristic, error):
+        print("[WARN ] write value failed", str(error))
+        self.update_in_progress = True
+        self.disconnect()
 
     def characteristic_value_updated(self, characteristic, value):
         if self.verbose:
@@ -123,6 +135,7 @@ class InfiniTimeDFU(gatt.Device):
 
     def services_resolved(self):
         super().services_resolved()
+        self.update_in_progress = True
 
         print("[%s] Resolved services" % (self.mac_address))
         ble_dfu_serv = next(s for s in self.services if s.uuid == self.UUID_DFU_SERVICE)
@@ -217,7 +230,8 @@ class InfiniTimeDFU(gatt.Device):
         self.current_step = 9
         print("[INFO ] Activate and reset")
         self.ctrl_point_char.write_value(bytearray.fromhex("05"))
-        self.window.show_complete()
+        self.update_in_progress = False
+        self.disconnect()
 
     def get_init_bin_array(self):
         # Open the DAT file and create array of its contents

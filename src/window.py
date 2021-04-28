@@ -270,8 +270,10 @@ class SigloWindow(Gtk.ApplicationWindow):
             verbose=False,
         )
         self.ble_dfu.input_setup()
-        self.dfu_progress_text.set_text(self.get_prog_text())
+        self.update_progress_bar()
         self.ble_dfu.connect()
+        if not self.ble_dfu.successful_connection:
+            self.show_complete(success=False)
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):
@@ -306,13 +308,17 @@ class SigloWindow(Gtk.ApplicationWindow):
             str(self.ble_dfu.total_receipt_size)
             + " / "
             + str(self.ble_dfu.image_size)
-            + " bytes recieved"
+            + " bytes received"
         )
 
-    def show_complete(self):
-        self.main_info.set_text("OTA Update Complete")
+    def show_complete(self, success):
+        if success:
+            self.main_info.set_text("OTA Update Complete")
+        else:
+            self.main_info.set_text("OTA Update Failed")
         self.bt_spinner.set_visible(False)
         self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
+        self.ota_picked_box.set_visible(True)
         if (self.conf.get_property("deploy_type") == "quick"):
             self.auto_bbox_scan_pass.set_visible(True)
