@@ -54,6 +54,11 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.deploy_type_switch.set_active(True)
         else:
             self.auto_switch_deploy_type = False
+        if self.conf.get_property("paired") == "True":
+            self.auto_switch_paired = True
+            self.pair_switch.set_active(True)
+        else:
+            self.auto_switch_paired = False
 
     def destroy_manager(self):
         if self.manager:
@@ -303,7 +308,14 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def pair_switch_toggled(self, widget):
-
+        print(self.manager)
+        if self.conf.get_property("paired") == "True" and self.auto_switch_paired == True:
+            self.auto_switch_paired = False
+        else:
+            if self.conf.get_property("paired") == "False":
+                self.conf.set_property("paired", "True")
+            else:
+                self.conf.set_property("paired", "False")
 
 
     def update_progress_bar(self):
