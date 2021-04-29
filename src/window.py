@@ -79,6 +79,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.rescan_button.set_visible(False)
             self.scan_pass_box.set_visible(False)
             self.manager.scan_result = False
+            # TODO: set insensitive Pair Device button
             try:
                 self.manager.scan_for_infinitime()
             except (gatt.errors.NotReady, gatt.errors.Failed):
@@ -150,6 +151,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
+            # TODO: Set sensitive pair device button
             if self.conf.get_property("deploy_type") == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
                 self.populate_tagbox()
@@ -175,6 +177,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
+            # TODO: Set sensitive pair device button
             if self.conf.get_property("deploy_type") == "manual":
                 self.bbox_scan_pass.set_visible(True)
             if self.conf.get_property("deploy_type") == "quick":
