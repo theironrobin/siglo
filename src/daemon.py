@@ -4,37 +4,47 @@ import gatt
 import gi.repository.GLib as glib
 import dbus
 from dbus.mainloop.glib import DBusGMainLoop
+from .bluetooth import InfiniTimeManager, NoAdapterFound
+from .config import config
 
+def start():
+    try:
+        print("hello")
+        conf = config()
+        global manager 
+        manager = InfiniTimeManager()
+        global mac_address 
+        mac_address = conf.get_property("last_paired_device")
+
+        DBusGMainLoop(set_as_default=True)
+
+        bus = dbus.SessionBus()
+        bus.add_match_string_non_blocking(
+            "eavesdrop=true, interface='org.freedesktop.Notifications', member='Notify'"
+        )
+        bus.add_message_filter(notifications)
+
+        mainloop = glib.MainLoop()
+        mainloop.run()
+    except gatt.errors.NotReady:
+        print("[WARN ] Bluetooth is disabled")
+    except NoAdapterFound:
+        print("[WARN ] No Bluetooth adapter found")
 
 def notifications(bus, message):
-    category = ""
+    alert_dict = {}
     for arg in message.get_args_list():
         if isinstance(arg, dbus.Dictionary):
             if arg["desktop-entry"] == "sm.puri.Chatty":
-                category = "SMS"
-
-    if category == "SMS":
-        subject = "SMS"
-        sender = message.get_args_list()[3]
-        message = message.get_args_list()[4]
-
-        print("category:", category)
-        print("sender:", sender)
-        print("message:", message)
-
-
-def start():
-    DBusGMainLoop(set_as_default=True)
-
-    bus = dbus.SessionBus()
-    bus.add_match_string_non_blocking(
-        "eavesdrop=true, interface='org.freedesktop.Notifications', member='Notify'"
-    )
-    bus.add_message_filter(notifications)
-
-    mainloop = glib.MainLoop()
-    mainloop.run()
-
+                alert_dict["category"] = "SMS"
+                alert_dict["sender"] = message.get_args_list()[3]
+                alert_dict["message"] = message.get_args_list()[4]
+    alert_dict_empty = not alert_dict
+    if not alert_dict_empty:
+            device = InfiniTimeNotify(
+                manager=manager, mac_address=mac_address
+            )
+            device.connect()
 
 class InfiniTimeNotify(gatt.Device):
     # Class constants
@@ -75,5 +85,5 @@ class InfiniTimeNotify(gatt.Device):
             for c in alert_serv.characteristics
             if c.uuid == self.UUID_CHARACTERISTIC_ALERT_NOTIFICATION_NEW_ALERT
         )
-
-        alert_char.write_value(alert)
+        print("goodbye")
+        # alert_char.write_value(alert)
