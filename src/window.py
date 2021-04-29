@@ -1,7 +1,13 @@
 import gatt.errors
 import urllib.request
 from gi.repository import Gtk, GObject
-from .bluetooth import InfiniTimeDevice, InfiniTimeManager, BluetoothDisabled, NoAdapterFound
+from .bluetooth import (
+    InfiniTimeDevice,
+    InfiniTimeManager,
+    BluetoothDisabled,
+    NoAdapterFound,
+    InfiniTimeNotify,
+)
 from .ble_dfu import InfiniTimeDFU
 from .unpacker import Unpacker
 from .quick_deploy import *
@@ -286,7 +292,10 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):
-        if self.conf.get_property("deploy_type") == "manual" and self.auto_switch_deploy_type:
+        if (
+            self.conf.get_property("deploy_type") == "manual"
+            and self.auto_switch_deploy_type
+        ):
             self.auto_switch_deploy_type = False
         else:
             if self.conf.get_property("deploy_type") == "quick":
@@ -309,14 +318,22 @@ class SigloWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback()
     def pair_switch_toggled(self, widget):
         print(self.manager)
-        if self.conf.get_property("paired") == "True" and self.auto_switch_paired == True:
+        if (
+            self.conf.get_property("paired") == "True"
+            and self.auto_switch_paired == True
+        ):
             self.auto_switch_paired = False
         else:
             if self.conf.get_property("paired") == "False":
                 self.conf.set_property("paired", "True")
+                if self.manager is not None:
+                    print("Pairing with", self.manager.get_mac_address())
+                    device = InfiniTimeNotify(
+                        manager=self.manager, mac_address=self.manager.get_mac_address()
+                    )
+                    device.connect()
             else:
                 self.conf.set_property("paired", "False")
-
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
@@ -341,5 +358,5 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
         self.ota_picked_box.set_visible(True)
-        if (self.conf.get_property("deploy_type") == "quick"):
+        if self.conf.get_property("deploy_type") == "quick":
             self.auto_bbox_scan_pass.set_visible(True)
