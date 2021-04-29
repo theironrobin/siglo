@@ -12,9 +12,9 @@ def start():
         print("hello")
         conf = config()
         conf.load_defaults()
-        global manager 
+        global daemon_manager 
         manager = InfiniTimeManager()
-        global mac_address 
+        global daemon_mac_address 
         mac_address = conf.get_property("last_paired_device")
 
         DBusGMainLoop(set_as_default=True)
@@ -43,7 +43,7 @@ def notifications(bus, message):
     alert_dict_empty = not alert_dict
     if not alert_dict_empty:
             device = InfiniTimeNotify(
-                manager=manager, mac_address=mac_address
+                manager=daemon_manager, mac_address=daemon_mac_address
             )
             device.connect()
 
