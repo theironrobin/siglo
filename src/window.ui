@@ -37,6 +37,7 @@
         <property name="tooltip-text" translatable="yes">Sync time and recieve notifications even after app closes</property>
         <property name="label" translatable="yes">Pair Device</property>
         <property name="use-underline">True</property>
+        <signal name="toggled" handler="pair_switch_toggled_cb" swapped="no"/>
       </object>
     </child>
   </object>

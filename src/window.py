@@ -31,6 +31,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     ota_pick_asset_combobox = Gtk.Template.Child()
     ota_pick_asset_combobox = Gtk.Template.Child()
     deploy_type_switch = Gtk.Template.Child()
+    pair_switch = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -79,7 +80,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.rescan_button.set_visible(False)
             self.scan_pass_box.set_visible(False)
             self.manager.scan_result = False
-            # TODO: set insensitive Pair Device button
+            self.pair_switch.set_sensitive(False)
             try:
                 self.manager.scan_for_infinitime()
             except (gatt.errors.NotReady, gatt.errors.Failed):
@@ -151,7 +152,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
-            # TODO: Set sensitive pair device button
+            self.pair_switch.set_sensitive(True)
             if self.conf.get_property("deploy_type") == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
                 self.populate_tagbox()
@@ -177,7 +178,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
-            # TODO: Set sensitive pair device button
+            self.pair_switch.set_sensitive(True)
             if self.conf.get_property("deploy_type") == "manual":
                 self.bbox_scan_pass.set_visible(True)
             if self.conf.get_property("deploy_type") == "quick":
@@ -299,6 +300,11 @@ class SigloWindow(Gtk.ApplicationWindow):
             else:
                 self.conf.set_property("mode", "singleton")
             self.rescan_button.emit("clicked")
+
+    @Gtk.Template.Callback()
+    def pair_switch_toggled(self, widget):
+
+
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
