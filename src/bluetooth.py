@@ -29,12 +29,17 @@ def get_default_adapter():
     """ https://stackoverflow.com/a/49017827 """
     import dbus
     bus = dbus.SystemBus()
-    manager = dbus.Interface(bus.get_object('org.bluez', '/'), 'org.freedesktop.DBus.ObjectManager')
+    try:
+        manager = dbus.Interface(bus.get_object('org.bluez', '/'),
+                'org.freedesktop.DBus.ObjectManager')
+    except dbus.exceptions.DBusException:
+        raise BluetoothDisabled
+
     for path, ifaces in manager.GetManagedObjects().items():
         if ifaces.get('org.bluez.Adapter1') is None:
             continue
         return path.split('/')[-1]
-    return None
+    raise NoAdapterFound
 
 
 class InfiniTimeManager(gatt.DeviceManager):
@@ -42,8 +47,6 @@ class InfiniTimeManager(gatt.DeviceManager):
         self.conf = config()
         self.device_set = set()
         self.adapter_name = get_default_adapter()
-        if not self.adapter_name:
-            raise NoAdapterFound
         self.alias = None
         self.scan_result = False
         self.mac_address = None
@@ -78,12 +81,17 @@ class InfiniTimeManager(gatt.DeviceManager):
 
 
 class InfiniTimeDevice(gatt.Device):
+    def connect(self):
+        self.successful_connection = True
+        super().connect()
+
     def connect_succeeded(self):
         super().connect_succeeded()
         print("[%s] Connected" % (self.mac_address))
 
     def connect_failed(self, error):
         super().connect_failed(error)
+        self.successful_connection = False
         print("[%s] Connection failed: %s" % (self.mac_address, str(error)))
 
     def disconnect_succeeded(self):
@@ -106,6 +114,9 @@ class InfiniTimeDevice(gatt.Device):
 
         char.write_value(get_current_time())
 
+
+class BluetoothDisabled(Exception):
+    pass
 
 class NoAdapterFound(Exception):
     pass

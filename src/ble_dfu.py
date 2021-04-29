@@ -3,6 +3,7 @@ import gatt
 import os
 from .util import *
 import math
+from struct import unpack
 
 class InfiniTimeDFU(gatt.Device):
     # Class constants
@@ -24,8 +25,13 @@ class InfiniTimeDFU(gatt.Device):
         self.done = False
         self.packet_recipt_count = 0
         self.total_receipt_size = 0
+        self.update_in_progress = False
 
         super().__init__(mac_address, manager)
+
+    def connect(self):
+        self.successful_connection = True
+        super().connect()
 
     def input_setup(self):
         """Bin: read binfile into bin_array"""
@@ -58,11 +64,13 @@ class InfiniTimeDFU(gatt.Device):
 
     def connect_failed(self, error):
         super().connect_failed(error)
+        self.successful_connection = False
         print("[%s] Connection failed: %s" % (self.mac_address, str(error)))
 
     def disconnect_succeeded(self):
         super().disconnect_succeeded()
         print("[%s] Disconnected" % (self.mac_address))
+        self.window.show_complete(success=(not self.update_in_progress))
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
         if self.verbose and characteristic.uuid == self.UUID_CTRL_POINT:
@@ -80,16 +88,18 @@ class InfiniTimeDFU(gatt.Device):
             )
         if self.current_step == 1:
             self.step_two()
-
-        if self.current_step == 3:
+        elif self.current_step == 3:
             self.step_four()
-
-        if self.current_step == 5:
+        elif self.current_step == 5:
             self.step_six()
-
-        if self.current_step == 6:
+        elif self.current_step == 6:
             print("Begin DFU")
             self.step_seven()
+
+    def characteristic_write_value_failed(self, characteristic, error):
+        print("[WARN ] write value failed", str(error))
+        self.update_in_progress = True
+        self.disconnect()
 
     def characteristic_value_updated(self, characteristic, value):
         if self.verbose:
@@ -101,15 +111,32 @@ class InfiniTimeDFU(gatt.Device):
                 print("Characteristic value was updated for Packet Characteristic")
             print("New value is:", value)
 
-        if array_to_hex_string(value)[2:-2] == "01":
-            self.step_three()
+        hexval = array_to_hex_string(value)
 
-        if array_to_hex_string(value)[2:-2] == "02":
-            self.step_five()
-
-        if array_to_hex_string(value)[0:2] == "11":
+        if hexval[:4] == "1001":
+            # Response::StartDFU
+            if hexval[4:] == "01":
+                self.step_three()
+            else:
+                print("[WARN ] StartDFU failed")
+                self.disconnect()
+        elif hexval[:4] == "1002":
+            # Response::InitDFUParameters
+            if hexval[4:] == "01":
+                self.step_five()
+            else:
+                print("[WARN ] InitDFUParameters failed")
+                self.disconnect()
+        elif hexval[:2] == "11":
+            # PacketReceiptNotification
             self.packet_recipt_count += 1
             self.total_receipt_size += self.size_per_receipt
+            # verify that the returned size correspond to what was sent
+            ack_size = unpack('<I', value[1:])[0]
+            if ack_size != self.total_receipt_size:
+                print("[WARN ] PacketReceiptNotification failed")
+                print("        acknowledged {} : expected {}".format(ack_size, self.total_receipt_size))
+                self.disconnect()
             self.window.update_progress_bar()
             if self.verbose:
                 print("[INFO ] receipt count", str(self.packet_recipt_count))
@@ -118,11 +145,24 @@ class InfiniTimeDFU(gatt.Device):
             if self.done != True:
                 self.i += self.pkt_payload_size
                 self.step_seven()
-        if array_to_hex_string(value)[2:-2] == "04":
-            self.step_nine()
+        elif hexval[:4] == "1003":
+            # Response::ReceiveFirmwareImage::NoError
+            if hexval[4:] == "01":
+                self.step_eight()
+            else:
+                print("[WARN ] ReceiveFirmwareImage failed")
+                self.disconnect()
+        elif hexval[:4] == "1004":
+            # Response::ValidateFirmware
+            if hexval[4:] == "01":
+                self.step_nine()
+            else:
+                print("[WARN ] ValidateFirmware failed")
+                self.disconnect()
 
     def services_resolved(self):
         super().services_resolved()
+        self.update_in_progress = True
 
         print("[%s] Resolved services" % (self.mac_address))
         ble_dfu_serv = next(s for s in self.services if s.uuid == self.UUID_DFU_SERVICE)
@@ -200,13 +240,12 @@ class InfiniTimeDFU(gatt.Device):
         self.segment_count += 1
         if self.segment_count == self.segment_total:
             self.done = True
-            self.step_eight()
         elif (self.segment_count % self.pkt_receipt_interval) != 0:
             self.i += self.pkt_payload_size
             self.step_seven()
         else:
             if self.verbose:
-                print("[INFO ] Waiting for Packet Reciept Notifiation")
+                print("[INFO ] Waiting for Packet Receipt Notifiation")
 
     def step_eight(self):
         self.current_step = 8
@@ -217,7 +256,8 @@ class InfiniTimeDFU(gatt.Device):
         self.current_step = 9
         print("[INFO ] Activate and reset")
         self.ctrl_point_char.write_value(bytearray.fromhex("05"))
-        self.window.show_complete()
+        self.update_in_progress = False
+        self.disconnect()
 
     def get_init_bin_array(self):
         # Open the DAT file and create array of its contents
