@@ -11,6 +11,7 @@ def start():
     try:
         print("hello")
         conf = config()
+        conf.load_defaults()
         global manager 
         manager = InfiniTimeManager()
         global mac_address 
