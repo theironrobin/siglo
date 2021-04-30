@@ -6,7 +6,6 @@ from .bluetooth import (
     InfiniTimeManager,
     BluetoothDisabled,
     NoAdapterFound,
-    InfiniTimeNotify,
 )
 from .ble_dfu import InfiniTimeDFU
 from .unpacker import Unpacker
@@ -60,7 +59,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.deploy_type_switch.set_active(True)
         else:
             self.auto_switch_deploy_type = False
-        if self.conf.get_property("paired") == "True":
+        if self.conf.get_property("paired"):
             self.auto_switch_paired = True
             self.pair_switch.set_active(True)
         else:
@@ -92,11 +91,12 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.scan_pass_box.set_visible(False)
             self.manager.scan_result = False
             self.pair_switch.set_sensitive(False)
-            try:
-                self.manager.scan_for_infinitime()
-            except (gatt.errors.NotReady, gatt.errors.Failed):
-                info_prefix = "[WARN ] Bluetooth is disabled"
-                self.destroy_manager()
+            if not self.conf.get_property("paired"):
+                try:
+                    self.manager.scan_for_infinitime()
+                except (gatt.errors.NotReady, gatt.errors.Failed):
+                    info_prefix = "[WARN ] Bluetooth is disabled"
+                    self.destroy_manager()
         if self.conf.get_property("mode") == "singleton":
             self.done_scanning_singleton(info_prefix)
         if self.conf.get_property("mode") == "multi":
@@ -109,7 +109,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.multi_device_listbox.set_visible(False)
 
     def populate_listbox(self):
-        for mac_addr in self.manager.device_set:
+        for mac_addr in self.manager.get_device_set():
             label = Gtk.Label(xalign=0)
             label.set_use_markup(True)
             label.set_name("multi_mac_label")
@@ -152,15 +152,16 @@ class SigloWindow(Gtk.ApplicationWindow):
             scan_result = self.manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         info_suffix = "\n[INFO ] Single-Device Mode"
+        print("manager", self.manager)
+        print("scan_result", scan_result)
         if self.manager and scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
-                self.manager.alias
-                + " Found!\n\nAdapter Name: "
-                + self.manager.adapter_name
+                "\nAdapter Name: " + self.manager.get_adapter_name()
                 + "\nMac Address: "
                 + self.manager.get_mac_address()
             )
+            self.conf.set_property("last_paired_device", self.manager.get_mac_address())
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
             self.pair_switch.set_sensitive(True)
@@ -181,8 +182,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             mac_add = row.get_child().get_label()
             self.manager.set_mac_address(mac_add)
             self.info_scan_pass.set_text(
-                self.manager.alias
-                + " Found!\n\nAdapter Name: "
+                "\nAdapter Name: "
                 + self.manager.adapter_name
                 + "\nMac Address: "
                 + self.manager.get_mac_address()
@@ -226,7 +226,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             device = InfiniTimeDevice(
                 manager=self.manager, mac_address=self.manager.get_mac_address()
             )
-            device.connect()
+            device.connect(sync_time=True)
             if device.successful_connection:
                 self.main_info.set_text("InfiniTime Sync... Success!")
             else:
@@ -319,20 +319,24 @@ class SigloWindow(Gtk.ApplicationWindow):
     def pair_switch_toggled(self, widget):
         print(self.manager)
         if (
-            self.conf.get_property("paired") == "True"
+            self.conf.get_property("paired")
             and self.auto_switch_paired == True
         ):
             self.auto_switch_paired = False
         else:
-            if self.conf.get_property("paired") == "False":
+            if not self.conf.get_property("paired"):
                 self.conf.set_property("paired", "True")
                 if self.manager is not None:
                     print("Pairing with", self.manager.get_mac_address())
-                    device = InfiniTimeNotify(
+                    device = InfiniTimeDevice(
                         manager=self.manager, mac_address=self.manager.get_mac_address()
                     )
-                    device.connect()
+                    device.connect(sync_time=True)
             else:
+                device = InfiniTimeDevice(
+                    manager=self.manager, mac_address=self.manager.get_mac_address()
+                )
+                device.disconnect()
                 self.conf.set_property("paired", "False")
 
     def update_progress_bar(self):
