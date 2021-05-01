@@ -1,3 +1,4 @@
+from os import sync
 import gatt
 import datetime
 import struct
@@ -26,19 +27,21 @@ def get_current_time():
 
 
 def get_default_adapter():
-    """ https://stackoverflow.com/a/49017827 """
+    """https://stackoverflow.com/a/49017827"""
     import dbus
+
     bus = dbus.SystemBus()
     try:
-        manager = dbus.Interface(bus.get_object('org.bluez', '/'),
-                'org.freedesktop.DBus.ObjectManager')
+        manager = dbus.Interface(
+            bus.get_object("org.bluez", "/"), "org.freedesktop.DBus.ObjectManager"
+        )
     except dbus.exceptions.DBusException:
         raise BluetoothDisabled
 
     for path, ifaces in manager.GetManagedObjects().items():
-        if ifaces.get('org.bluez.Adapter1') is None:
+        if ifaces.get("org.bluez.Adapter1") is None:
             continue
-        return path.split('/')[-1]
+        return path.split("/")[-1]
     raise NoAdapterFound
 
 
@@ -46,19 +49,38 @@ class InfiniTimeManager(gatt.DeviceManager):
     def __init__(self):
         self.conf = config()
         self.device_set = set()
-        self.adapter_name = get_default_adapter()
         self.alias = None
-        self.scan_result = False
+        if not self.conf.get_property("paired"):
+            self.scan_result = False
+            self.adapter_name = get_default_adapter()
+            self.conf.set_property("adapter", self.adapter_name)
+        else:
+            self.scan_result = True
+            self.adapter_name = self.conf.get_property("adapter")
         self.mac_address = None
         super().__init__(self.adapter_name)
 
     def get_scan_result(self):
+        if self.conf.get_property("paired"):
+            self.scan_result = True
         return self.scan_result
+
+    def get_device_set(self):
+        if self.conf.get_property("paired"):
+            self.device_set.add(self.conf.get_property("last_paired_device"))
+        return self.device_set
+
+    def get_adapter_name(self):
+        if self.conf.get_property("paired"):
+            return self.conf.get_property("adapter")
+        return get_default_adapter()
 
     def set_mac_address(self, mac_address):
         self.mac_address = mac_address
 
     def get_mac_address(self):
+        if self.conf.get_property("paired"):
+            self.mac_address = self.conf.get_property("last_paired_device")
         return self.mac_address
 
     def set_timeout(self, timeout):
@@ -81,7 +103,12 @@ class InfiniTimeManager(gatt.DeviceManager):
 
 
 class InfiniTimeDevice(gatt.Device):
-    def connect(self):
+    def __init__(self, mac_address, manager):
+        self.conf = config()
+        super().__init__(mac_address, manager)
+
+    def connect(self, sync_time):
+        self.sync_time = sync_time
         self.successful_connection = True
         super().connect()
 
@@ -99,20 +126,44 @@ class InfiniTimeDevice(gatt.Device):
         print("[%s] Disconnected" % (self.mac_address))
 
     def characteristic_write_value_succeeded(self, characteristic):
-        self.disconnect()
+        if not self.conf.get_property("paired"):
+            self.disconnect()
 
     def services_resolved(self):
         super().services_resolved()
-        serv = next(
+        self.serv = next(
             s for s in self.services if s.uuid == "00001805-0000-1000-8000-00805f9b34fb"
         )
-        char = next(
+        self.char = next(
             c
-            for c in serv.characteristics
+            for c in self.serv.characteristics
             if c.uuid == "00002a2b-0000-1000-8000-00805f9b34fb"
         )
 
-        char.write_value(get_current_time())
+        self.alert_service = next(
+            a for a in self.services if a.uuid == "00001811-0000-1000-8000-00805f9b34fb"
+        )
+
+        self.new_alert_characteristic = next(
+            n
+            for n in self.alert_service.characteristics
+            if n.uuid == "00002a46-0000-1000-8000-00805f9b34fb"
+        )
+
+        if self.sync_time:
+            self.char.write_value(get_current_time())
+
+    def send_notification(self, alert_dict):
+        message = alert_dict["message"]
+        arr = bytearray(message, "utf-8")
+        # self.new_alert_characteristic.write_value(
+        #     b"   Reports of my death were greatly exaggerated. So how was your day?"
+        # )
+        self.new_alert_characteristic.write_value(arr)
+
+
+class BluetoothDisabled(Exception):
+    pass
 
 
 class BluetoothDisabled(Exception):

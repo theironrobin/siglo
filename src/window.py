@@ -1,7 +1,14 @@
 import gatt.errors
 import urllib.request
+import subprocess
+import dbus
 from gi.repository import Gtk, GObject
-from .bluetooth import InfiniTimeDevice, InfiniTimeManager, BluetoothDisabled, NoAdapterFound
+from .bluetooth import (
+    InfiniTimeDevice,
+    InfiniTimeManager,
+    BluetoothDisabled,
+    NoAdapterFound,
+)
 from .ble_dfu import InfiniTimeDFU
 from .unpacker import Unpacker
 from .quick_deploy import *
@@ -31,6 +38,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     ota_pick_asset_combobox = Gtk.Template.Child()
     ota_pick_asset_combobox = Gtk.Template.Child()
     deploy_type_switch = Gtk.Template.Child()
+    pair_switch = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -53,6 +61,48 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.deploy_type_switch.set_active(True)
         else:
             self.auto_switch_deploy_type = False
+        if self.conf.get_property("paired"):
+            self.auto_switch_paired = True
+            self.pair_switch.set_active(True)
+        else:
+            self.auto_switch_paired = False
+
+    def destroy_manager(self):
+        if self.manager:
+            self.manager.stop()
+            self.manager = None
+
+    def do_scanning(self):
+        info_prefix = "[INFO ] Done Scanning"
+        if not self.manager:
+            # create manager if not present yet
+            try:
+                self.manager = InfiniTimeManager()
+            except (gatt.errors.NotReady, BluetoothDisabled):
+                info_prefix = "[WARN ] Bluetooth is disabled"
+            except NoAdapterFound:
+                info_prefix = "[WARN ] No Bluetooth adapter found"
+        if self.manager:
+            self.depopulate_listbox()
+            self.main_info.set_text("Rescanning...")
+            self.bt_spinner.set_visible(True)
+            self.bbox_scan_pass.set_visible(False)
+            self.auto_bbox_scan_pass.set_visible(False)
+            self.scan_fail_box.set_visible(False)
+            self.rescan_button.set_visible(False)
+            self.scan_pass_box.set_visible(False)
+            self.manager.scan_result = False
+            self.pair_switch.set_sensitive(False)
+            if not self.conf.get_property("paired"):
+                try:
+                    self.manager.scan_for_infinitime()
+                except (gatt.errors.NotReady, gatt.errors.Failed):
+                    info_prefix = "[WARN ] Bluetooth is disabled"
+                    self.destroy_manager()
+        if self.conf.get_property("mode") == "singleton":
+            self.done_scanning_singleton(info_prefix)
+        if self.conf.get_property("mode") == "multi":
+            self.done_scanning_multi(info_prefix)
 
     def destroy_manager(self):
         if self.manager:
@@ -96,7 +146,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.multi_device_listbox.set_visible(False)
 
     def populate_listbox(self):
-        for mac_addr in self.manager.device_set:
+        for mac_addr in self.manager.get_device_set():
             label = Gtk.Label(xalign=0)
             label.set_use_markup(True)
             label.set_name("multi_mac_label")
@@ -139,17 +189,18 @@ class SigloWindow(Gtk.ApplicationWindow):
             scan_result = self.manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         info_suffix = "\n[INFO ] Single-Device Mode"
+        print("manager", self.manager)
         if self.manager and scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
-                self.manager.alias
-                + " Found!\n\nAdapter Name: "
-                + self.manager.adapter_name
+                "\nAdapter Name: " + self.manager.get_adapter_name()
                 + "\nMac Address: "
                 + self.manager.get_mac_address()
             )
+            self.conf.set_property("last_paired_device", self.manager.get_mac_address())
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
+            self.pair_switch.set_sensitive(True)
             if self.conf.get_property("deploy_type") == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
                 self.populate_tagbox()
@@ -167,14 +218,14 @@ class SigloWindow(Gtk.ApplicationWindow):
             mac_add = row.get_child().get_label()
             self.manager.set_mac_address(mac_add)
             self.info_scan_pass.set_text(
-                self.manager.alias
-                + " Found!\n\nAdapter Name: "
+                "\nAdapter Name: "
                 + self.manager.adapter_name
                 + "\nMac Address: "
                 + self.manager.get_mac_address()
             )
             self.scan_pass_box.set_visible(True)
             self.ota_picked_box.set_visible(True)
+            self.pair_switch.set_sensitive(True)
             if self.conf.get_property("deploy_type") == "manual":
                 self.bbox_scan_pass.set_visible(True)
             if self.conf.get_property("deploy_type") == "quick":
@@ -211,7 +262,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             device = InfiniTimeDevice(
                 manager=self.manager, mac_address=self.manager.get_mac_address()
             )
-            device.connect()
+            device.connect(sync_time=True)
             if device.successful_connection:
                 self.main_info.set_text("InfiniTime Sync... Success!")
             else:
@@ -277,7 +328,10 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):
-        if self.conf.get_property("deploy_type") == "manual" and self.auto_switch_deploy_type:
+        if (
+            self.conf.get_property("deploy_type") == "manual"
+            and self.auto_switch_deploy_type
+        ):
             self.auto_switch_deploy_type = False
         else:
             if self.conf.get_property("deploy_type") == "quick":
@@ -296,6 +350,38 @@ class SigloWindow(Gtk.ApplicationWindow):
             else:
                 self.conf.set_property("mode", "singleton")
             self.rescan_button.emit("clicked")
+
+    @Gtk.Template.Callback()
+    def pair_switch_toggled(self, widget):
+        print(self.manager)
+        if (
+            self.conf.get_property("paired")
+            and self.auto_switch_paired == True
+        ):
+            self.auto_switch_paired = False
+        else:
+            if not self.conf.get_property("paired"):
+                self.conf.set_property("paired", "True")
+                if self.manager is not None:
+                    print("Pairing with", self.manager.get_mac_address())
+                    device = InfiniTimeDevice(
+                        manager=self.manager, mac_address=self.manager.get_mac_address()
+                    )
+                    device.connect(sync_time=True)
+                    subprocess.call(["systemctl", "--user", "daemon-reload"])
+                    subprocess.call(["systemctl", "--user", "restart", "siglo"])
+            else:
+                try:
+                    device = InfiniTimeDevice(
+                        manager=self.manager, mac_address=self.manager.get_mac_address()
+                        )
+                    device.disconnect()
+                except dbus.exceptions.DBusException:
+                    raise BluetoothDisabled
+                finally:
+                    subprocess.call(["systemctl", "--user", "daemon-reload"])
+                    subprocess.call(["systemctl", "--user", "stop", "siglo"])
+                    self.conf.set_property("paired", "False")
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
@@ -320,5 +406,5 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
         self.ota_picked_box.set_visible(True)
-        if (self.conf.get_property("deploy_type") == "quick"):
+        if self.conf.get_property("deploy_type") == "quick":
             self.auto_bbox_scan_pass.set_visible(True)

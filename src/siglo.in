@@ -5,6 +5,7 @@ import os
 import sys
 import signal
 import gettext
+import argparse
 
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
@@ -14,12 +15,24 @@ sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 gettext.install('siglo', localedir)
 
+def main():
+    p = argparse.ArgumentParser(description="app to sync InfiniTime watch")
+    p.add_argument('--daemon', '-d', required=False, action='store_true', help="run as a service")
+    args = p.parse_args()
+
+    if args.daemon:
+        from siglo import daemon
+        d = daemon.daemon()
+        d.scan_for_notifications()
+    else:
+        import gi
+
+        from gi.repository import Gio
+        resource = Gio.Resource.load(os.path.join(pkgdatadir, 'siglo.gresource'))
+        resource._register()
+
+        from siglo import main
+        sys.exit(main.main(VERSION))
+
 if __name__ == '__main__':
-    import gi
-
-    from gi.repository import Gio
-    resource = Gio.Resource.load(os.path.join(pkgdatadir, 'siglo.gresource'))
-    resource._register()
-
-    from siglo import main
-    sys.exit(main.main(VERSION))
+    main()

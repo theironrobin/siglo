@@ -18,6 +18,8 @@ install_data(join_paths('icons', 'org.gnome.siglo.svg'),
   install_dir: join_paths(get_option('datadir'), 'icons')
 )
 
+install_data('siglo.service', install_dir: '/etc/systemd/user/')
+
 appstream_file = i18n.merge_file(
   input: 'org.gnome.siglo.appdata.xml.in',
   output: 'org.gnome.siglo.appdata.xml',
@@ -43,3 +45,4 @@ if compile_schemas.found()
     args: ['--strict', '--dry-run', meson.current_source_dir()]
   )
 endif
+
