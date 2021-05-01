@@ -104,6 +104,41 @@ class SigloWindow(Gtk.ApplicationWindow):
         if self.conf.get_property("mode") == "multi":
             self.done_scanning_multi(info_prefix)
 
+    def destroy_manager(self):
+        if self.manager:
+            self.manager.stop()
+            self.manager = None
+
+    def do_scanning(self):
+        info_prefix = "[INFO ] Done Scanning"
+        if not self.manager:
+            # create manager if not present yet
+            try:
+                self.manager = InfiniTimeManager()
+            except (gatt.errors.NotReady, BluetoothDisabled):
+                info_prefix = "[WARN ] Bluetooth is disabled"
+            except NoAdapterFound:
+                info_prefix = "[WARN ] No Bluetooth adapter found"
+        if self.manager:
+            self.depopulate_listbox()
+            self.main_info.set_text("Rescanning...")
+            self.bt_spinner.set_visible(True)
+            self.bbox_scan_pass.set_visible(False)
+            self.auto_bbox_scan_pass.set_visible(False)
+            self.scan_fail_box.set_visible(False)
+            self.rescan_button.set_visible(False)
+            self.scan_pass_box.set_visible(False)
+            self.manager.scan_result = False
+            try:
+                self.manager.scan_for_infinitime()
+            except (gatt.errors.NotReady, gatt.errors.Failed):
+                info_prefix = "[WARN ] Bluetooth is disabled"
+                self.destroy_manager()
+        if self.conf.get_property("mode") == "singleton":
+            self.done_scanning_singleton(info_prefix)
+        if self.conf.get_property("mode") == "multi":
+            self.done_scanning_multi(info_prefix)
+
     def depopulate_listbox(self):
         children = self.multi_device_listbox.get_children()
         for child in children:
