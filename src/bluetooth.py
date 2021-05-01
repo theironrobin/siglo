@@ -153,10 +153,13 @@ class InfiniTimeDevice(gatt.Device):
         if self.sync_time:
             self.char.write_value(get_current_time())
 
-    def send_notification(self):
-        self.new_alert_characteristic.write_value(
-            b"   Reports of my death were greatly exaggerated. So how was your day?"
-        )
+    def send_notification(self, alert_dict):
+        message = alert_dict["message"]
+        arr = bytearray(message, "utf-8")
+        # self.new_alert_characteristic.write_value(
+        #     b"   Reports of my death were greatly exaggerated. So how was your day?"
+        # )
+        self.new_alert_characteristic.write_value(arr)
 
 
 class BluetoothDisabled(Exception):

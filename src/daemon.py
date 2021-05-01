@@ -34,5 +34,4 @@ class daemon:
                     alert_dict["message"] = message.get_args_list()[4]
         alert_dict_empty = not alert_dict
         if len(alert_dict) > 0:
-            self.device.send_notification()
-            
+            self.device.send_notification(alert_dict)
