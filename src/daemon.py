@@ -3,7 +3,7 @@ import gatt
 import gi.repository.GLib as glib
 import dbus
 from dbus.mainloop.glib import DBusGMainLoop
-from .bluetooth import InfiniTimeManager, NoAdapterFound
+from .bluetooth import InfiniTimeManager, InfiniTimeDevice, NoAdapterFound
 from .config import config
 
 
@@ -11,6 +11,8 @@ class daemon:
     def __init__(self):
         self.conf = config()
         self.manager = InfiniTimeManager()
+        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.conf.get_property("last_paired_device"))
+        self.device.connect(sync_time=False)
 
     def scan_for_notifications(self):
         DBusGMainLoop(set_as_default=True)
@@ -31,51 +33,6 @@ class daemon:
                     alert_dict["sender"] = message.get_args_list()[3]
                     alert_dict["message"] = message.get_args_list()[4]
         alert_dict_empty = not alert_dict
-        if not alert_dict_empty:
-            device = InfiniTimeNotify(
-                manager=self.manager, mac_address=self.conf.get_property("last_paired_device")
-            )
-            device.connect()
-
-
-class InfiniTimeNotify(gatt.Device):
-    # Class constants
-    UUID_SERVICE_ALERT_NOTIFICATION = "00001811-0000-1000-8000-00805f9b34fb"
-    UUID_CHARACTERISTIC_ALERT_NOTIFICATION_NEW_ALERT = (
-        "00002a46-0000-1000-8000-00805f9b34fb"
-    )
-    UUID_CHARACTERISTIC_ALERT_NOTIFICATION_CONTROL = (
-        "00002a44-0000-1000-8000-00805f9b34fb"
-    )
-    UUID_CHARACTERISTIC_ALERT_NOTIFICATION_EVENT = (
-        "00020001-78fc-48fe-8e23-433b3a1942d0"
-    )
-
-    def __init__(self, mac_address, manager, alert):
-        self.alert = alert
-        super().__init__(mac_address, manager)
-
-    def connect_succeeded(self):
-        super().connect_succeeded()
-        print("[%s] Connected" % (self.mac_address))
-
-    def connect_failed(self, error):
-        super().connect_failed(error)
-        print("[%s] Connection failed: %s" % (self.mac_address, str(error)))
-
-    def disconnect_succeeded(self):
-        super().disconnect_succeeded()
-        print("[%s] Disconnected" % (self.mac_address))
-
-    def services_resolved(self):
-        super().services_resolved()
-        alert_serv = next(
-            s for s in self.services if s.uuid == self.UUID_SERVICE_ALERT_NOTIFICATION
-        )
-        alert_char = next(
-            c
-            for c in alert_serv.characteristics
-            if c.uuid == self.UUID_CHARACTERISTIC_ALERT_NOTIFICATION_NEW_ALERT
-        )
-        print("goodbye")
-        # alert_char.write_value(alert)
+        if len(alert_dict) > 0:
+            self.device.send_notification()
+            

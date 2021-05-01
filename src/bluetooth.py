@@ -27,7 +27,7 @@ def get_current_time():
 
 
 def get_default_adapter():
-    """ https://stackoverflow.com/a/49017827 """
+    """https://stackoverflow.com/a/49017827"""
     import dbus
 
     bus = dbus.SystemBus()
@@ -48,7 +48,7 @@ def get_default_adapter():
 class InfiniTimeManager(gatt.DeviceManager):
     def __init__(self):
         self.conf = config()
-        self.device_set = set()        
+        self.device_set = set()
         self.alias = None
         if not self.conf.get_property("paired"):
             self.scan_result = False
@@ -69,7 +69,6 @@ class InfiniTimeManager(gatt.DeviceManager):
         if self.conf.get_property("paired"):
             self.device_set.add(self.conf.get_property("last_paired_device"))
         return self.device_set
-
 
     def get_adapter_name(self):
         if self.conf.get_property("paired"):
@@ -140,9 +139,24 @@ class InfiniTimeDevice(gatt.Device):
             for c in self.serv.characteristics
             if c.uuid == "00002a2b-0000-1000-8000-00805f9b34fb"
         )
+
+        self.alert_service = next(
+            a for a in self.services if a.uuid == "00001811-0000-1000-8000-00805f9b34fb"
+        )
+
+        self.new_alert_characteristic = next(
+            n
+            for n in self.alert_service.characteristics
+            if n.uuid == "00002a46-0000-1000-8000-00805f9b34fb"
+        )
+
         if self.sync_time:
             self.char.write_value(get_current_time())
 
+    def send_notification(self):
+        self.new_alert_characteristic.write_value(
+            b"   Reports of my death were greatly exaggerated. So how was your day?"
+        )
 
 
 class BluetoothDisabled(Exception):

@@ -154,7 +154,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.bt_spinner.set_visible(False)
         info_suffix = "\n[INFO ] Single-Device Mode"
         print("manager", self.manager)
-        print("scan_result", scan_result)
         if self.manager and scan_result:
             info_suffix += "\n[INFO ] Scan Succeeded"
             self.info_scan_pass.set_text(
