@@ -332,12 +332,14 @@ class SigloWindow(Gtk.ApplicationWindow):
                         manager=self.manager, mac_address=self.manager.get_mac_address()
                     )
                     device.connect(sync_time=True)
+                    subprocess.call(["systemctl", "--user", "daemon-reload"])
                     subprocess.call(["systemctl", "--user", "restart", "siglo"])
             else:
                 device = InfiniTimeDevice(
                     manager=self.manager, mac_address=self.manager.get_mac_address()
                 )
                 device.disconnect()
+                subprocess.call(["systemctl", "--user", "daemon-reload"])
                 subprocess.call(["systemctl", "--user", "stop", "siglo"])
                 self.conf.set_property("paired", "False")
 
