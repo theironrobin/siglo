@@ -1,4 +1,3 @@
-import time
 import gatt
 
 import gi.repository.GLib as glib
@@ -7,45 +6,37 @@ from dbus.mainloop.glib import DBusGMainLoop
 from .bluetooth import InfiniTimeManager, NoAdapterFound
 from .config import config
 
-def start():
-    try:
-        print("hello")
-        conf = config()
-        conf.load_defaults()
-        global daemon_manager 
-        manager = InfiniTimeManager()
-        global daemon_mac_address 
-        mac_address = conf.get_property("last_paired_device")
 
+class daemon:
+    def __init__(self):
+        self.conf = config()
+        self.manager = InfiniTimeManager()
+
+    def scan_for_notifications(self):
         DBusGMainLoop(set_as_default=True)
-
         bus = dbus.SessionBus()
         bus.add_match_string_non_blocking(
             "eavesdrop=true, interface='org.freedesktop.Notifications', member='Notify'"
         )
-        bus.add_message_filter(notifications)
-
+        bus.add_message_filter(self.notifications)
         mainloop = glib.MainLoop()
         mainloop.run()
-    except gatt.errors.NotReady:
-        print("[WARN ] Bluetooth is disabled")
-    except NoAdapterFound:
-        print("[WARN ] No Bluetooth adapter found")
 
-def notifications(bus, message):
-    alert_dict = {}
-    for arg in message.get_args_list():
-        if isinstance(arg, dbus.Dictionary):
-            if arg["desktop-entry"] == "sm.puri.Chatty":
-                alert_dict["category"] = "SMS"
-                alert_dict["sender"] = message.get_args_list()[3]
-                alert_dict["message"] = message.get_args_list()[4]
-    alert_dict_empty = not alert_dict
-    if not alert_dict_empty:
+    def notifications(self, bus, message):
+        alert_dict = {}
+        for arg in message.get_args_list():
+            if isinstance(arg, dbus.Dictionary):
+                if arg["desktop-entry"] == "sm.puri.Chatty":
+                    alert_dict["category"] = "SMS"
+                    alert_dict["sender"] = message.get_args_list()[3]
+                    alert_dict["message"] = message.get_args_list()[4]
+        alert_dict_empty = not alert_dict
+        if not alert_dict_empty:
             device = InfiniTimeNotify(
-                manager=daemon_manager, mac_address=daemon_mac_address
+                manager=self.manager, mac_address=self.conf.get_property("last_paired_device")
             )
             device.connect()
+
 
 class InfiniTimeNotify(gatt.Device):
     # Class constants

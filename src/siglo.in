@@ -22,7 +22,8 @@ def main():
 
     if args.daemon:
         from siglo import daemon
-        daemon.start()
+        d = daemon.daemon()
+        d.scan_for_notifications()
     else:
         import gi
 
