@@ -1,6 +1,7 @@
 import gatt.errors
 import urllib.request
 import subprocess
+import dbus
 from gi.repository import Gtk, GObject
 from .bluetooth import (
     InfiniTimeDevice,
@@ -335,13 +336,17 @@ class SigloWindow(Gtk.ApplicationWindow):
                     subprocess.call(["systemctl", "--user", "daemon-reload"])
                     subprocess.call(["systemctl", "--user", "restart", "siglo"])
             else:
-                device = InfiniTimeDevice(
-                    manager=self.manager, mac_address=self.manager.get_mac_address()
-                )
-                device.disconnect()
-                subprocess.call(["systemctl", "--user", "daemon-reload"])
-                subprocess.call(["systemctl", "--user", "stop", "siglo"])
-                self.conf.set_property("paired", "False")
+                try:
+                    device = InfiniTimeDevice(
+                        manager=self.manager, mac_address=self.manager.get_mac_address()
+                        )
+                    device.disconnect()
+                except dbus.exceptions.DBusException:
+                    raise BluetoothDisabled
+                finally:
+                    subprocess.call(["systemctl", "--user", "daemon-reload"])
+                    subprocess.call(["systemctl", "--user", "stop", "siglo"])
+                    self.conf.set_property("paired", "False")
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
