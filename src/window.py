@@ -31,7 +31,6 @@ class SigloWindow(Gtk.ApplicationWindow):
     dfu_progress_text = Gtk.Template.Child()
     multi_device_listbox = Gtk.Template.Child()
     rescan_button = Gtk.Template.Child()
-    multi_device_switch = Gtk.Template.Child()
     auto_bbox_scan_pass = Gtk.Template.Child()
     bbox_scan_pass = Gtk.Template.Child()
     ota_pick_tag_combobox = Gtk.Template.Child()
@@ -51,11 +50,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
         GObject.threads_init()
         self.full_list = get_quick_deploy_list()
-        if self.conf.get_property("mode") == "multi":
-            self.auto_switch_mode = True
-            self.multi_device_switch.set_active(True)
-        else:
-            self.auto_switch_mode = False
         if self.conf.get_property("deploy_type") == "manual":
             self.auto_switch_deploy_type = True
             self.deploy_type_switch.set_active(True)
@@ -99,10 +93,7 @@ class SigloWindow(Gtk.ApplicationWindow):
                 except (gatt.errors.NotReady, gatt.errors.Failed):
                     info_prefix = "[WARN ] Bluetooth is disabled"
                     self.destroy_manager()
-        if self.conf.get_property("mode") == "singleton":
-            self.done_scanning_singleton(info_prefix)
-        if self.conf.get_property("mode") == "multi":
-            self.done_scanning_multi(info_prefix)
+        self.done_scanning_multi(info_prefix)
 
     def destroy_manager(self):
         if self.manager:
@@ -134,10 +125,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             except (gatt.errors.NotReady, gatt.errors.Failed):
                 info_prefix = "[WARN ] Bluetooth is disabled"
                 self.destroy_manager()
-        if self.conf.get_property("mode") == "singleton":
-            self.done_scanning_singleton(info_prefix)
-        if self.conf.get_property("mode") == "multi":
-            self.done_scanning_multi(info_prefix)
+        self.done_scanning_multi(info_prefix)
 
     def depopulate_listbox(self):
         children = self.multi_device_listbox.get_children()
@@ -175,40 +163,11 @@ class SigloWindow(Gtk.ApplicationWindow):
             scan_result = self.manager.get_scan_result()
         self.bt_spinner.set_visible(False)
         self.rescan_button.set_visible(True)
-        info_suffix = "\n[INFO ] Multi-Device Mode"
         if self.manager and scan_result:
-            info_suffix += "\n[INFO ] Scan Succeeded"
+            info_suffix = "\n[INFO ] Scan Succeeded"
             self.populate_listbox()
         else:
-            info_suffix += "\n[INFO ] Scan Failed"
-            self.scan_fail_box.set_visible(True)
-        self.main_info.set_text(info_prefix + info_suffix)
-
-    def done_scanning_singleton(self, info_prefix):
-        if self.manager:
-            scan_result = self.manager.get_scan_result()
-        self.bt_spinner.set_visible(False)
-        info_suffix = "\n[INFO ] Single-Device Mode"
-        print("manager", self.manager)
-        if self.manager and scan_result:
-            info_suffix += "\n[INFO ] Scan Succeeded"
-            self.info_scan_pass.set_text(
-                "\nAdapter Name: " + self.manager.get_adapter_name()
-                + "\nMac Address: "
-                + self.manager.get_mac_address()
-            )
-            self.conf.set_property("last_paired_device", self.manager.get_mac_address())
-            self.scan_pass_box.set_visible(True)
-            self.ota_picked_box.set_visible(True)
-            self.pair_switch.set_sensitive(True)
-            if self.conf.get_property("deploy_type") == "quick":
-                self.auto_bbox_scan_pass.set_visible(True)
-                self.populate_tagbox()
-            if self.conf.get_property("deploy_type") == "manual":
-                self.bbox_scan_pass.set_visible(True)
-        else:
-            info_suffix += "\n[INFO ] Scan Failed"
-            self.rescan_button.set_visible(True)
+            info_suffix = "\n[INFO ] Scan Failed"
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
 
@@ -253,6 +212,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
         print("[INFO ] Rescan button clicked")
+        self.ota_pick_tag_combobox.remove_all()
         self.do_scanning()
 
     @Gtk.Template.Callback()
@@ -338,17 +298,6 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.conf.set_property("deploy_type", "manual")
             else:
                 self.conf.set_property("deploy_type", "quick")
-            self.rescan_button.emit("clicked")
-
-    @Gtk.Template.Callback()
-    def mode_toggled(self, widget):
-        if self.conf.get_property("mode") == "multi" and self.auto_switch_mode == True:
-            self.auto_switch_mode = False
-        else:
-            if self.conf.get_property("mode") == "singleton":
-                self.conf.set_property("mode", "multi")
-            else:
-                self.conf.set_property("mode", "singleton")
             self.rescan_button.emit("clicked")
 
     @Gtk.Template.Callback()

@@ -8,7 +8,6 @@ from pathlib import Path
 class config:
     # Class constants
     default_config = {
-        "mode": "singleton",
         "deploy_type": "quick",
         "last_paired_device": "None",
         "paired": "False",
