@@ -265,6 +265,7 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def start_flashing(self, widget, args):
         self.main_info.set_text("[INFO ] Updating Firmware...")
+        self.rescan_button.set_sensitive(False)
         self.ota_picked_box.set_visible(False)
         self.dfu_progress_box.set_visible(True)
         self.sync_time_button.set_visible(False)
@@ -289,6 +290,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu.connect()
         if not self.ble_dfu.successful_connection:
             self.show_complete(success=False)
+        self.rescan_button.set_sensitive(False)
 
     @Gtk.Template.Callback()
     def flash_it_button_clicked(self, widget):
