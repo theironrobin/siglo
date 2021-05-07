@@ -300,7 +300,8 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.main_info.set_text("[INFO ] Downloading Asset...")
             Thread(target=self.download_thread).start()
         else:
-            self.start_flashing()
+            self.emit("flash-signal", None)
+            #self.start_flashing()
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):
