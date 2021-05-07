@@ -94,7 +94,7 @@ class InfiniTimeManager(gatt.DeviceManager):
 
     def scan_for_infinitime(self):
         self.start_discovery()
-        self.set_timeout(1 * 1000)
+        self.set_timeout(1.5 * 1000)
         self.run()
 
 
