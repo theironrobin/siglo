@@ -61,9 +61,9 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.pair_switch.set_active(True)
         else:
             self.auto_switch_paired = False
-        GObject.signal_new("my-custom-signal", self, GObject.SIGNAL_RUN_LAST, GObject.TYPE_PYOBJECT,
+        GObject.signal_new("flash-signal", self, GObject.SIGNAL_RUN_LAST, GObject.TYPE_PYOBJECT,
                        (GObject.TYPE_PYOBJECT,))
-        self.connect("my-custom-signal", self.start_flashing)
+        self.connect("flash-signal", self.start_flashing)
 
     def destroy_manager(self):
         if self.manager:
@@ -255,13 +255,13 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.ota_picked_box.set_visible(False)
             self.ota_selection_box.set_visible(True)
 
-    def thread_function(self):
+    def download_thread(self):
         file_name = "/tmp/" + self.asset
         local_filename, headers = urllib.request.urlretrieve(
             self.asset_download_url, file_name
         )
         self.ota_file = local_filename
-        self.emit("my-custom-signal", None)
+        self.emit("flash-signal", None)
 
     def start_flashing(self, widget, args):
         self.main_info.set_text("[INFO ] Updating Firmware...")
@@ -290,14 +290,12 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu.connect()
         if not self.ble_dfu.successful_connection:
             self.show_complete(success=False)
-        self.rescan_button.set_sensitive(False)
 
     @Gtk.Template.Callback()
     def flash_it_button_clicked(self, widget):
         if self.conf.get_property("deploy_type") == "quick":
             self.main_info.set_text("[INFO ] Downloading Asset...")
-            #self.bt_spinner.set_visible(True)
-            Thread(target=self.thread_function).start()
+            Thread(target=self.download_thread).start()
         else:
             self.start_flashing()
 
@@ -364,6 +362,7 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def show_complete(self, success):
         if success:
+            self.rescan_button.set_sensitive("True")
             self.main_info.set_text("OTA Update Complete")
         else:
             self.main_info.set_text("OTA Update Failed")
