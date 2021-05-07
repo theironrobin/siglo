@@ -25,6 +25,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     sync_time_button = Gtk.Template.Child()
     ota_picked_box = Gtk.Template.Child()
     ota_selection_box = Gtk.Template.Child()
+    ota_cancel_button = Gtk.Template.Child()
     dfu_progress_box = Gtk.Template.Child()
     main_info = Gtk.Template.Child()
     bt_spinner = Gtk.Template.Child()
@@ -191,8 +192,10 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.pair_switch.set_sensitive(True)
             if self.conf.get_property("deploy_type") == "manual":
                 self.bbox_scan_pass.set_visible(True)
+                self.ota_cancel_button.set_sensitive(True)
             if self.conf.get_property("deploy_type") == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
+                self.ota_cancel_button.set_sensitive(False)
                 self.populate_tagbox()
             self.multi_device_listbox.set_visible(False)
 
