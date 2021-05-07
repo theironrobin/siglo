@@ -315,6 +315,7 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def pair_switch_toggled(self, widget):
+        self.conf.set_property("last_paired_device", self.manager.get_mac_address())
         print(self.manager)
         if (
             self.conf.get_property("paired")
