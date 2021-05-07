@@ -375,6 +375,7 @@ To check, go to Settings-&gt;Bluetooth-&gt;Devices
 
 Might take a few scans.</property>
                 <property name="justify">center</property>
+                <property name="wrap">True</property>
               </object>
               <packing>
                 <property name="expand">False</property>
