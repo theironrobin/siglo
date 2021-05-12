@@ -30,22 +30,22 @@ class InfiniTimeDFU(gatt.Device):
         self.s = Gio.Settings.new("org.gnome.desktop.session")
         self.p = Gio.Settings.new("org.gnome.settings-daemon.plugins.power")
         self.idle_delay = self.s.get_uint("idle-delay")
-        self.sleep_inactive_battery_timeout = self.p.get_uint("sleep-inactive-battery-timeout")
-        self.sleep_inactive_ac_timeout = self.p.get_uint("sleep-inactive-ac-timeout")
+        self.sleep_inactive_battery_timeout = self.p.get_int("sleep-inactive-battery-timeout")
+        self.sleep_inactive_ac_timeout = self.p.get_int("sleep-inactive-ac-timeout")
         self.idle_dim = self.p.get_boolean("idle-dim")
 
         super().__init__(mac_address, manager)
 
     def caffeinate(self):
         self.s.set_uint("idle-delay", 0)
-        self.p.set_uint("sleep-inactive-battery-timeout", 0)
-        self.p.set_uint("sleep-inactive-ac-timeout", 0)
+        self.p.set_int("sleep-inactive-battery-timeout", 0)
+        self.p.set_int("sleep-inactive-ac-timeout", 0)
         self.p.set_boolean("idle-dim", False)
 
     def decaffeinate(self):
         self.s.set_uint("idle-delay", self.idle_delay)
-        self.p.set_uint("sleep-inactive-battery-timeout", self.sleep_inactive_battery_timeout)
-        self.p.set_uint("sleep-inactive-ac-timeout", self.sleep_inactive_ac_timeout)
+        self.p.set_int("sleep-inactive-battery-timeout", self.sleep_inactive_battery_timeout)
+        self.p.set_int("sleep-inactive-ac-timeout", self.sleep_inactive_ac_timeout)
         self.p.set_boolean("idle-dim", self.idle_dim)
         
     def connect(self):
