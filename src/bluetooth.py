@@ -151,11 +151,14 @@ class InfiniTimeDevice(gatt.Device):
 
     def send_notification(self, alert_dict):
         message = alert_dict["message"]
-        arr = bytearray(message, "utf-8")
-        # self.new_alert_characteristic.write_value(
-        #     b"   Reports of my death were greatly exaggerated. So how was your day?"
-        # )
-        self.new_alert_characteristic.write_value(arr)
+        alert_category = '0' # simple alert
+        alert_number = '0' # 0-255
+        title = 'Alert'
+        msg = str.encode(alert_category) + str.encode(alert_number) + str.encode('\0') + str.encode(title) + str.encode('\0') + str.encode("Reports of my death were greatly exaggerated. So how was your day?")
+
+        #arr = bytearray(message, "utf-8")
+        #self.new_alert_characteristic.write_value(arr)
+        self.new_alert_characteristic.write_value(msg)
 
 
 class BluetoothDisabled(Exception):
