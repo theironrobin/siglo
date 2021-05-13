@@ -3,7 +3,7 @@ GTK app to sync InfiniTime watch with PinePhone
 
 'siglo' means century in Spanish
 
-## Dependancies
+## Dependencies
 ### Arch Linux
 ```
 sudo pacman -S --needed meson python-pip base-devel bluez bluez-utils dbus-python
