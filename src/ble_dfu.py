@@ -4,6 +4,7 @@ import os
 from .util import *
 import math
 from struct import unpack
+from gi.repository import Gio
 
 class InfiniTimeDFU(gatt.Device):
     # Class constants
@@ -26,9 +27,27 @@ class InfiniTimeDFU(gatt.Device):
         self.packet_recipt_count = 0
         self.total_receipt_size = 0
         self.update_in_progress = False
+        self.s = Gio.Settings.new("org.gnome.desktop.session")
+        self.p = Gio.Settings.new("org.gnome.settings-daemon.plugins.power")
+        self.idle_delay = self.s.get_uint("idle-delay")
+        self.sleep_inactive_battery_timeout = self.p.get_int("sleep-inactive-battery-timeout")
+        self.sleep_inactive_ac_timeout = self.p.get_int("sleep-inactive-ac-timeout")
+        self.idle_dim = self.p.get_boolean("idle-dim")
 
         super().__init__(mac_address, manager)
 
+    def caffeinate(self):
+        self.s.set_uint("idle-delay", 0)
+        self.p.set_int("sleep-inactive-battery-timeout", 0)
+        self.p.set_int("sleep-inactive-ac-timeout", 0)
+        self.p.set_boolean("idle-dim", False)
+
+    def decaffeinate(self):
+        self.s.set_uint("idle-delay", self.idle_delay)
+        self.p.set_int("sleep-inactive-battery-timeout", self.sleep_inactive_battery_timeout)
+        self.p.set_int("sleep-inactive-ac-timeout", self.sleep_inactive_ac_timeout)
+        self.p.set_boolean("idle-dim", self.idle_dim)
+        
     def connect(self):
         self.successful_connection = True
         super().connect()
@@ -94,6 +113,7 @@ class InfiniTimeDFU(gatt.Device):
             self.step_six()
         elif self.current_step == 6:
             print("Begin DFU")
+            self.caffeinate()
             self.step_seven()
 
     def characteristic_write_value_failed(self, characteristic, error):
@@ -258,6 +278,7 @@ class InfiniTimeDFU(gatt.Device):
         self.ctrl_point_char.write_value(bytearray.fromhex("05"))
         self.update_in_progress = False
         self.disconnect()
+        self.decaffeinate()
 
     def get_init_bin_array(self):
         # Open the DAT file and create array of its contents
