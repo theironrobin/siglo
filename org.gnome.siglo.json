@@ -80,7 +80,7 @@
                 {
                     "type" : "git",
                     "url" : "https://github.com/alexr4535/siglo",
-                    "tag" : "v0.6.2"
+                    "tag" : "v0.7.3"
                 }
             ]
         }
