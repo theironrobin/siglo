@@ -30,8 +30,8 @@ class daemon:
             if isinstance(arg, dbus.Dictionary):
                 if arg["desktop-entry"] == "sm.puri.Chatty":
                     alert_dict["category"] = "SMS"
-                    alert_dict["sender"] = message.get_args_list()[3]
-                    alert_dict["message"] = "   " + message.get_args_list()[4]
+                    alert_dict["sender"] = message.get_args_list()[3].split("New message from ")[1]
+                    alert_dict["message"] = message.get_args_list()[4]
         alert_dict_empty = not alert_dict
         if len(alert_dict) > 0:
             self.device.send_notification(alert_dict)
