@@ -8,19 +8,37 @@ from gi.repository import Gio
 
 class Caffeinator():
     def __init__(self):
-        schemas = Gio.Settings.list_schemas()
-        if "org.gnome.desktop.session" in schemas:
-            self.gnome_session = Gio.Settings.new("org.gnome.desktop.session")
+        self.gnome_session = self.safe_lookup(
+            "org.gnome.desktop.session",
+            "GNOME session not found, you're on your own for idle timeouts"
+        )
+        if self.gnome_session:
             self.idle_delay = self.gnome_session.get_uint("idle-delay")
-        else:
-            print("[INFO ] GNOME session not found, you're on your own for idle timeouts")
-        if "org.gnome.settings-daemon.plugins.power" in schemas:
-            self.gnome_power = Gio.Settings.new("org.gnome.settings-daemon.plugins.power")
+
+        self.gnome_power = self.safe_lookup(
+            "org.gnome.settings-daemon.plugins.power",
+            "GNOME power settings not found, you're on your own for system sleep"
+        )
+        if self.gnome_power:
             self.sleep_inactive_battery_timeout = self.gnome_power.get_int("sleep-inactive-battery-timeout")
             self.sleep_inactive_ac_timeout = self.gnome_power.get_int("sleep-inactive-ac-timeout")
             self.idle_dim = self.gnome_power.get_boolean("idle-dim")
+
+    # Look up a Gio Settings schema without crashing if it doesn't exist
+    def safe_lookup(self, path, failmsg=None):
+        try:
+            exists = Gio.SettingsSchema.lookup(path)
+        except AttributeError as e:
+            # SettingsSchema is new, if it doesn't exist
+            # then fall back to legacy schema lookup
+            exists = (path in Gio.Settings.list_schemas())
+
+        if exists:
+            return Gio.Settings.new(path)
         else:
-            print("[INFO ] GNOME power settings not found, you're on your own for system sleep")
+            if failmsg:
+                print("[INFO ] {}".format(failmsg))
+            return None
 
     def caffeinate(self):
         if self.gnome_session:
