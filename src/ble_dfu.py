@@ -6,60 +6,6 @@ import math
 from struct import unpack
 from gi.repository import Gio
 
-class Caffeinator():
-    def __init__(self):
-        self.gnome_session = self.safe_lookup(
-            "org.gnome.desktop.session",
-            "GNOME session not found, you're on your own for idle timeouts"
-        )
-        if self.gnome_session:
-            self.idle_delay = self.gnome_session.get_uint("idle-delay")
-
-        self.gnome_power = self.safe_lookup(
-            "org.gnome.settings-daemon.plugins.power",
-            "GNOME power settings not found, you're on your own for system sleep"
-        )
-        if self.gnome_power:
-            self.sleep_inactive_battery_timeout = self.gnome_power.get_int("sleep-inactive-battery-timeout")
-            self.sleep_inactive_ac_timeout = self.gnome_power.get_int("sleep-inactive-ac-timeout")
-            self.idle_dim = self.gnome_power.get_boolean("idle-dim")
-
-    # Look up a Gio Settings schema without crashing if it doesn't exist
-    def safe_lookup(self, path, failmsg=None):
-        try:
-            exists = Gio.SettingsSchema.lookup(path)
-        except AttributeError as e:
-            # SettingsSchema is new, if it doesn't exist
-            # then fall back to legacy schema lookup
-            exists = (path in Gio.Settings.list_schemas())
-
-        if exists:
-            return Gio.Settings.new(path)
-        else:
-            if failmsg:
-                print("[INFO ] {}".format(failmsg))
-            return None
-
-    def caffeinate(self):
-        if self.gnome_session:
-            print("[INFO ] Disabling GNOME idle timeout")
-            self.gnome_session.set_uint("idle-delay", 0)
-        if self.gnome_power:
-            print("[INFO ] Disabling GNOME inactivity sleeping")
-            self.gnome_power.set_int("sleep-inactive-battery-timeout", 0)
-            self.gnome_power.set_int("sleep-inactive-ac-timeout", 0)
-            self.gnome_power.set_boolean("idle-dim", False)
-
-    def decaffeinate(self):
-        if self.gnome_session:
-            print("[INFO ] Restoring GNOME idle timeout")
-            self.gnome_session.set_uint("idle-delay", self.idle_delay)
-        if self.gnome_power:
-            print("[INFO ] Restoring GNOME inactivity sleeping")
-            self.gnome_power.set_int("sleep-inactive-battery-timeout", self.sleep_inactive_battery_timeout)
-            self.gnome_power.set_int("sleep-inactive-ac-timeout", self.sleep_inactive_ac_timeout)
-            self.gnome_power.set_boolean("idle-dim", self.idle_dim)
-
 class InfiniTimeDFU(gatt.Device):
     # Class constants
     UUID_DFU_SERVICE = "00001530-1212-efde-1523-785feabcd123"
@@ -321,3 +267,57 @@ class InfiniTimeDFU(gatt.Device):
         # Open the DAT file and create array of its contents
         init_bin_array = array("B", open(self.datfile_path, "rb").read())
         return init_bin_array
+
+class Caffeinator():
+    def __init__(self):
+        self.gnome_session = self.safe_lookup(
+            "org.gnome.desktop.session",
+            "GNOME session not found, you're on your own for idle timeouts"
+        )
+        if self.gnome_session:
+            self.idle_delay = self.gnome_session.get_uint("idle-delay")
+
+        self.gnome_power = self.safe_lookup(
+            "org.gnome.settings-daemon.plugins.power",
+            "GNOME power settings not found, you're on your own for system sleep"
+        )
+        if self.gnome_power:
+            self.sleep_inactive_battery_timeout = self.gnome_power.get_int("sleep-inactive-battery-timeout")
+            self.sleep_inactive_ac_timeout = self.gnome_power.get_int("sleep-inactive-ac-timeout")
+            self.idle_dim = self.gnome_power.get_boolean("idle-dim")
+
+    # Look up a Gio Settings schema without crashing if it doesn't exist
+    def safe_lookup(self, path, failmsg=None):
+        try:
+            exists = Gio.SettingsSchema.lookup(path)
+        except AttributeError as e:
+            # SettingsSchema is new, if it doesn't exist
+            # then fall back to legacy schema lookup
+            exists = (path in Gio.Settings.list_schemas())
+
+        if exists:
+            return Gio.Settings.new(path)
+        else:
+            if failmsg:
+                print("[INFO ] {}".format(failmsg))
+            return None
+
+    def caffeinate(self):
+        if self.gnome_session:
+            print("[INFO ] Disabling GNOME idle timeout")
+            self.gnome_session.set_uint("idle-delay", 0)
+        if self.gnome_power:
+            print("[INFO ] Disabling GNOME inactivity sleeping")
+            self.gnome_power.set_int("sleep-inactive-battery-timeout", 0)
+            self.gnome_power.set_int("sleep-inactive-ac-timeout", 0)
+            self.gnome_power.set_boolean("idle-dim", False)
+
+    def decaffeinate(self):
+        if self.gnome_session:
+            print("[INFO ] Restoring GNOME idle timeout")
+            self.gnome_session.set_uint("idle-delay", self.idle_delay)
+        if self.gnome_power:
+            print("[INFO ] Restoring GNOME inactivity sleeping")
+            self.gnome_power.set_int("sleep-inactive-battery-timeout", self.sleep_inactive_battery_timeout)
+            self.gnome_power.set_int("sleep-inactive-ac-timeout", self.sleep_inactive_ac_timeout)
+            self.gnome_power.set_boolean("idle-dim", self.idle_dim)
