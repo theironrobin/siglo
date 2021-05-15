@@ -6,6 +6,42 @@ import math
 from struct import unpack
 from gi.repository import Gio
 
+class Caffeinator():
+    def __init__(self):
+        schemas = Gio.Settings.list_schemas()
+        if "org.gnome.desktop.session" in schemas:
+            self.gnome_session = Gio.Settings.new("org.gnome.desktop.session")
+            self.idle_delay = self.gnome_session.get_uint("idle-delay")
+        else:
+            print("[INFO ] GNOME session not found, you're on your own for idle timeouts")
+        if "org.gnome.settings-daemon.plugins.power" in schemas:
+            self.gnome_power = Gio.Settings.new("org.gnome.settings-daemon.plugins.power")
+            self.sleep_inactive_battery_timeout = self.gnome_power.get_int("sleep-inactive-battery-timeout")
+            self.sleep_inactive_ac_timeout = self.gnome_power.get_int("sleep-inactive-ac-timeout")
+            self.idle_dim = self.gnome_power.get_boolean("idle-dim")
+        else:
+            print("[INFO ] GNOME power settings not found, you're on your own for system sleep")
+
+    def caffeinate(self):
+        if self.gnome_session:
+            print("[INFO ] Disabling GNOME idle timeout")
+            self.gnome_session.set_uint("idle-delay", 0)
+        if self.gnome_power:
+            print("[INFO ] Disabling GNOME inactivity sleeping")
+            self.gnome_power.set_int("sleep-inactive-battery-timeout", 0)
+            self.gnome_power.set_int("sleep-inactive-ac-timeout", 0)
+            self.gnome_power.set_boolean("idle-dim", False)
+
+    def decaffeinate(self):
+        if self.gnome_session:
+            print("[INFO ] Restoring GNOME idle timeout")
+            self.gnome_session.set_uint("idle-delay", self.idle_delay)
+        if self.gnome_power:
+            print("[INFO ] Restoring GNOME inactivity sleeping")
+            self.gnome_power.set_int("sleep-inactive-battery-timeout", self.sleep_inactive_battery_timeout)
+            self.gnome_power.set_int("sleep-inactive-ac-timeout", self.sleep_inactive_ac_timeout)
+            self.gnome_power.set_boolean("idle-dim", self.idle_dim)
+
 class InfiniTimeDFU(gatt.Device):
     # Class constants
     UUID_DFU_SERVICE = "00001530-1212-efde-1523-785feabcd123"
@@ -27,27 +63,10 @@ class InfiniTimeDFU(gatt.Device):
         self.packet_recipt_count = 0
         self.total_receipt_size = 0
         self.update_in_progress = False
-        self.s = Gio.Settings.new("org.gnome.desktop.session")
-        self.p = Gio.Settings.new("org.gnome.settings-daemon.plugins.power")
-        self.idle_delay = self.s.get_uint("idle-delay")
-        self.sleep_inactive_battery_timeout = self.p.get_int("sleep-inactive-battery-timeout")
-        self.sleep_inactive_ac_timeout = self.p.get_int("sleep-inactive-ac-timeout")
-        self.idle_dim = self.p.get_boolean("idle-dim")
+        self.caffeinator = Caffeinator()
 
         super().__init__(mac_address, manager)
 
-    def caffeinate(self):
-        self.s.set_uint("idle-delay", 0)
-        self.p.set_int("sleep-inactive-battery-timeout", 0)
-        self.p.set_int("sleep-inactive-ac-timeout", 0)
-        self.p.set_boolean("idle-dim", False)
-
-    def decaffeinate(self):
-        self.s.set_uint("idle-delay", self.idle_delay)
-        self.p.set_int("sleep-inactive-battery-timeout", self.sleep_inactive_battery_timeout)
-        self.p.set_int("sleep-inactive-ac-timeout", self.sleep_inactive_ac_timeout)
-        self.p.set_boolean("idle-dim", self.idle_dim)
-        
     def connect(self):
         self.successful_connection = True
         super().connect()
@@ -113,7 +132,7 @@ class InfiniTimeDFU(gatt.Device):
             self.step_six()
         elif self.current_step == 6:
             print("Begin DFU")
-            self.caffeinate()
+            self.caffeinator.caffeinate()
             self.step_seven()
 
     def characteristic_write_value_failed(self, characteristic, error):
@@ -278,7 +297,7 @@ class InfiniTimeDFU(gatt.Device):
         self.ctrl_point_char.write_value(bytearray.fromhex("05"))
         self.update_in_progress = False
         self.disconnect()
-        self.decaffeinate()
+        self.caffeinator.decaffeinate()
 
     def get_init_bin_array(self):
         # Open the DAT file and create array of its contents
