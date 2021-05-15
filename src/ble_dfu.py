@@ -4,7 +4,6 @@ import os
 from .util import *
 import math
 from struct import unpack
-from gi.repository import Gio
 
 class InfiniTimeDFU(gatt.Device):
     # Class constants
@@ -270,33 +269,41 @@ class InfiniTimeDFU(gatt.Device):
 
 class Caffeinator():
     def __init__(self):
-        self.gnome_session = self.safe_lookup(
-            "org.gnome.desktop.session",
-            "GNOME session not found, you're on your own for idle timeouts"
-        )
-        if self.gnome_session:
-            self.idle_delay = self.gnome_session.get_uint("idle-delay")
+        try:
+            from gi.repository import Gio
+            self.gio = Gio
 
-        self.gnome_power = self.safe_lookup(
-            "org.gnome.settings-daemon.plugins.power",
-            "GNOME power settings not found, you're on your own for system sleep"
-        )
-        if self.gnome_power:
-            self.sleep_inactive_battery_timeout = self.gnome_power.get_int("sleep-inactive-battery-timeout")
-            self.sleep_inactive_ac_timeout = self.gnome_power.get_int("sleep-inactive-ac-timeout")
-            self.idle_dim = self.gnome_power.get_boolean("idle-dim")
+            self.gnome_session = self.safe_lookup(
+                "org.gnome.desktop.session",
+                "GNOME session not found, you're on your own for idle timeouts"
+            )
+            if self.gnome_session:
+                self.idle_delay = self.gnome_session.get_uint("idle-delay")
+
+            self.gnome_power = self.safe_lookup(
+                "org.gnome.settings-daemon.plugins.power",
+                "GNOME power settings not found, you're on your own for system sleep"
+            )
+            if self.gnome_power:
+                self.sleep_inactive_battery_timeout = self.gnome_power.get_int("sleep-inactive-battery-timeout")
+                self.sleep_inactive_ac_timeout = self.gnome_power.get_int("sleep-inactive-ac-timeout")
+                self.idle_dim = self.gnome_power.get_boolean("idle-dim")
+        except ImportError:
+            print("[INFO ] GIO not found, disabling caffeine")
+        except AttributeError:
+            print("[INFO ] Unable to load GIO schemas, disabling caffeine")
 
     # Look up a Gio Settings schema without crashing if it doesn't exist
     def safe_lookup(self, path, failmsg=None):
         try:
-            exists = Gio.SettingsSchema.lookup(path)
-        except AttributeError as e:
+            exists = self.gio.SettingsSchema.lookup(path)
+        except AttributeError:
             # SettingsSchema is new, if it doesn't exist
             # then fall back to legacy schema lookup
-            exists = (path in Gio.Settings.list_schemas())
+            exists = (path in self.gio.Settings.list_schemas())
 
         if exists:
-            return Gio.Settings.new(path)
+            return self.gio.Settings.new(path)
         else:
             if failmsg:
                 print("[INFO ] {}".format(failmsg))
