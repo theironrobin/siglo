@@ -1,6 +1,7 @@
 import gatt.errors
 import urllib.request
 import subprocess
+from subprocess import Popen, PIPE
 import dbus
 from threading import Thread
 from gi.repository import Gtk, GObject
@@ -40,6 +41,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     ota_pick_asset_combobox = Gtk.Template.Child()
     deploy_type_switch = Gtk.Template.Child()
     pair_switch = Gtk.Template.Child()
+    bluetooth_button = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
@@ -62,8 +64,13 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.pair_switch.set_active(True)
         else:
             self.auto_switch_paired = False
-        GObject.signal_new("flash-signal", self, GObject.SIGNAL_RUN_LAST, GObject.TYPE_PYOBJECT,
-                       (GObject.TYPE_PYOBJECT,))
+        GObject.signal_new(
+            "flash-signal",
+            self,
+            GObject.SIGNAL_RUN_LAST,
+            GObject.TYPE_PYOBJECT,
+            (GObject.TYPE_PYOBJECT,),
+        )
         self.connect("flash-signal", self.start_flashing)
 
     def destroy_manager(self):
@@ -129,6 +136,7 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.manager.scan_for_infinitime()
             except (gatt.errors.NotReady, gatt.errors.Failed):
                 info_prefix = "[WARN ] Bluetooth is disabled"
+                self.bluetooth_button.set_visible(True)
                 self.destroy_manager()
         self.done_scanning_multi(info_prefix)
 
@@ -220,6 +228,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     def rescan_button_clicked(self, widget):
         print("[INFO ] Rescan button clicked")
         self.ota_pick_tag_combobox.remove_all()
+        self.bluetooth_button.set_visible(False)
         self.do_scanning()
 
     @Gtk.Template.Callback()
@@ -257,6 +266,16 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.main_info.set_text("Choose another OTA File")
             self.ota_picked_box.set_visible(False)
             self.ota_selection_box.set_visible(True)
+
+    @Gtk.Template.Callback()
+    def bluetooth_button_clicked(self, widget):
+        p1 = Popen("echo 'power on'", shell=True, stdout=PIPE)
+        p2 = Popen(["pkexec", "sudo", "bluetoothctl"], stdin=p1.stdout, stdout=PIPE)
+        p1.stdout.close()
+        output = p2.communicate()[0]
+        self.main_info.set_text("[INFO ] Bluetooth Enabled!")
+        self.bluetooth_button.set_visible(False)
+        self.scan_fail_box.set_visible(False)
 
     def download_thread(self):
         file_name = "/tmp/" + self.asset
@@ -301,7 +320,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             Thread(target=self.download_thread).start()
         else:
             self.emit("flash-signal", None)
-            #self.start_flashing()
+            # self.start_flashing()
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):
@@ -321,10 +340,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     def pair_switch_toggled(self, widget):
         self.conf.set_property("last_paired_device", self.manager.get_mac_address())
         print(self.manager)
-        if (
-            self.conf.get_property("paired")
-            and self.auto_switch_paired == True
-        ):
+        if self.conf.get_property("paired") and self.auto_switch_paired == True:
             self.auto_switch_paired = False
         else:
             if not self.conf.get_property("paired"):
@@ -341,7 +357,7 @@ class SigloWindow(Gtk.ApplicationWindow):
                 try:
                     device = InfiniTimeDevice(
                         manager=self.manager, mac_address=self.manager.get_mac_address()
-                        )
+                    )
                     device.disconnect()
                 except dbus.exceptions.DBusException:
                     raise BluetoothDisabled
