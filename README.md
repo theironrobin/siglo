@@ -25,12 +25,6 @@ cd build
 sudo ninja install
 ```
 
-Make sure Bluetooth Adapter is enabled in Settings->Bluetooth, or:
-```
-sudo systemctl start bluetooth
-echo "power on" | sudo bluetoothctl
-```
-
 ## Building and installing Flatpak app
 
 ### Building and installing on target architecture
