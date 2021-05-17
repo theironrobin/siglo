@@ -35,6 +35,7 @@ def main(version):
     def gtk_style():
         css = b"""
 #multi_mac_label { font-size: 33px; }
+#bluetooth_button { background-color: #0082fc; }
         """
         style_provider = Gtk.CssProvider()
         style_provider.load_from_data(css)

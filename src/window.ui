@@ -124,7 +124,8 @@
         </child>
         <child>
           <object class="GtkButton" id="bluetooth_button">
-            <property name="label" translatable="yes">Start Bluetooth (requires sudo)</property>
+            <property name="label" translatable="yes">Start Bluetooth</property>
+            <property name="name">bluetooth_button</property>
             <property name="can-focus">True</property>
             <property name="receives-default">True</property>
             <property name="halign">center</property>
@@ -134,6 +135,7 @@
           <packing>
             <property name="expand">False</property>
             <property name="fill">True</property>
+            <property name="padding">10</property>
             <property name="position">4</property>
           </packing>
         </child>
