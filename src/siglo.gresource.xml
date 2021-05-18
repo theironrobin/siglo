@@ -2,5 +2,10 @@
 <gresources>
   <gresource prefix="/org/gnome/siglo">
     <file>window.ui</file>
+    <file>watch.svg</file>
+    <file>watch-icon.svg</file>
+    <file>watch-check.svg</file>
+    <file>watch-progress.svg</file>
+    <file>watch-error.svg</file>
   </gresource>
 </gresources>

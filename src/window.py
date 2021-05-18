@@ -1,10 +1,10 @@
-import gatt.errors
-import urllib.request
 import subprocess
-from subprocess import Popen, PIPE
-import dbus
-from threading import Thread
-from gi.repository import Gtk, GObject
+import configparser
+import threading
+import urllib.request
+from pathlib import Path
+import gatt
+from gi.repository import Gtk, GObject, GLib
 from .bluetooth import (
     InfiniTimeDevice,
     InfiniTimeManager,
@@ -17,36 +17,60 @@ from .quick_deploy import *
 from .config import config
 
 
+class ConnectionThread(threading.Thread):
+    def __init__(self, manager, mac, callback):
+        threading.Thread.__init__(self)
+        self.mac = mac
+        self.manager = manager
+        self.callback = callback
+        self.device = None
+
+    def run(self):
+        self.device = InfiniTimeDevice(
+            manager=self.manager, mac_address=self.mac
+        )
+        self.device.services_done = self.data_received
+        self.device.connect()
+
+    def data_received(self):
+        firmware = bytes(self.device.firmware).decode()
+        if self.device.battery == -1:
+            battery = "n/a"
+        else:
+            battery = "{}%".format(self.device.battery)
+        GLib.idle_add(self.callback, [firmware, battery])
+
+
+
 @Gtk.Template(resource_path="/org/gnome/siglo/window.ui")
 class SigloWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "SigloWindow"
-    info_scan_pass = Gtk.Template.Child()
-    scan_fail_box = Gtk.Template.Child()
-    scan_pass_box = Gtk.Template.Child()
-    sync_time_button = Gtk.Template.Child()
-    ota_picked_box = Gtk.Template.Child()
-    ota_selection_box = Gtk.Template.Child()
-    ota_cancel_button = Gtk.Template.Child()
-    dfu_progress_box = Gtk.Template.Child()
-    main_info = Gtk.Template.Child()
-    bt_spinner = Gtk.Template.Child()
-    dfu_progress_bar = Gtk.Template.Child()
-    dfu_progress_text = Gtk.Template.Child()
-    multi_device_listbox = Gtk.Template.Child()
-    rescan_button = Gtk.Template.Child()
-    auto_bbox_scan_pass = Gtk.Template.Child()
-    bbox_scan_pass = Gtk.Template.Child()
+    # Navigation
+    main_stack = Gtk.Template.Child()
+    header_stack = Gtk.Template.Child()
+
+    # Watches view
+    watches_listbox = Gtk.Template.Child()
+
+    # Watch view
+    watch_name = Gtk.Template.Child()
+    watch_address = Gtk.Template.Child()
+    watch_firmware = Gtk.Template.Child()
+    watch_battery = Gtk.Template.Child()
     ota_pick_tag_combobox = Gtk.Template.Child()
     ota_pick_asset_combobox = Gtk.Template.Child()
-    ota_pick_asset_combobox = Gtk.Template.Child()
-    deploy_type_switch = Gtk.Template.Child()
-    pair_switch = Gtk.Template.Child()
-    bluetooth_button = Gtk.Template.Child()
+    firmware_run = Gtk.Template.Child()
+
+    # Flasher
+    dfu_stack = Gtk.Template.Child()
+    dfu_progress_bar = Gtk.Template.Child()
+    dfu_progress_text = Gtk.Template.Child()
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
         self.ota_file = None
         self.manager = None
+        self.current_mac = None
         self.asset = None
         self.asset_download_url = None
         self.tag = None
@@ -78,89 +102,89 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.manager.stop()
             self.manager = None
 
-    def do_scanning(self):
-        info_prefix = "[INFO ] Done Scanning"
-        if not self.manager:
-            # create manager if not present yet
-            try:
-                self.manager = InfiniTimeManager()
-            except (gatt.errors.NotReady, BluetoothDisabled):
-                info_prefix = "[WARN ] Bluetooth is disabled"
-            except NoAdapterFound:
-                info_prefix = "[WARN ] No Bluetooth adapter found"
-        if self.manager:
-            self.depopulate_listbox()
-            self.main_info.set_text("Rescanning...")
-            self.bt_spinner.set_visible(True)
-            self.bbox_scan_pass.set_visible(False)
-            self.auto_bbox_scan_pass.set_visible(False)
-            self.scan_fail_box.set_visible(False)
-            self.rescan_button.set_visible(False)
-            self.scan_pass_box.set_visible(False)
-            self.manager.scan_result = False
-            self.pair_switch.set_sensitive(False)
-            if not self.conf.get_property("paired"):
-                try:
-                    self.manager.scan_for_infinitime()
-                except (gatt.errors.NotReady, gatt.errors.Failed):
-                    info_prefix = "[WARN ] Bluetooth is disabled"
-                    self.destroy_manager()
-        self.done_scanning_multi(info_prefix)
-
     def destroy_manager(self):
         if self.manager:
             self.manager.stop()
             self.manager = None
 
+    def make_watch_row(self, name, mac):
+        row = Gtk.ListBoxRow()
+        grid = Gtk.Grid()
+        grid.set_hexpand(True)
+        grid.set_row_spacing(8)
+        grid.set_column_spacing(8)
+        grid.set_margin_top(8)
+        grid.set_margin_bottom(8)
+        grid.set_margin_left(8)
+        grid.set_margin_right(8)
+        row.add(grid)
+
+        icon = Gtk.Image.new_from_resource("/org/gnome/siglo/watch-icon.svg")
+        grid.attach(icon, 0, 0, 1, 2)
+
+        label_alias = Gtk.Label(label="Name", xalign=1.0)
+        label_alias.get_style_context().add_class("dim-label")
+        grid.attach(label_alias, 1, 0, 1, 1)
+        value_alias = Gtk.Label(label=name, xalign=0.0)
+        value_alias.set_hexpand(True)
+        grid.attach(value_alias, 2, 0, 1, 1)
+
+        label_mac = Gtk.Label(label="Address", xalign=1.0)
+        label_mac.get_style_context().add_class("dim-label")
+        grid.attach(label_mac, 1, 1, 1, 1)
+        value_mac = Gtk.Label(label=mac, xalign=0.0)
+        grid.attach(value_mac, 2, 1, 1, 1)
+
+        arrow = Gtk.Image.new_from_icon_name("go-next-symbolic", Gtk.IconSize.BUTTON)
+        grid.attach(arrow, 3, 0, 1, 2)
+
+        row.show_all()
+        return row
+
     def do_scanning(self):
-        info_prefix = "[INFO ] Done Scanning"
+        print("Start scanning")
+        self.main_stack.set_visible_child_name("scan")
+        self.header_stack.set_visible_child_name("scan")
         if not self.manager:
             # create manager if not present yet
             try:
                 self.manager = InfiniTimeManager()
             except (gatt.errors.NotReady, BluetoothDisabled):
-                info_prefix = "[WARN ] Bluetooth is disabled"
+                print("Bluetooth is disabled")
+                self.main_stack.set_visible_child_name("nodevice")
             except NoAdapterFound:
-                info_prefix = "[WARN ] No Bluetooth adapter found"
-        if self.manager:
-            self.depopulate_listbox()
-            self.main_info.set_text("Rescanning...")
-            self.bt_spinner.set_visible(True)
-            self.bbox_scan_pass.set_visible(False)
-            self.auto_bbox_scan_pass.set_visible(False)
-            self.scan_fail_box.set_visible(False)
-            self.rescan_button.set_visible(False)
-            self.scan_pass_box.set_visible(False)
-            self.manager.scan_result = False
-            try:
-                self.manager.scan_for_infinitime()
-            except (gatt.errors.NotReady, gatt.errors.Failed):
-                info_prefix = "[WARN ] Bluetooth is disabled"
-                self.bluetooth_button.set_visible(True)
-                self.destroy_manager()
-        self.done_scanning_multi(info_prefix)
+                print("No bluetooth adapter found")
+                self.main_stack.set_visible_child_name("nodevice")
+        if not self.manager:
+            return
+
+        self.depopulate_listbox()
+        self.manager.scan_result = False
+        try:
+            self.manager.scan_for_infinitime()
+        except (gatt.errors.NotReady, gatt.errors.Failed) as e:
+            print(e)
+            self.main_stack.set_visible_child_name("nodevice")
+            self.destroy_manager()
+
+        if len(self.manager.get_device_set()) > 0:
+            self.main_stack.set_visible_child_name("watches")
+            self.header_stack.set_visible_child_name("watches")
+        else:
+            self.main_stack.set_visible_child_name("nodevice")
+        
+        for mac in self.manager.get_device_set():
+            print("Found {}".format(mac))
+            row = self.make_watch_row(self.manager.aliases[mac], mac)
+            row.mac = mac
+            row.alias = self.manager.aliases[mac]
+            self.watches_listbox.add(row)
+        self.populate_tagbox()
 
     def depopulate_listbox(self):
-        children = self.multi_device_listbox.get_children()
+        children = self.watches_listbox.get_children()
         for child in children:
-            self.multi_device_listbox.remove(child)
-        self.multi_device_listbox.set_visible(False)
-
-    def populate_listbox(self):
-        for mac_addr in self.manager.get_device_set():
-            label = Gtk.Label(xalign=0)
-            label.set_use_markup(True)
-            label.set_name("multi_mac_label")
-            label.set_text(mac_addr)
-            label.set_justify(Gtk.Justification.LEFT)
-            self.multi_device_listbox.add(label)
-            try:
-                label.set_margin_start(10)
-            except AttributeError:
-                label.set_margin_left(10)
-            label.set_width_chars(20)
-            self.multi_device_listbox.set_visible(True)
-            self.multi_device_listbox.show_all()
+            self.watches_listbox.remove(child)
 
     def populate_tagbox(self):
         for tag in get_tags(self.full_list):
@@ -180,32 +204,51 @@ class SigloWindow(Gtk.ApplicationWindow):
             info_suffix = "\n[INFO ] Scan Succeeded"
             self.populate_listbox()
         else:
-            info_suffix = "\n[INFO ] Scan Failed"
+            info_suffix += "\n[INFO ] Scan Failed"
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
 
-    @Gtk.Template.Callback()
-    def multi_listbox_row_selected(self, list_box, row):
-        if row is not None:
-            mac_add = row.get_child().get_label()
-            self.manager.set_mac_address(mac_add)
-            self.info_scan_pass.set_text(
-                "\nAdapter Name: "
-                + self.manager.adapter_name
-                + "\nMac Address: "
-                + self.manager.get_mac_address()
-            )
-            self.scan_pass_box.set_visible(True)
-            self.ota_picked_box.set_visible(True)
-            self.pair_switch.set_sensitive(True)
-            if self.conf.get_property("deploy_type") == "manual":
-                self.bbox_scan_pass.set_visible(True)
-                self.ota_cancel_button.set_sensitive(True)
-            if self.conf.get_property("deploy_type") == "quick":
+
+    def done_scanning_singleton(self, manager):
+        self.manager = manager
+        scan_result = manager.get_scan_result()
+        print("[INFO ] Single-Device Mode")
+        if scan_result:
+            print("[INFO ] Scan Succeeded")
+            print("[INFO ] Got watch {} on {}".format(manager.get_mac_address(),
+                manager.adapter_name))
+
+            if self.deploy_type == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
-                self.ota_cancel_button.set_sensitive(False)
-                self.populate_tagbox()
-            self.multi_device_listbox.set_visible(False)
+            if self.deploy_type == "manual":
+                self.bbox_scan_pass.set_visible(True)
+        else:
+            print("[INFO ] Scan Failed")
+            self.main_stack.set_visible_child_name("nodevice")
+
+    def callback_device_connect(self, data):
+        firmware, battery = data
+
+        self.watch_firmware.set_text(firmware)
+        self.watch_battery.set_text(battery)
+
+    @Gtk.Template.Callback()
+    def on_watches_listbox_row_activated(self, widget, row):
+        mac = row.mac
+        self.current_mac = mac
+        alias = row.alias
+        thread = ConnectionThread(self.manager, mac, self.callback_device_connect)
+        thread.daemon = True
+        thread.start()
+        self.watch_name.set_text(alias)
+        self.watch_address.set_text(mac)
+        self.main_stack.set_visible_child_name("watch")
+        self.header_stack.set_visible_child_name("watch")
+
+    @Gtk.Template.Callback()
+    def on_back_to_devices_clicked(self, *args):
+        self.main_stack.set_visible_child_name("watches")
+        self.header_stack.set_visible_child_name("watches")
 
     @Gtk.Template.Callback()
     def ota_pick_tag_combobox_changed_cb(self, widget):
@@ -216,20 +259,21 @@ class SigloWindow(Gtk.ApplicationWindow):
     def ota_pick_asset_combobox_changed_cb(self, widget):
         self.asset = self.ota_pick_asset_combobox.get_active_text()
         if self.asset is not None:
-            self.ota_picked_box.set_sensitive(True)
+            self.firmware_run.set_sensitive(True)
             self.asset_download_url = get_download_url(
                 self.asset, self.tag, self.full_list
             )
         else:
-            self.ota_picked_box.set_sensitive(False)
+            self.firmware_run.set_sensitive(False)
             self.asset_download_url = None
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
-        print("[INFO ] Rescan button clicked")
-        self.ota_pick_tag_combobox.remove_all()
-        self.bluetooth_button.set_visible(False)
         self.do_scanning()
+
+    @Gtk.Template.Callback()
+    def on_bluetooth_settings_clicked(self, widget):
+        subprocess.Popen(["gnome-control-center", "bluetooth"])
 
     @Gtk.Template.Callback()
     def sync_time_button_clicked(self, widget):
@@ -268,22 +312,61 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.ota_selection_box.set_visible(True)
 
     @Gtk.Template.Callback()
-    def bluetooth_button_clicked(self, widget):
-        p1 = Popen("echo 'power on'", shell=True, stdout=PIPE)
-        p2 = Popen(["pkexec", "sudo", "bluetoothctl"], stdin=p1.stdout, stdout=PIPE)
-        p1.stdout.close()
-        output = p2.communicate()[0]
-        self.main_info.set_text("[INFO ] Bluetooth Enabled!")
-        self.bluetooth_button.set_visible(False)
-        self.scan_fail_box.set_visible(False)
+    def on_firmware_run_clicked(self, widget):
+        self.dfu_stack.set_visible_child_name("ok")
+        self.main_stack.set_visible_child_name("firmware")
 
-    def download_thread(self):
+        self.firmware_mode = "auto"
+
         file_name = "/tmp/" + self.asset
+
+        print("Downloading {}".format(self.asset_download_url))
+
         local_filename, headers = urllib.request.urlretrieve(
             self.asset_download_url, file_name
         )
         self.ota_file = local_filename
-        self.emit("flash-signal", None)
+        unpacker = Unpacker()
+        try:
+            binfile, datfile = unpacker.unpack_zipfile(self.ota_file)
+        except Exception as e:
+            print("ERR")
+            print(e)
+            pass
+
+        self.ble_dfu = InfiniTimeDFU(
+            mac_address=self.current_mac,
+            manager=self.manager,
+            window=self,
+            firmware_path=binfile,
+            datfile_path=datfile,
+            verbose=False,
+        )
+        self.ble_dfu.on_failure = self.on_flash_failed
+        self.ble_dfu.on_success = self.on_flash_done
+        self.ble_dfu.input_setup()
+        self.dfu_progress_text.set_text(self.get_prog_text())
+        self.ble_dfu.connect()
+
+    def on_flash_failed(self):
+        self.dfu_stack.set_visible_child_name("fail")
+
+    def on_flash_done(self):
+        self.dfu_stack.set_visible_child_name("done")
+
+    @Gtk.Template.Callback()
+    def on_dfu_retry_clicked(self, widget):
+        if self.firmware_mode == "auto":
+            self.on_firmware_run_clicked(self, widget)
+
+    @Gtk.Template.Callback()
+    def flash_it_button_clicked(self, widget):
+        if self.deploy_type == "quick":
+            file_name = "/tmp/" + self.asset
+            local_filename, headers = urllib.request.urlretrieve(
+                self.asset_download_url, file_name
+            )
+            self.ota_file = local_filename
 
     def start_flashing(self, widget, args):
         self.main_info.set_text("[INFO ] Updating Firmware...")
@@ -299,28 +382,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             print("ERR")
             print(e)
             pass
-        self.ble_dfu = InfiniTimeDFU(
-            mac_address=self.manager.get_mac_address(),
-            manager=self.manager,
-            window=self,
-            firmware_path=binfile,
-            datfile_path=datfile,
-            verbose=False,
-        )
-        self.ble_dfu.input_setup()
-        self.update_progress_bar()
-        self.ble_dfu.connect()
-        if not self.ble_dfu.successful_connection:
-            self.show_complete(success=False)
-
-    @Gtk.Template.Callback()
-    def flash_it_button_clicked(self, widget):
-        if self.conf.get_property("deploy_type") == "quick":
-            self.main_info.set_text("[INFO ] Downloading Asset...")
-            Thread(target=self.download_thread).start()
-        else:
-            self.emit("flash-signal", None)
-            # self.start_flashing()
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):

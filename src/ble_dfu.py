@@ -27,6 +27,7 @@ class InfiniTimeDFU(gatt.Device):
         self.total_receipt_size = 0
         self.update_in_progress = False
         self.caffeinator = Caffeinator()
+        self.success = False
 
         super().__init__(mac_address, manager)
 
@@ -70,8 +71,9 @@ class InfiniTimeDFU(gatt.Device):
 
     def disconnect_succeeded(self):
         super().disconnect_succeeded()
+        if not self.success:
+            self.on_failure()
         print("[%s] Disconnected" % (self.mac_address))
-        self.window.show_complete(success=(not self.update_in_progress))
 
     def characteristic_enable_notifications_succeeded(self, characteristic):
         if self.verbose and characteristic.uuid == self.UUID_CTRL_POINT:
@@ -259,6 +261,8 @@ class InfiniTimeDFU(gatt.Device):
         print("[INFO ] Activate and reset")
         self.ctrl_point_char.write_value(bytearray.fromhex("05"))
         self.update_in_progress = False
+        self.success = True
+        self.on_success()
         self.disconnect()
         self.caffeinator.decaffeinate()
 
