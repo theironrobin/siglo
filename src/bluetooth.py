@@ -5,6 +5,15 @@ import struct
 from gi.repository import GObject, Gio
 from .config import config
 
+BTSVC_TIME = "00001805-0000-1000-8000-00805f9b34fb"
+BTSVC_INFO = "0000180a-0000-1000-8000-00805f9b34fb"
+BTSVC_BATT = "0000180f-0000-1000-8000-00805f9b34fb"
+BTSVC_ALERT = "00001811-0000-1000-8000-00805f9b34fb"
+BTCHAR_FIRMWARE = "00002a26-0000-1000-8000-00805f9b34fb"
+BTCHAR_CURRENTTIME = "00002a2b-0000-1000-8000-00805f9b34fb"
+BTCHAR_NEWALERT = "00002a46-0000-1000-8000-00805f9b34fb"
+BTCHAR_BATTLEVEL = "00002a19-0000-1000-8000-00805f9b34fb"
+
 
 def get_current_time():
     now = datetime.datetime.now()
@@ -49,7 +58,7 @@ class InfiniTimeManager(gatt.DeviceManager):
     def __init__(self):
         self.conf = config()
         self.device_set = set()
-        self.alias = None
+        self.aliases = dict()
         if not self.conf.get_property("paired"):
             self.scan_result = False
             self.adapter_name = get_default_adapter()
@@ -89,7 +98,7 @@ class InfiniTimeManager(gatt.DeviceManager):
     def device_discovered(self, device):
         if device.alias() in ("InfiniTime", "Pinetime-JF", "PineTime"):
             self.scan_result = True
-            self.alias = device.alias()
+            self.aliases[device.mac_address] = device.alias()
             self.device_set.add(device.mac_address)
 
     def scan_for_infinitime(self):
@@ -103,8 +112,7 @@ class InfiniTimeDevice(gatt.Device):
         self.conf = config()
         super().__init__(mac_address, manager)
 
-    def connect(self, sync_time):
-        self.sync_time = sync_time
+    def connect(self):
         self.successful_connection = True
         super().connect()
 
@@ -127,27 +135,60 @@ class InfiniTimeDevice(gatt.Device):
 
     def services_resolved(self):
         super().services_resolved()
-        self.serv = next(
-            s for s in self.services if s.uuid == "00001805-0000-1000-8000-00805f9b34fb"
-        )
-        self.char = next(
-            c
-            for c in self.serv.characteristics
-            if c.uuid == "00002a2b-0000-1000-8000-00805f9b34fb"
-        )
+        infosvc = None
+        timesvc = None
+        battsvc = None
+        alertsvc = None
+        for svc in self.services:
+            if svc.uuid == BTSVC_INFO:
+                infosvc = svc
+            elif svc.uuid == BTSVC_TIME:
+                timesvc = svc
+            elif svc.uuid == BTSVC_BATT:
+                battsvc = svc
+            elif svc.uuid == BTSVC_ALERT:
+                alertsvc = svc
 
-        self.alert_service = next(
-            a for a in self.services if a.uuid == "00001811-0000-1000-8000-00805f9b34fb"
-        )
+        if timesvc:
+            currenttime = next(
+                c
+                for c in timesvc.characteristics
+                if c.uuid == BTCHAR_CURRENTTIME
+            )
 
-        self.new_alert_characteristic = next(
-            n
-            for n in self.alert_service.characteristics
-            if n.uuid == "00002a46-0000-1000-8000-00805f9b34fb"
-        )
+            # Update watch time on connection
+            currenttime.write_value(get_current_time())
 
-        if self.sync_time:
-            self.char.write_value(get_current_time())
+        self.firmware = b"n/a"
+        if infosvc:
+            info_firmware = next(
+                c
+                for c in infosvc.characteristics
+                if c.uuid == BTCHAR_FIRMWARE
+            )
+        
+            # Get device firmware
+            self.firmware = info_firmware.read_value()
+
+        if alertsvc:
+            self.new_alert = next(
+                c
+                for c in alertsvc.characteristics
+                if c.uuid == BTCHAR_NEWALERT
+            )
+        
+        self.battery = -1
+        if battsvc:
+            battery_level = next(
+                c
+                for c in battsvc.characteristics
+                if c.uuid == BTCHAR_BATTLEVEL
+            )
+        
+            # Get device firmware
+            self.battery = int(battery_level.read_value()[0])
+
+        self.services_done()
 
     def send_notification(self, alert_dict):
         message = alert_dict["message"]
@@ -165,7 +206,7 @@ class InfiniTimeDevice(gatt.Device):
 
         # arr = bytearray(message, "utf-8")
         # self.new_alert_characteristic.write_value(arr)
-        self.new_alert_characteristic.write_value(msg)
+        self.new_alert.write_value(msg)
 
 
 class BluetoothDisabled(Exception):
