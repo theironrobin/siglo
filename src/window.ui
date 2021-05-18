@@ -1322,11 +1322,17 @@ To make the firmware persistent go to the settings on the watch and go to the fi
             </child>
             <child>
               <object class="GtkButton">
-                <property name="label" translatable="yes">Refresh</property>
                 <property name="visible">True</property>
                 <property name="can-focus">True</property>
                 <property name="receives-default">True</property>
                 <signal name="clicked" handler="rescan_button_clicked" swapped="no"/>
+                <child>
+                  <object class="GtkImage">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="icon-name">view-refresh-symbolic</property>
+                  </object>
+                </child>
               </object>
               <packing>
                 <property name="name">watches</property>

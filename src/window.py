@@ -110,6 +110,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     def make_watch_row(self, name, mac):
         row = Gtk.ListBoxRow()
         grid = Gtk.Grid()
+        grid.set_hexpand(True)
         grid.set_row_spacing(8)
         grid.set_column_spacing(8)
         grid.set_margin_top(8)
@@ -125,6 +126,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         label_alias.get_style_context().add_class("dim-label")
         grid.attach(label_alias, 1, 0, 1, 1)
         value_alias = Gtk.Label(label=name, xalign=0.0)
+        value_alias.set_hexpand(True)
         grid.attach(value_alias, 2, 0, 1, 1)
 
         label_mac = Gtk.Label(label="Address", xalign=1.0)
@@ -132,6 +134,10 @@ class SigloWindow(Gtk.ApplicationWindow):
         grid.attach(label_mac, 1, 1, 1, 1)
         value_mac = Gtk.Label(label=mac, xalign=0.0)
         grid.attach(value_mac, 2, 1, 1, 1)
+
+        arrow = Gtk.Image.new_from_icon_name("go-next-symbolic", Gtk.IconSize.BUTTON)
+        grid.attach(arrow, 3, 0, 1, 2)
+
         row.show_all()
         return row
 
