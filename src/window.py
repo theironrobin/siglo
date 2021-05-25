@@ -60,6 +60,8 @@ class SigloWindow(Gtk.ApplicationWindow):
     ota_pick_tag_combobox = Gtk.Template.Child()
     ota_pick_asset_combobox = Gtk.Template.Child()
     firmware_run = Gtk.Template.Child()
+    firmware_file = Gtk.Template.Child()
+    firmware_run_file = Gtk.Template.Child()
 
     # Flasher
     dfu_stack = Gtk.Template.Child()
@@ -268,6 +270,14 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.asset_download_url = None
 
     @Gtk.Template.Callback()
+    def firmware_file_file_set_cb(self, widget):
+        print("File set!")
+        filename = widget.get_filename()
+        self.ota_file = filename
+        self.firmware_run_file.set_sensitive(True)
+        
+
+    @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
         self.do_scanning()
 
@@ -310,6 +320,36 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.main_info.set_text("Choose another OTA File")
             self.ota_picked_box.set_visible(False)
             self.ota_selection_box.set_visible(True)
+
+    @Gtk.Template.Callback()
+    def firmware_run_file_clicked_cb(self, widget):
+        self.dfu_stack.set_visible_child_name("ok")
+        self.main_stack.set_visible_child_name("firmware")
+
+        self.firmware_mode = "manual"
+
+        unpacker = Unpacker()
+        try:
+            binfile, datfile = unpacker.unpack_zipfile(self.ota_file)
+        except Exception as e:
+            print("ERR")
+            print(e)
+            pass
+
+        self.ble_dfu = InfiniTimeDFU(
+            mac_address=self.current_mac,
+            manager=self.manager,
+            window=self,
+            firmware_path=binfile,
+            datfile_path=datfile,
+            verbose=False,
+        )
+
+        self.ble_dfu.on_failure = self.on_flash_failed
+        self.ble_dfu.on_success = self.on_flash_done
+        self.ble_dfu.input_setup()
+        self.dfu_progress_text.set_text(self.get_prog_text())
+        self.ble_dfu.connect()
 
     @Gtk.Template.Callback()
     def on_firmware_run_clicked(self, widget):

@@ -653,6 +653,7 @@
                                             <property name="can-focus">False</property>
                                             <property name="create-folders">False</property>
                                             <property name="title" translatable="yes">Firmware file</property>
+                                            <signal name="file-set" handler="firmware_file_file_set_cb" swapped="no"/>
                                           </object>
                                           <packing>
                                             <property name="left-attach">1</property>
@@ -681,6 +682,7 @@
                                             <property name="sensitive">False</property>
                                             <property name="can-focus">True</property>
                                             <property name="receives-default">True</property>
+                                            <signal name="clicked" handler="firmware_run_file_clicked_cb" swapped="no"/>
                                           </object>
                                           <packing>
                                             <property name="left-attach">1</property>
