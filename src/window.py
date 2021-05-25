@@ -26,9 +26,7 @@ class ConnectionThread(threading.Thread):
         self.device = None
 
     def run(self):
-        self.device = InfiniTimeDevice(
-            manager=self.manager, mac_address=self.mac
-        )
+        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.mac)
         self.device.services_done = self.data_received
         self.device.connect()
 
@@ -39,7 +37,6 @@ class ConnectionThread(threading.Thread):
         else:
             battery = "{}%".format(self.device.battery)
         GLib.idle_add(self.callback, [firmware, battery])
-
 
 
 @Gtk.Template(resource_path="/org/gnome/siglo/window.ui")
@@ -97,7 +94,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             GObject.TYPE_PYOBJECT,
             (GObject.TYPE_PYOBJECT,),
         )
-        self.connect("flash-signal", self.start_flashing)
 
     def destroy_manager(self):
         if self.manager:
@@ -174,7 +170,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.header_stack.set_visible_child_name("watches")
         else:
             self.main_stack.set_visible_child_name("nodevice")
-        
+
         for mac in self.manager.get_device_set():
             print("Found {}".format(mac))
             row = self.make_watch_row(self.manager.aliases[mac], mac)
@@ -210,15 +206,17 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.scan_fail_box.set_visible(True)
         self.main_info.set_text(info_prefix + info_suffix)
 
-
     def done_scanning_singleton(self, manager):
         self.manager = manager
         scan_result = manager.get_scan_result()
         print("[INFO ] Single-Device Mode")
         if scan_result:
             print("[INFO ] Scan Succeeded")
-            print("[INFO ] Got watch {} on {}".format(manager.get_mac_address(),
-                manager.adapter_name))
+            print(
+                "[INFO ] Got watch {} on {}".format(
+                    manager.get_mac_address(), manager.adapter_name
+                )
+            )
 
             if self.deploy_type == "quick":
                 self.auto_bbox_scan_pass.set_visible(True)
@@ -275,7 +273,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         filename = widget.get_filename()
         self.ota_file = filename
         self.firmware_run_file.set_sensitive(True)
-        
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
@@ -328,28 +325,7 @@ class SigloWindow(Gtk.ApplicationWindow):
 
         self.firmware_mode = "manual"
 
-        unpacker = Unpacker()
-        try:
-            binfile, datfile = unpacker.unpack_zipfile(self.ota_file)
-        except Exception as e:
-            print("ERR")
-            print(e)
-            pass
-
-        self.ble_dfu = InfiniTimeDFU(
-            mac_address=self.current_mac,
-            manager=self.manager,
-            window=self,
-            firmware_path=binfile,
-            datfile_path=datfile,
-            verbose=False,
-        )
-
-        self.ble_dfu.on_failure = self.on_flash_failed
-        self.ble_dfu.on_success = self.on_flash_done
-        self.ble_dfu.input_setup()
-        self.dfu_progress_text.set_text(self.get_prog_text())
-        self.ble_dfu.connect()
+        self.start_flash()
 
     @Gtk.Template.Callback()
     def on_firmware_run_clicked(self, widget):
@@ -366,6 +342,10 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.asset_download_url, file_name
         )
         self.ota_file = local_filename
+
+        self.start_flash()
+
+    def start_flash(self):
         unpacker = Unpacker()
         try:
             binfile, datfile = unpacker.unpack_zipfile(self.ota_file)
@@ -407,21 +387,6 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.asset_download_url, file_name
             )
             self.ota_file = local_filename
-
-    def start_flashing(self, widget, args):
-        self.main_info.set_text("[INFO ] Updating Firmware...")
-        self.rescan_button.set_sensitive(False)
-        self.ota_picked_box.set_visible(False)
-        self.dfu_progress_box.set_visible(True)
-        self.sync_time_button.set_visible(False)
-        self.auto_bbox_scan_pass.set_visible(False)
-        unpacker = Unpacker()
-        try:
-            binfile, datfile = unpacker.unpack_zipfile(self.ota_file)
-        except Exception as e:
-            print("ERR")
-            print(e)
-            pass
 
     @Gtk.Template.Callback()
     def deploy_type_toggled(self, widget):
