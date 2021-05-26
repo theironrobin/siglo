@@ -11,7 +11,7 @@ class config:
         "deploy_type": "quick",
         "last_paired_device": "None",
         "paired": "False",
-        "adapter": "None"
+        "adapter": "None",
     }
     config_dir = xdg.BaseDirectory.xdg_config_home
     config_file = config_dir + "/siglo.ini"

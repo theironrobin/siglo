@@ -14,7 +14,11 @@ version_blacklist = (
     "0.9.0-develop",
     "0.9.0",
     "0.8.3",
-    "0.8.2"
+    "0.8.2",
+    "0.10.0",
+    "0.11.0",
+    "0.12.0",
+    "0.12.1",
 )
 
 
@@ -43,12 +47,14 @@ def get_tags(full_list):
         tags.add(element["tag_name"])
     return sorted(tags, reverse=True)
 
+
 def get_assets_by_tag(tag, full_list):
     asset_list = []
     for element in full_list:
         if tag == element["tag_name"]:
             asset_list.append(element["name"])
     return asset_list
+
 
 def get_download_url(name, tag, full_list):
     for element in full_list:
