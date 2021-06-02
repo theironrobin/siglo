@@ -177,7 +177,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             row.mac = mac
             row.alias = self.manager.aliases[mac]
             self.watches_listbox.add(row)
-        self.depopulate_tagbox()
         self.populate_tagbox()
 
     def depopulate_listbox(self):
@@ -186,11 +185,9 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.watches_listbox.remove(child)
 
     def populate_tagbox(self):
+        self.ota_pick_tag_combobox.remove_all()
         for tag in get_tags(self.full_list):
             self.ota_pick_tag_combobox.append_text(tag)
-
-    def depopulate_tagbox(self):
-        self.ota_pick_tag_combobox.remove_all()
 
     def populate_assetbox(self):
         self.ota_pick_asset_combobox.remove_all()
