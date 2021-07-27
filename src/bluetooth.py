@@ -131,7 +131,11 @@ class InfiniTimeDevice(gatt.Device):
 
     def characteristic_write_value_succeeded(self, characteristic):
         if not self.conf.get_property("paired"):
-            self.disconnect()
+
+            #workaround to keep the connection up after the initial time sync, until pairing is implemented
+            #self.disconnect()
+
+            pass
 
     def services_resolved(self):
         super().services_resolved()
