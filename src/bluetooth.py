@@ -4,11 +4,13 @@ import datetime
 import struct
 from gi.repository import GObject, Gio
 from .config import config
+from . import music_service
 
 BTSVC_TIME = "00001805-0000-1000-8000-00805f9b34fb"
 BTSVC_INFO = "0000180a-0000-1000-8000-00805f9b34fb"
 BTSVC_BATT = "0000180f-0000-1000-8000-00805f9b34fb"
 BTSVC_ALERT = "00001811-0000-1000-8000-00805f9b34fb"
+BTSVC_MUSIC = "00000000-78fc-48fe-8e23-433b3a1942d0"
 BTCHAR_FIRMWARE = "00002a26-0000-1000-8000-00805f9b34fb"
 BTCHAR_CURRENTTIME = "00002a2b-0000-1000-8000-00805f9b34fb"
 BTCHAR_NEWALERT = "00002a46-0000-1000-8000-00805f9b34fb"
@@ -143,6 +145,7 @@ class InfiniTimeDevice(gatt.Device):
         timesvc = None
         battsvc = None
         alertsvc = None
+        musicsvc = None
         for svc in self.services:
             if svc.uuid == BTSVC_INFO:
                 infosvc = svc
@@ -152,6 +155,8 @@ class InfiniTimeDevice(gatt.Device):
                 battsvc = svc
             elif svc.uuid == BTSVC_ALERT:
                 alertsvc = svc
+            elif svc.uuid == BTSVC_MUSIC:
+                musicsvc = svc
 
         if timesvc:
             currenttime = next(
@@ -192,7 +197,13 @@ class InfiniTimeDevice(gatt.Device):
             # Get device firmware
             self.battery = int(battery_level.read_value()[0])
 
+        if musicsvc:
+            music_service.start_service(self, musicsvc)
+
         self.services_done()
+
+    def characteristic_value_updated(self, characteristic, value):
+        music_service.characteristic_value_updated(characteristic, value)
 
     def send_notification(self, alert_dict):
         message = alert_dict["message"]

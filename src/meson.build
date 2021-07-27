@@ -36,6 +36,7 @@ siglo_sources = [
   'ble_dfu.py',
   'ota/util.py',
   'ota/unpacker.py',
+  'music_service.py'
 ]
 
 install_data(siglo_sources, install_dir: moduledir)
