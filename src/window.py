@@ -101,7 +101,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             #part of workaround to keep the connection up, until the app is closed
             #//
             for d in self.manager.devices():
-                print(d)
                 d.disconnect()
             #//
 
