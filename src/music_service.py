@@ -1,5 +1,6 @@
 
 import dbus
+import platform
 from dbus.mainloop.glib import DBusGMainLoop
 
 class Singleton(type):
@@ -34,6 +35,8 @@ class MusicService(metaclass=Singleton):
 
         self.VOLUME_STEP = 0.1 #10%
 
+        self.MPRIS_IFACE = 'org.mpris.MediaPlayer2.Player'
+
         self.btsvc = None
 
         self.status_chrc = None
@@ -59,77 +62,6 @@ class MusicService(metaclass=Singleton):
 
         self.monitor_bus = None
         self.dbus_monitor_iface = None
-
-    def monitor_cb(self, bus, msg):
-        args = msg.get_args_list()
-
-        if self.active_player:
-            if self.active_player_name in args:
-                #player was closed
-                self.active_player = None
-                self.player_iface = None
-                self.player_prop_iface = None
-                self.active_player_name = None
-
-                if not self.get_player():
-                    self.player_unavailable()
-        else:
-            for arg in args:
-                if "org.mpris.MediaPlayer2" in arg:
-                    self.get_player()
-
-    def player_unavailable(self):
-        if not self.active_player:
-            self.artist_chrc.write_value(bytes('Host device:', 'utf-8'))
-            self.track_chrc.write_value(bytes('<no player found>', 'utf-8'))
-            self.album_chrc.write_value(bytes('', 'utf-8'))
-            self.total_length_chrc.write_value((0).to_bytes(4, byteorder='big'))
-            self.position_chrc.write_value((0).to_bytes(4, byteorder='big'))
-            self.status_chrc.write_value([dbus.Byte(0)])
-
-    def player_available(self):
-        #player could already be playing music or idle in menu
-        metadata = self.player_prop_iface.Get('org.mpris.MediaPlayer2.Player', 'Metadata')
-        if 'xesam:title' in metadata:
-            self.track_chrc.write_value(bytes(metadata['xesam:title'], 'utf-8'))
-            self.artist_chrc.write_value(bytes(metadata['xesam:artist'][0], 'utf-8'))
-            self.album_chrc.write_value(bytes(metadata['xesam:album'], 'utf-8'))
-            self.total_length_chrc.write_value((metadata['mpris:length']//(1000*1000)).to_bytes(4, byteorder='big'))
-            position = self.player_prop_iface.Get('org.mpris.MediaPlayer2.Player', 'Position')
-            self.position_chrc.write_value((position//(1000*1000)).to_bytes(4, byteorder='big'))
-
-            if self.player_prop_iface.Get('org.mpris.MediaPlayer2.Player', 'PlaybackStatus') == 'Playing':
-                self.status_chrc.write_value([dbus.Byte(1)])
-            else:
-                self.status_chrc.write_value([dbus.Byte(0)])
-        else:
-            self.track_chrc.write_value(bytes('<select a track>', 'utf-8'))
-            self.artist_chrc.write_value(bytes("player: " + self.active_player_name.rsplit('.', 1)[1], 'utf-8'))
-            self.album_chrc.write_value(bytes('', 'utf-8'))
-            self.total_length_chrc.write_value((0).to_bytes(4, byteorder='big'))
-            self.position_chrc.write_value((0).to_bytes(4, byteorder='big'))
-            self.status_chrc.write_value([dbus.Byte(0)])
-
-    def active_player_seeked_cb(self, pos):
-        self.position_chrc.write_value((pos//(1000*1000)).to_bytes(4, byteorder='big'))
-
-    def get_player(self):
-        if self.active_player:
-            return
-        for proc in self.dbus_iface.ListNames():
-            if "org.mpris.MediaPlayer2" in proc:
-                self.active_player = self.bus.get_object(proc,"/org/mpris/MediaPlayer2")
-                self.active_player_name = proc
-        if self.active_player:
-            self.player_iface = dbus.Interface(self.active_player, dbus_interface='org.mpris.MediaPlayer2.Player')
-            self.player_prop_iface = dbus.Interface(self.active_player, dbus_interface='org.freedesktop.DBus.Properties')
-            self.player_prop_iface.connect_to_signal("PropertiesChanged", self.active_player_properties_changed_cb)
-            self.player_iface.connect_to_signal("Seeked", self.active_player_seeked_cb)
-            self.player_available()
-            return True
-        else:
-            self.player_unavailable()
-            return False
 
     def start_service(self, device, service):
 
@@ -157,51 +89,173 @@ class MusicService(metaclass=Singleton):
         self.event_chrc.enable_notifications()
 
         self.bus = dbus.SessionBus()
-
         self.dbus_iface = dbus.Interface(self.bus.get_object('org.freedesktop.DBus', '/org/freedesktop/DBus'), dbus_interface='org.freedesktop.DBus')
 
+        #if a player is already running, get it
         self.get_player()
 
-    def active_player_properties_changed_cb(self, iface, changed_prop, invalid):
+    def monitor_cb(self, bus, msg):
+
+        args = msg.get_args_list()
+
+        if self.active_player:
+            if self.active_player_name in args:
+                #player was closed
+                self.active_player = None
+                self.player_iface = None
+                self.player_prop_iface = None
+                self.active_player_name = None
+
+                if not self.get_player():
+                    self.player_unavailable()
+        else:
+            for arg in args:
+                if "org.mpris.MediaPlayer2" in arg:
+                    self.get_player()
+                    break
+
+    def get_player(self):
+        if self.active_player:
+            return
+
+        for proc in self.dbus_iface.ListNames():
+            if "org.mpris.MediaPlayer2" in proc:
+                try:
+                    self.active_player = self.bus.get_object(proc,"/org/mpris/MediaPlayer2")
+                except dbus.DBusException as e:
+                   continue
+                self.active_player_name = proc
+                break
+
+        if self.active_player:
+            try:
+                self.player_iface = dbus.Interface(self.active_player, dbus_interface=self.MPRIS_IFACE)
+                self.player_prop_iface = dbus.Interface(self.active_player, dbus_interface='org.freedesktop.DBus.Properties')
+                self.player_prop_iface.connect_to_signal("PropertiesChanged", self.active_player_properties_changed)
+                self.player_iface.connect_to_signal("Seeked", self.send_position)
+            except:
+                pass
+            self.player_available()
+            return True
+        else:
+            self.player_unavailable()
+            return False
+
+    def player_unavailable(self):
+        if not self.active_player:
+            self.send_metadata(title="<no player found>",
+                                artist="Host : " + platform.node(),
+                                album="",
+                                total_length=0)
+            self.send_position(0)
+            self.send_status(0)
+
+    def player_available(self):
+        #new player could already be playing music or idle in menu
+        metadata = self.get_player_propertie('Metadata')
+        if 'xesam:title' in metadata:
+            self.send_metadata(metadata)
+            self.send_position()
+            self.send_status()
+        else:
+            self.send_metadata(title="<select a track>",
+                               artist="Player: " + self.active_player_name.rsplit('.', 1)[1],
+                               album="",
+                               total_length=0)
+
+            self.send_position(0)
+            self.send_status(0)
+
+    def active_player_properties_changed(self, iface, changed_prop, invalid):
         if 'Metadata' in changed_prop:
             metadata = changed_prop['Metadata']
+            if metadata['xesam:title']:
+                self.send_metadata(metadata)
+                self.send_position()
+            else: #end of a playlist
+                self.send_metadata(title="<select a track>",
+                                   artist="Player: " + self.active_player_name.rsplit('.', 1)[1],
+                                   album="",
+                                   total_length=0)
+                self.send_position(0)
+                self.send_status(0)
+        elif 'PlaybackStatus' in changed_prop:
+            self.send_status(changed_prop['PlaybackStatus'])
+
+    def characteristic_value_updated(self, chrc, value):
+        if self.active_player:
+            if chrc == self.event_chrc:
+                if value == self.EVENT_NEXT:
+                    self.player_iface.Next()
+
+                elif value == self.EVENT_PREV:
+                    self.player_iface.Previous()
+
+                elif value == self.EVENT_PLAY:
+                    self.player_iface.Play()
+
+                elif value == self.EVENT_PAUSE:
+                    self.player_iface.Pause()
+
+                elif value == self.EVENT_VOLDOWN:
+                    curr_volume = self.get_player_propertie('Volume')
+                    if curr_volume:
+                        self.set_player_propertie('Volume', curr_volume - self.VOLUME_STEP)
+
+                elif value == self.EVENT_VOLUP:
+                    curr_volume = self.get_player_propertie('Volume')
+                    if curr_volume:
+                        self.set_player_propertie('Volume', curr_volume + self.VOLUME_STEP)
+
+                elif value == self.EVENT_OPEN:
+                    #the current position is lost when the music applet is closed, therefor restore it
+                    self.send_position()
+                else:
+                    print("unknown event")
+
+    def send_metadata(self, metadata=None , /, title="", artist="", album="", total_length=0):
+        if metadata:
             self.track_chrc.write_value(bytes(metadata['xesam:title'], 'utf-8'))
             self.artist_chrc.write_value(bytes(metadata['xesam:artist'][0], 'utf-8'))
             self.album_chrc.write_value(bytes(metadata['xesam:album'], 'utf-8'))
             self.total_length_chrc.write_value((metadata['mpris:length']//(1000*1000)).to_bytes(4, byteorder='big'))
-            position = self.player_prop_iface.Get('org.mpris.MediaPlayer2.Player', 'Position')
-            self.position_chrc.write_value((position//(1000*1000)).to_bytes(4, byteorder='big'))
-        elif 'PlaybackStatus' in changed_prop:
-            if changed_prop['PlaybackStatus'] == 'Playing':
+        else:
+            self.track_chrc.write_value(bytes(title, 'utf-8'))
+            self.artist_chrc.write_value(bytes(artist, 'utf-8'))
+            self.album_chrc.write_value(bytes(album, 'utf-8'))
+            self.total_length_chrc.write_value((total_length//(1000*1000)).to_bytes(4, byteorder='big'))
+
+    def get_player_propertie(self, prop):
+        result = None
+        try:
+            result = self.player_prop_iface.Get(self.MPRIS_IFACE, prop)
+        except :
+           pass
+        return result
+
+    def set_player_propertie(self, prop, value):
+        try:
+            result = self.player_prop_iface.Set(self.MPRIS_IFACE, prop)
+        except:
+           pass
+        return result
+
+    def send_status(self, status=None):
+        if status:
+            if status == 'Playing':
+                self.status_chrc.write_value([dbus.Byte(1)])
+            else:
+                self.status_chrc.write_value([dbus.Byte(0)])
+        else:
+            if self.get_player_propertie('PlaybackStatus') == 'Playing':
                 self.status_chrc.write_value([dbus.Byte(1)])
             else:
                 self.status_chrc.write_value([dbus.Byte(0)])
 
-    def characteristic_value_updated(self, chrc, value):
-        if chrc == self.event_chrc:
-            if value == self.EVENT_NEXT:
-                self.player_iface.Next()
-
-            elif value == self.EVENT_PREV:
-                self.player_iface.Previous()
-
-            elif value == self.EVENT_PLAY:
-                self.player_iface.Play()
-
-            elif value == self.EVENT_PAUSE:
-                self.player_iface.Pause()
-
-            elif value == self.EVENT_VOLDOWN:
-                curr_volume = self.player_prop_iface.Get('org.mpris.MediaPlayer2.Player', 'Volume')
-                self.player_prop_iface.Set('org.mpris.MediaPlayer2.Player', 'Volume', curr_volume - self.VOLUME_STEP)
-
-            elif value == self.EVENT_VOLUP:
-                curr_volume = self.player_prop_iface.Get('org.mpris.MediaPlayer2.Player', 'Volume')
-                self.player_prop_iface.Set('org.mpris.MediaPlayer2.Player', 'Volume', curr_volume + self.VOLUME_STEP)
-
-            elif value == self.EVENT_OPEN:
-                #the current position is lost when the music applet is closed, therefor restore it
-                position = self.player_prop_iface.Get('org.mpris.MediaPlayer2.Player', 'Position')
+    def send_position(self, pos=None):
+        if pos:
+            self.position_chrc.write_value((pos//(1000*1000)).to_bytes(4, byteorder='big'))
+        else:
+            position = self.get_player_propertie('Position')
+            if position:
                 self.position_chrc.write_value((position//(1000*1000)).to_bytes(4, byteorder='big'))
-            else:
-                print("unknown event")

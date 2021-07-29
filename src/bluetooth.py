@@ -16,8 +16,6 @@ BTCHAR_CURRENTTIME = "00002a2b-0000-1000-8000-00805f9b34fb"
 BTCHAR_NEWALERT = "00002a46-0000-1000-8000-00805f9b34fb"
 BTCHAR_BATTLEVEL = "00002a19-0000-1000-8000-00805f9b34fb"
 
-#music_service = MusicService()
-
 def get_current_time():
     now = datetime.datetime.now()
 
