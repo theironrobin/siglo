@@ -9,6 +9,11 @@ GTK app to sync InfiniTime watch with PinePhone
 sudo pacman -S --needed meson python-pip base-devel bluez bluez-utils dbus-python
 pip3 install gatt pyxdg
 ```
+### Fedora
+```
+sudo dnf install meson glib2-devel
+pip3 install gatt
+```
 ### Ubuntu
 ```
 sudo apt install meson python3-dbus gettext appstream-util libglib2.0-dev
