@@ -95,7 +95,6 @@ class MusicService(metaclass=Singleton):
         self.get_player()
 
     def monitor_cb(self, bus, msg):
-
         args = msg.get_args_list()
 
         if self.active_player:
@@ -123,7 +122,8 @@ class MusicService(metaclass=Singleton):
                 try:
                     self.active_player = self.bus.get_object(proc,"/org/mpris/MediaPlayer2")
                 except dbus.DBusException as e:
-                   continue
+                    self.dbus_error(e)
+
                 self.active_player_name = proc
                 break
 
@@ -133,8 +133,9 @@ class MusicService(metaclass=Singleton):
                 self.player_prop_iface = dbus.Interface(self.active_player, dbus_interface='org.freedesktop.DBus.Properties')
                 self.player_prop_iface.connect_to_signal("PropertiesChanged", self.active_player_properties_changed)
                 self.player_iface.connect_to_signal("Seeked", self.send_position)
-            except:
-                pass
+            except dbus.DBusException as e:
+                self.dbus_error(e)
+
             self.player_available()
             return True
         else:
@@ -143,7 +144,7 @@ class MusicService(metaclass=Singleton):
 
     def player_unavailable(self):
         if not self.active_player:
-            self.send_metadata(title="<no player found>",
+            self.send_metadata(title="<start a player>",
                                 artist="Host : " + platform.node(),
                                 album="",
                                 total_length=0)
@@ -169,9 +170,10 @@ class MusicService(metaclass=Singleton):
     def active_player_properties_changed(self, iface, changed_prop, invalid):
         if 'Metadata' in changed_prop:
             metadata = changed_prop['Metadata']
-            if metadata['xesam:title']:
+            if 'xesam:title' in metadata:
                 self.send_metadata(metadata)
                 self.send_position()
+                self.send_status()
             else: #end of a playlist
                 self.send_metadata(title="<select a track>",
                                    artist="Player: " + self.active_player_name.rsplit('.', 1)[1],
@@ -228,17 +230,18 @@ class MusicService(metaclass=Singleton):
     def get_player_propertie(self, prop):
         result = None
         try:
-            result = self.player_prop_iface.Get(self.MPRIS_IFACE, prop)
-        except :
-           pass
+            if self.player_prop_iface:
+                result = self.player_prop_iface.Get(self.MPRIS_IFACE, prop)
+        except dbus.DBusException as e:
+           self.dbus_error(e)
+
         return result
 
     def set_player_propertie(self, prop, value):
         try:
-            result = self.player_prop_iface.Set(self.MPRIS_IFACE, prop)
-        except:
-           pass
-        return result
+            self.player_prop_iface.Set(self.MPRIS_IFACE, prop, value)
+        except dbus.DBusException as e:
+           self.dbus_error(e)
 
     def send_status(self, status=None):
         if status:
@@ -259,3 +262,8 @@ class MusicService(metaclass=Singleton):
             position = self.get_player_propertie('Position')
             if position:
                 self.position_chrc.write_value((position//(1000*1000)).to_bytes(4, byteorder='big'))
+            else:
+                self.position_chrc.write_value((0//(1000*1000)).to_bytes(4, byteorder='big'))
+
+    def dbus_error(self, error):
+        print(error)
