@@ -11,32 +11,33 @@ class Singleton(type):
         return cls._instances[cls]
 
 class MusicService(metaclass=Singleton):
+
+    UUID_STATUS = '00000002-78fc-48fe-8e23-433b3a1942d0'
+    UUID_EVENT = '00000001-78fc-48fe-8e23-433b3a1942d0'
+    UUID_ARTIST = '00000003-78fc-48fe-8e23-433b3a1942d0'
+    UUID_TRACK = '00000004-78fc-48fe-8e23-433b3a1942d0'
+    UUID_ALBUM = '00000005-78fc-48fe-8e23-433b3a1942d0'
+    UUID_POSITION = '00000006-78fc-48fe-8e23-433b3a1942d0'
+    UUID_TOTAL_LENGTH = '00000007-78fc-48fe-8e23-433b3a1942d0'
+    UUID_TRACK_NUMBER = '00000008-78fc-48fe-8e23-433b3a1942d0' #not implemented
+    UUID_TRACK_TOTAL = '00000009-78fc-48fe-8e23-433b3a1942d0' #not implemented
+    UUID_PLAYBACK_SPEED = '0000000a-78fc-48fe-8e23-433b3a1942d0' #not implemented
+    UUID_REPEAT = '0000000b-78fc-48fe-8e23-433b3a1942d0' #not implemented
+    UUID_SHUFFLE = '0000000c-78fc-48fe-8e23-433b3a1942d0' #not implemented
+
+    EVENT_OPEN = (0xe0).to_bytes(1, byteorder='big')
+    EVENT_PLAY = (0x00).to_bytes(1, byteorder='big')
+    EVENT_PAUSE = (0x01).to_bytes(1, byteorder='big')
+    EVENT_NEXT = (0x03).to_bytes(1, byteorder='big')
+    EVENT_PREV = (0x04).to_bytes(1, byteorder='big')
+    EVENT_VOLUP = (0x05).to_bytes(1, byteorder='big')
+    EVENT_VOLDOWN = (0x06).to_bytes(1, byteorder='big')
+
+    VOLUME_STEP = 0.1 #10%
+
+    MPRIS_IFACE = 'org.mpris.MediaPlayer2.Player'
+
     def __init__(self):
-        self.UUID_STATUS = '00000002-78fc-48fe-8e23-433b3a1942d0'
-        self.UUID_EVENT = '00000001-78fc-48fe-8e23-433b3a1942d0'
-        self.UUID_ARTIST = '00000003-78fc-48fe-8e23-433b3a1942d0'
-        self.UUID_TRACK = '00000004-78fc-48fe-8e23-433b3a1942d0'
-        self.UUID_ALBUM = '00000005-78fc-48fe-8e23-433b3a1942d0'
-        self.UUID_POSITION = '00000006-78fc-48fe-8e23-433b3a1942d0'
-        self.UUID_TOTAL_LENGTH = '00000007-78fc-48fe-8e23-433b3a1942d0'
-        self.UUID_TRACK_NUMBER = '00000008-78fc-48fe-8e23-433b3a1942d0' #not implemented
-        self.UUID_TRACK_TOTAL = '00000009-78fc-48fe-8e23-433b3a1942d0' #not implemented
-        self.UUID_PLAYBACK_SPEED = '0000000a-78fc-48fe-8e23-433b3a1942d0' #not implemented
-        self.UUID_REPEAT = '0000000b-78fc-48fe-8e23-433b3a1942d0' #not implemented
-        self.UUID_SHUFFLE = '0000000c-78fc-48fe-8e23-433b3a1942d0' #not implemented
-
-        self.EVENT_OPEN = (0xe0).to_bytes(1, byteorder='big')
-        self.EVENT_PLAY = (0x00).to_bytes(1, byteorder='big')
-        self.EVENT_PAUSE = (0x01).to_bytes(1, byteorder='big')
-        self.EVENT_NEXT = (0x03).to_bytes(1, byteorder='big')
-        self.EVENT_PREV = (0x04).to_bytes(1, byteorder='big')
-        self.EVENT_VOLUP = (0x05).to_bytes(1, byteorder='big')
-        self.EVENT_VOLDOWN = (0x06).to_bytes(1, byteorder='big')
-
-        self.VOLUME_STEP = 0.1 #10%
-
-        self.MPRIS_IFACE = 'org.mpris.MediaPlayer2.Player'
-
         self.btsvc = None
 
         self.status_chrc = None
@@ -217,10 +218,25 @@ class MusicService(metaclass=Singleton):
 
     def send_metadata(self, metadata=None , /, title="", artist="", album="", total_length=0):
         if metadata:
-            self.track_chrc.write_value(bytes(metadata['xesam:title'], 'utf-8'))
-            self.artist_chrc.write_value(bytes(metadata['xesam:artist'][0], 'utf-8'))
-            self.album_chrc.write_value(bytes(metadata['xesam:album'], 'utf-8'))
-            self.total_length_chrc.write_value((metadata['mpris:length']//(1000*1000)).to_bytes(4, byteorder='big'))
+            try:
+                self.track_chrc.write_value(bytes(metadata['xesam:title'], 'utf-8'))
+            except KeyError:
+                self.track_chrc.write_value(bytes('', 'utf-8'))
+
+            try:
+                self.artist_chrc.write_value(bytes(metadata['xesam:artist'][0], 'utf-8'))
+            except KeyError:
+                self.artist_chrc.write_value(bytes('', 'utf-8'))
+
+            try:
+                self.album_chrc.write_value(bytes(metadata['xesam:album'], 'utf-8'))
+            except KeyError:
+                self.album_chrc.write_value(bytes('', 'utf-8'))
+
+            try:
+                self.total_length_chrc.write_value((metadata['mpris:length']//(1000*1000)).to_bytes(4, byteorder='big'))
+            except KeyError:
+                self.total_length_chrc.write_value((0).to_bytes(4, byteorder='big'))
         else:
             self.track_chrc.write_value(bytes(title, 'utf-8'))
             self.artist_chrc.write_value(bytes(artist, 'utf-8'))
