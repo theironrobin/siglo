@@ -5,4 +5,4 @@ Terminal=false
 Type=Application
 Categories=GTK;
 StartupNotify=true
-Icon=org.gnome.siglo
+Icon=com.github.alexr4535.siglo

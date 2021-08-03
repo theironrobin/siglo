@@ -1,6 +1,6 @@
 desktop_file = i18n.merge_file(
-  input: 'org.gnome.siglo.desktop.in',
-  output: 'org.gnome.siglo.desktop',
+  input: 'com.github.alexr4535.siglo.desktop.in',
+  output: 'com.github.alexr4535.siglo.desktop',
   type: 'desktop',
   po_dir: '../po',
   install: true,
@@ -14,15 +14,15 @@ if desktop_utils.found()
   )
 endif
 
-install_data(join_paths('icons', 'org.gnome.siglo.svg'),
+install_data(join_paths('icons', 'com.github.alexr4535.siglo.svg'),
   install_dir: join_paths(get_option('datadir'), 'icons')
 )
 
 install_data('siglo.service', install_dir: '/etc/systemd/user/')
 
 appstream_file = i18n.merge_file(
-  input: 'org.gnome.siglo.appdata.xml.in',
-  output: 'org.gnome.siglo.appdata.xml',
+  input: 'com.github.alexr4535.siglo.appdata.xml.in',
+  output: 'com.github.alexr4535.siglo.appdata.xml',
   po_dir: '../po',
   install: true,
   install_dir: join_paths(get_option('datadir'), 'appdata')
@@ -35,7 +35,7 @@ if appstream_util.found()
   )
 endif
 
-install_data('org.gnome.siglo.gschema.xml',
+install_data('com.github.alexr4535.siglo.gschema.xml',
   install_dir: join_paths(get_option('datadir'), 'glib-2.0/schemas')
 )
 
