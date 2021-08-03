@@ -13,6 +13,13 @@ sudo pacman -S --needed meson python-pip base-devel bluez bluez-utils dbus-pytho
 pip3 install gatt pyxdg
 ```
 
+### Fedora
+
+```
+sudo dnf install meson glib2-devel
+pip3 install gatt
+```
+
 ### Ubuntu
 
 ```sh
