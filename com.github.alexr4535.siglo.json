@@ -24,54 +24,7 @@
         "*.a"
     ],
     "modules" : [
-        {
-            "name": "gatt",
-            "buildsystem": "simple",
-            "build-options": {
-                "build-args": [
-                    "--share=network"
-                ]
-            },
-            "build-commands": [
-                "pip3 install --prefix=/app --no-cache-dir gatt"
-            ]
-        },
-        {
-            "name": "dbus-python",
-            "buildsystem": "simple",
-            "build-options": {
-                "build-args": [
-                    "--share=network"
-                ]
-            },
-            "build-commands": [
-                "pip3 install --prefix=/app --no-cache-dir dbus-python"
-            ]
-        },
-        {
-            "name": "python3-requests",
-            "buildsystem": "simple",
-            "build-options": {
-                "build-args": [
-                    "--share=network"
-                ]
-            },
-            "build-commands": [
-                "pip3 install --prefix=/app --no-cache-dir requests"
-            ]
-        },
-        {
-            "name": "python3-pyxdg",
-            "buildsystem": "simple",
-            "build-options": {
-                "build-args": [
-                    "--share=network"
-                ]
-            },
-            "build-commands": [
-                "pip3 install --prefix=/app --no-cache-dir pyxdg"
-            ]
-        },
+        "python3-requests.json",
         {
             "name" : "siglo",
             "builddir" : true,
