@@ -63,11 +63,9 @@ Once the container is running, you can launch the app:
 
 ```sh
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak install --user flathub org.gnome.Sdk//3.38 org.gnome.Platform//3.38
+flatpak install --user flathub org.gnome.Sdk//40 org.gnome.Platform//40
 
-flatpak-builder --repo=repo --force-clean build-dir/ com.github.alexr4535.siglo.json
-flatpak build-bundle ./repo/ siglo.flatpak com.github.alexr4535.siglo
-flatpak install --user ./siglo.flatpak
+flatpak-builder --user --install --repo=repo --force-clean build-dir/ com.github.alexr4535.siglo.json
 ```
 
 ### Cross-compiling for PinePhone
@@ -77,7 +75,7 @@ Example cross-compiling for PinePhone on an `x86_64` Fedora machine:
 ```sh
 sudo dnf install qemu-system-arm qemu-user-static
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
-flatpak install --user flathub org.gnome.Sdk/aarch64/3.38 org.gnome.Platform/aarch64/3.38
+flatpak install --user flathub org.gnome.Sdk/aarch64/40 org.gnome.Platform/aarch64/40
 
 flatpak-builder --arch=aarch64 --repo=repo --force-clean build-dir com.github.alexr4535.siglo.json
 flatpak build-bundle --arch=aarch64 ./repo/ siglo.flatpak com.github.alexr4535.siglo
