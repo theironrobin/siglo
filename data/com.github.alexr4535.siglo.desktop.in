@@ -6,3 +6,4 @@ Type=Application
 Categories=GTK;
 StartupNotify=true
 Icon=com.github.alexr4535.siglo
+X-Purism-FormFactor=Workstation;Mobile;
