@@ -4,7 +4,7 @@
 	<name>Siglo</name>
 	<summary>Linux Companion App for PineTime</summary>
 	<metadata_license>CC0-1.0</metadata_license>
-	<project_license>LicenseRef-proprietary</project_license>
+	<project_license>MPL-2.0</project_license>
 	<description>
 	  <p>
 	    GTK app to sync InfiniTime watch with PinePhone
