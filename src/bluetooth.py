@@ -188,7 +188,7 @@ class InfiniTimeDevice(gatt.Device):
             # Get device firmware
             self.battery = int(battery_level.read_value()[0])
 
-        self.services_done()
+        #self.services_done()
 
     def send_notification(self, alert_dict):
         message = alert_dict["message"]

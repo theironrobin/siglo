@@ -12,7 +12,7 @@ class daemon:
         self.conf = config()
         self.manager = InfiniTimeManager()
         self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.conf.get_property("last_paired_device"))
-        self.device.connect(sync_time=False)
+        self.device.connect()
 
     def scan_for_notifications(self):
         DBusGMainLoop(set_as_default=True)
