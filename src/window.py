@@ -78,15 +78,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
         GObject.threads_init()
         self.full_list = get_quick_deploy_list()
-        if self.conf.get_property("deploy_type") == "manual":
-            self.auto_switch_deploy_type = True
-            self.deploy_type_switch.set_active(True)
-        else:
-            self.auto_switch_deploy_type = False
-        if self.conf.get_property("paired"):
-            self.auto_switch_paired = True
-        else:
-            self.auto_switch_paired = False
         GObject.signal_new(
             "flash-signal",
             self,
@@ -275,18 +266,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ota_picked_box.set_visible(True)
         self.ota_selection_box.set_visible(False)
         self.ota_picked_box.set_sensitive(True)
-
-    @Gtk.Template.Callback()
-    def ota_cancel_button_clicked(self, widget):
-        if self.conf.get_property("deploy_type") == "quick":
-            self.ota_pick_asset_combobox.remove_all()
-            self.ota_pick_tag_combobox.remove_all()
-            self.populate_tagbox()
-            self.ota_picked_box.set_sensitive(False)
-        if self.conf.get_property("deploy_type") == "manual":
-            self.main_info.set_text("Choose another OTA File")
-            self.ota_picked_box.set_visible(False)
-            self.ota_selection_box.set_visible(True)
 
     @Gtk.Template.Callback()
     def firmware_run_file_clicked_cb(self, widget):
