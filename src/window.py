@@ -26,7 +26,7 @@ class ConnectionThread(threading.Thread):
         self.device = None
 
     def run(self):
-        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.mac)
+        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.mac, thread=True)
         self.device.services_done = self.data_received
         self.device.connect()
 
@@ -59,6 +59,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     firmware_run = Gtk.Template.Child()
     firmware_file = Gtk.Template.Child()
     firmware_run_file = Gtk.Template.Child()
+    keep_paired_switch = Gtk.Template.Child()
 
     # Flasher
     dfu_stack = Gtk.Template.Child()
@@ -77,16 +78,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         super().__init__(**kwargs)
         GObject.threads_init()
         self.full_list = get_quick_deploy_list()
-        if self.conf.get_property("deploy_type") == "manual":
-            self.auto_switch_deploy_type = True
-            self.deploy_type_switch.set_active(True)
-        else:
-            self.auto_switch_deploy_type = False
-        if self.conf.get_property("paired"):
-            self.auto_switch_paired = True
-            self.pair_switch.set_active(True)
-        else:
-            self.auto_switch_paired = False
         GObject.signal_new(
             "flash-signal",
             self,
@@ -95,10 +86,14 @@ class SigloWindow(Gtk.ApplicationWindow):
             (GObject.TYPE_PYOBJECT,),
         )
 
-    def destroy_manager(self):
-        if self.manager:
-            self.manager.stop()
-            self.manager = None
+    def disconnect_paired_device(self):
+        try:
+            devices = self.manager.devices()
+            for d in devices:
+                if d.mac_address == self.manager.get_mac_address() and d.is_connected():
+                    d.disconnect()
+        finally:
+            self.conf.set_property("paired", "False")
 
     def destroy_manager(self):
         if self.manager:
@@ -134,7 +129,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         grid.attach(value_mac, 2, 1, 1, 1)
 
         arrow = Gtk.Image.new_from_icon_name("go-next-symbolic", Gtk.IconSize.BUTTON)
-        grid.attach(arrow, 3, 0, 1, 2)
+        grid.attach(arrow, 4, 0, 1, 2)
 
         row.show_all()
         return row
@@ -155,6 +150,9 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.main_stack.set_visible_child_name("nodevice")
         if not self.manager:
             return
+
+        if self.conf.get_property("paired"):
+            self.disconnect_paired_device()
 
         self.depopulate_listbox()
         self.manager.scan_result = False
@@ -194,39 +192,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         for asset in get_assets_by_tag(self.tag, self.full_list):
             self.ota_pick_asset_combobox.append_text(asset)
 
-    def done_scanning_multi(self, info_prefix):
-        if self.manager:
-            scan_result = self.manager.get_scan_result()
-        self.bt_spinner.set_visible(False)
-        self.rescan_button.set_visible(True)
-        if self.manager and scan_result:
-            info_suffix = "\n[INFO ] Scan Succeeded"
-            self.populate_listbox()
-        else:
-            info_suffix += "\n[INFO ] Scan Failed"
-            self.scan_fail_box.set_visible(True)
-        self.main_info.set_text(info_prefix + info_suffix)
-
-    def done_scanning_singleton(self, manager):
-        self.manager = manager
-        scan_result = manager.get_scan_result()
-        print("[INFO ] Single-Device Mode")
-        if scan_result:
-            print("[INFO ] Scan Succeeded")
-            print(
-                "[INFO ] Got watch {} on {}".format(
-                    manager.get_mac_address(), manager.adapter_name
-                )
-            )
-
-            if self.deploy_type == "quick":
-                self.auto_bbox_scan_pass.set_visible(True)
-            if self.deploy_type == "manual":
-                self.bbox_scan_pass.set_visible(True)
-        else:
-            print("[INFO ] Scan Failed")
-            self.main_stack.set_visible_child_name("nodevice")
-
     def callback_device_connect(self, data):
         firmware, battery = data
 
@@ -238,9 +203,17 @@ class SigloWindow(Gtk.ApplicationWindow):
         mac = row.mac
         self.current_mac = mac
         alias = row.alias
-        thread = ConnectionThread(self.manager, mac, self.callback_device_connect)
-        thread.daemon = True
-        thread.start()
+
+        if self.keep_paired_switch.get_active():
+            # Start daemon
+            subprocess.Popen(["systemctl", "--user", "start", "siglo"])
+            self.conf.set_property("paired", "True")
+
+        if self.manager is not None:
+            thread = ConnectionThread(self.manager, mac, self.callback_device_connect)
+            thread.daemon = True
+            thread.start()
+
         self.watch_name.set_text(alias)
         self.watch_address.set_text(mac)
         self.main_stack.set_visible_child_name("watch")
@@ -284,21 +257,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         subprocess.Popen(["gnome-control-center", "bluetooth"])
 
     @Gtk.Template.Callback()
-    def sync_time_button_clicked(self, widget):
-        if self.manager is not None:
-            print("Sync Time button clicked...")
-            device = InfiniTimeDevice(
-                manager=self.manager, mac_address=self.manager.get_mac_address()
-            )
-            device.connect(sync_time=True)
-            if device.successful_connection:
-                self.main_info.set_text("InfiniTime Sync... Success!")
-            else:
-                self.main_info.set_text("InfiniTime Sync... Failed!")
-            self.scan_pass_box.set_visible(False)
-            self.rescan_button.set_visible(True)
-
-    @Gtk.Template.Callback()
     def ota_file_selected(self, widget):
         filename = widget.get_filename()
         self.ota_file = filename
@@ -306,18 +264,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ota_picked_box.set_visible(True)
         self.ota_selection_box.set_visible(False)
         self.ota_picked_box.set_sensitive(True)
-
-    @Gtk.Template.Callback()
-    def ota_cancel_button_clicked(self, widget):
-        if self.conf.get_property("deploy_type") == "quick":
-            self.ota_pick_asset_combobox.remove_all()
-            self.ota_pick_tag_combobox.remove_all()
-            self.populate_tagbox()
-            self.ota_picked_box.set_sensitive(False)
-        if self.conf.get_property("deploy_type") == "manual":
-            self.main_info.set_text("Choose another OTA File")
-            self.ota_picked_box.set_visible(False)
-            self.ota_selection_box.set_visible(True)
 
     @Gtk.Template.Callback()
     def firmware_run_file_clicked_cb(self, widget):
@@ -403,35 +349,6 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.conf.set_property("deploy_type", "quick")
             self.rescan_button.emit("clicked")
 
-    @Gtk.Template.Callback()
-    def pair_switch_toggled(self, widget):
-        self.conf.set_property("last_paired_device", self.manager.get_mac_address())
-        print(self.manager)
-        if self.conf.get_property("paired") and self.auto_switch_paired == True:
-            self.auto_switch_paired = False
-        else:
-            if not self.conf.get_property("paired"):
-                self.conf.set_property("paired", "True")
-                if self.manager is not None:
-                    print("Pairing with", self.manager.get_mac_address())
-                    device = InfiniTimeDevice(
-                        manager=self.manager, mac_address=self.manager.get_mac_address()
-                    )
-                    device.connect(sync_time=True)
-                    subprocess.call(["systemctl", "--user", "daemon-reload"])
-                    subprocess.call(["systemctl", "--user", "restart", "siglo"])
-            else:
-                try:
-                    device = InfiniTimeDevice(
-                        manager=self.manager, mac_address=self.manager.get_mac_address()
-                    )
-                    device.disconnect()
-                except dbus.exceptions.DBusException:
-                    raise BluetoothDisabled
-                finally:
-                    subprocess.call(["systemctl", "--user", "daemon-reload"])
-                    subprocess.call(["systemctl", "--user", "stop", "siglo"])
-                    self.conf.set_property("paired", "False")
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
@@ -454,7 +371,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         else:
             self.main_info.set_text("OTA Update Failed")
         self.bt_spinner.set_visible(False)
-        self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
         self.ota_picked_box.set_visible(True)
         if self.conf.get_property("deploy_type") == "quick":

@@ -75,8 +75,6 @@ class InfiniTimeManager(gatt.DeviceManager):
         return self.scan_result
 
     def get_device_set(self):
-        if self.conf.get_property("paired"):
-            self.device_set.add(self.conf.get_property("last_paired_device"))
         return self.device_set
 
     def get_adapter_name(self):
@@ -108,8 +106,11 @@ class InfiniTimeManager(gatt.DeviceManager):
 
 
 class InfiniTimeDevice(gatt.Device):
-    def __init__(self, mac_address, manager):
+    def __init__(self, mac_address, manager, thread):
         self.conf = config()
+        self.mac = mac_address
+        self.manager = manager
+        self.thread = thread
         super().__init__(mac_address, manager)
 
     def connect(self):
@@ -119,6 +120,8 @@ class InfiniTimeDevice(gatt.Device):
     def connect_succeeded(self):
         super().connect_succeeded()
         print("[%s] Connected" % (self.mac_address))
+        print("self.mac", self.mac)
+        self.conf.set_property("last_paired_device", self.mac)
 
     def connect_failed(self, error):
         super().connect_failed(error)
@@ -187,8 +190,8 @@ class InfiniTimeDevice(gatt.Device):
         
             # Get device firmware
             self.battery = int(battery_level.read_value()[0])
-
-        self.services_done()
+        if self.thread:
+            self.services_done()
 
     def send_notification(self, alert_dict):
         message = alert_dict["message"]
