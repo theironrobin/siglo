@@ -33,7 +33,7 @@
                 {
                     "type" : "git",
                     "url" : "https://github.com/alexr4535/siglo",
-                    "tag" : "v0.8.14"
+                    "tag" : "v0.9.0"
                 }
             ]
         }
