@@ -97,7 +97,6 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def destroy_manager(self):
         if self.manager:
-            self.disconnect_paired_device()
             self.manager.stop()
             self.manager = None
 
