@@ -17,13 +17,16 @@ gettext.install('siglo', localedir)
 
 def main():
     p = argparse.ArgumentParser(description="app to sync InfiniTime watch")
-    p.add_argument('--daemon', '-d', required=False, action='store_true', help="run as a service")
+    p.add_argument('--start', '-d', required=False, action='store_true', help="start daemon")
+    p.add_argument('--stop', '-x', required=False, action='store_true', help="stop daemon")
     args = p.parse_args()
+    from siglo import daemon
+    d = daemon.daemon()
 
-    if args.daemon:
-        from siglo import daemon
-        d = daemon.daemon()
-        d.scan_for_notifications()
+    if args.start:
+        d.start()
+    elif args.stop:
+        d.stop()
     else:
         import gi
 
@@ -36,3 +39,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+

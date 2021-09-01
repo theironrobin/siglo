@@ -12,7 +12,15 @@ class daemon:
         self.conf = config()
         self.manager = InfiniTimeManager()
         self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.conf.get_property("last_paired_device"))
+        self.mainloop = glib.MainLoop()
+
+    def start(self):
         self.device.connect()
+        self.scan_for_notifications()
+
+    def stop(self):
+        self.mainloop.quit()
+        self.device.disconnect()
 
     def scan_for_notifications(self):
         DBusGMainLoop(set_as_default=True)
@@ -24,8 +32,7 @@ class daemon:
             print(e)
             return
         monitor_bus.add_message_filter(self.notifications)
-        mainloop = glib.MainLoop()
-        mainloop.run()
+        self.mainloop.run()
 
     def notifications(self, bus, message):
         alert_dict = {}
@@ -39,3 +46,4 @@ class daemon:
         if len(alert_dict) > 0:
             print(alert_dict)
             self.device.send_notification(alert_dict)
+
