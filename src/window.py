@@ -202,38 +202,38 @@ class SigloWindow(Gtk.ApplicationWindow):
         for asset in get_assets_by_tag(self.tag, self.full_list):
             self.ota_pick_asset_combobox.append_text(asset)
 
-    def done_scanning_multi(self, info_prefix):
-        if self.manager:
-            scan_result = self.manager.get_scan_result()
-        self.bt_spinner.set_visible(False)
-        self.rescan_button.set_visible(True)
-        if self.manager and scan_result:
-            info_suffix = "\n[INFO ] Scan Succeeded"
-            self.populate_listbox()
-        else:
-            info_suffix += "\n[INFO ] Scan Failed"
-            self.scan_fail_box.set_visible(True)
-        self.main_info.set_text(info_prefix + info_suffix)
+    # def done_scanning_multi(self, info_prefix):
+    #     if self.manager:
+    #         scan_result = self.manager.get_scan_result()
+    #     self.bt_spinner.set_visible(False)
+    #     self.rescan_button.set_visible(True)
+    #     if self.manager and scan_result:
+    #         info_suffix = "\n[INFO ] Scan Succeeded"
+    #         self.populate_listbox()
+    #     else:
+    #         info_suffix += "\n[INFO ] Scan Failed"
+    #         self.scan_fail_box.set_visible(True)
+    #     self.main_info.set_text(info_prefix + info_suffix)
 
-    def done_scanning_singleton(self, manager):
-        self.manager = manager
-        scan_result = manager.get_scan_result()
-        print("[INFO ] Single-Device Mode")
-        if scan_result:
-            print("[INFO ] Scan Succeeded")
-            print(
-                "[INFO ] Got watch {} on {}".format(
-                    manager.get_mac_address(), manager.adapter_name
-                )
-            )
+    # def done_scanning_singleton(self, manager):
+    #     self.manager = manager
+    #     scan_result = manager.get_scan_result()
+    #     print("[INFO ] Single-Device Mode")
+    #     if scan_result:
+    #         print("[INFO ] Scan Succeeded")
+    #         print(
+    #             "[INFO ] Got watch {} on {}".format(
+    #                 manager.get_mac_address(), manager.adapter_name
+    #             )
+    #         )
 
-            if self.deploy_type == "quick":
-                self.auto_bbox_scan_pass.set_visible(True)
-            if self.deploy_type == "manual":
-                self.bbox_scan_pass.set_visible(True)
-        else:
-            print("[INFO ] Scan Failed")
-            self.main_stack.set_visible_child_name("nodevice")
+    #         if self.deploy_type == "quick":
+    #             self.auto_bbox_scan_pass.set_visible(True)
+    #         if self.deploy_type == "manual":
+    #             self.bbox_scan_pass.set_visible(True)
+    #     else:
+    #         print("[INFO ] Scan Failed")
+    #         self.main_stack.set_visible_child_name("nodevice")
 
     def callback_device_connect(self, data):
         firmware, battery = data
