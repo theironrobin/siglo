@@ -1,6 +1,6 @@
-data/org.gnome.siglo.desktop.in
-data/org.gnome.siglo.appdata.xml.in
-data/org.gnome.siglo.gschema.xml
+data/com.github.alexr4535.siglo.desktop.in
+data/com.github.alexr4535.siglo.appdata.xml.in
+data/com.github.alexr4535.siglo.gschema.xml
 src/window.ui
 src/main.py
 src/window.py

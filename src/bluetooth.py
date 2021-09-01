@@ -214,9 +214,5 @@ class BluetoothDisabled(Exception):
     pass
 
 
-class BluetoothDisabled(Exception):
-    pass
-
-
 class NoAdapterFound(Exception):
     pass
