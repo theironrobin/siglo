@@ -10,7 +10,8 @@
         "--share=ipc",
         "--socket=fallback-x11",
         "--system-talk-name=org.bluez",
-        "--socket=wayland"
+        "--socket=wayland",
+        "--talk-name=org.freedesktop.Notifications"
     ],
     "cleanup" : [
         "/include",
