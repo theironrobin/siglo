@@ -1232,26 +1232,6 @@ To make the firmware persistent go to the settings on the watch and go to the fi
                     <property name="position">3</property>
                   </packing>
                 </child>
-                <child>
-                  <object class="GtkButton" id="sync_time_button">
-                    <property name="label" translatable="yes">Time Sync</property>
-                    <property name="width-request">-1</property>
-                    <property name="height-request">-1</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="halign">center</property>
-                    <property name="valign">start</property>
-                    <property name="margin-top">10</property>
-                    <property name="vexpand">True</property>
-                    <signal name="clicked" handler="sync_time_button_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">4</property>
-                  </packing>
-                </child>
               </object>
               <packing>
                 <property name="expand">False</property>

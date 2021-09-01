@@ -301,21 +301,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         subprocess.Popen(["gnome-control-center", "bluetooth"])
 
     @Gtk.Template.Callback()
-    def sync_time_button_clicked(self, widget):
-        if self.manager is not None:
-            print("Sync Time button clicked...")
-            device = InfiniTimeDevice(
-                manager=self.manager, mac_address=self.manager.get_mac_address()
-            )
-            device.connect(sync_time=True)
-            if device.successful_connection:
-                self.main_info.set_text("InfiniTime Sync... Success!")
-            else:
-                self.main_info.set_text("InfiniTime Sync... Failed!")
-            self.scan_pass_box.set_visible(False)
-            self.rescan_button.set_visible(True)
-
-    @Gtk.Template.Callback()
     def ota_file_selected(self, widget):
         filename = widget.get_filename()
         self.ota_file = filename
@@ -442,7 +427,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         else:
             self.main_info.set_text("OTA Update Failed")
         self.bt_spinner.set_visible(False)
-        self.sync_time_button.set_visible(True)
         self.dfu_progress_box.set_visible(False)
         self.ota_picked_box.set_visible(True)
         if self.conf.get_property("deploy_type") == "quick":
