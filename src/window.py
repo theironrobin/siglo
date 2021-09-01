@@ -59,6 +59,7 @@ class SigloWindow(Gtk.ApplicationWindow):
     firmware_run = Gtk.Template.Child()
     firmware_file = Gtk.Template.Child()
     firmware_run_file = Gtk.Template.Child()
+    keep_paired_switch = Gtk.Template.Child()
 
     # Flasher
     dfu_stack = Gtk.Template.Child()
@@ -84,7 +85,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.auto_switch_deploy_type = False
         if self.conf.get_property("paired"):
             self.auto_switch_paired = True
-            self.pair_switch.set_active(True)
         else:
             self.auto_switch_paired = False
         GObject.signal_new(
@@ -95,13 +95,18 @@ class SigloWindow(Gtk.ApplicationWindow):
             (GObject.TYPE_PYOBJECT,),
         )
 
-    def destroy_manager(self):
-        if self.manager:
-            self.manager.stop()
-            self.manager = None
+    def disconnect_paired_device(self):
+        try:
+            devices = self.manager.devices()
+            for d in devices:
+                if d.mac_address == self.manager.get_mac_address() and d.is_connected():
+                    d.disconnect()
+        finally:
+            self.conf.set_property("paired", "False")
 
     def destroy_manager(self):
         if self.manager:
+            self.disconnect_paired_device()
             self.manager.stop()
             self.manager = None
 
@@ -134,7 +139,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         grid.attach(value_mac, 2, 1, 1, 1)
 
         arrow = Gtk.Image.new_from_icon_name("go-next-symbolic", Gtk.IconSize.BUTTON)
-        grid.attach(arrow, 3, 0, 1, 2)
+        grid.attach(arrow, 4, 0, 1, 2)
 
         row.show_all()
         return row
@@ -155,6 +160,9 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.main_stack.set_visible_child_name("nodevice")
         if not self.manager:
             return
+
+        if self.conf.get_property("paired"):
+            self.disconnect_paired_device()
 
         self.depopulate_listbox()
         self.manager.scan_result = False
@@ -238,9 +246,18 @@ class SigloWindow(Gtk.ApplicationWindow):
         mac = row.mac
         self.current_mac = mac
         alias = row.alias
-        thread = ConnectionThread(self.manager, mac, self.callback_device_connect)
-        thread.daemon = True
-        thread.start()
+
+        if self.conf.get_property("paired"):
+            self.disconnect_paired_device()
+
+        if self.keep_paired_switch.get_active():
+            self.conf.set_property("paired", "True")
+
+        if self.manager is not None:
+            thread = ConnectionThread(self.manager, mac, self.callback_device_connect)
+            thread.daemon = True
+            thread.start()
+
         self.watch_name.set_text(alias)
         self.watch_address.set_text(mac)
         self.main_stack.set_visible_child_name("watch")

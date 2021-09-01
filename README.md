@@ -5,6 +5,12 @@ GTK app to sync InfiniTime watch with PinePhone
 'siglo' means century in Spanish
 
 ## Dependencies
+=======
+## Requirements
+Gtk >= 3.30
+
+## Download and Install
+[Download the latest stable version from Flathub](https://flathub.org/apps/details/com.github.alexr4535.siglo) (recommended).
 
 ### Arch Linux
 

@@ -23,7 +23,10 @@ version_blacklist = (
 
 
 def get_quick_deploy_list():
-    r = requests.get(url)
+    try:
+        r = requests.get(url)
+    except requests.exceptions.ConnectionError:
+        return []
     d = json.loads(r.content)
     quick_deploy_list = []
     for item in d:
