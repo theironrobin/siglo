@@ -20,17 +20,6 @@
         <property name="can-focus">False</property>
       </object>
     </child>
-    <child>
-      <object class="GtkCheckMenuItem" id="pair_switch">
-        <property name="visible">True</property>
-        <property name="sensitive">False</property>
-        <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Sync time and recieve notifications even after app closes</property>
-        <property name="label" translatable="yes">Pair Device (Beta)</property>
-        <property name="use-underline">True</property>
-        <signal name="toggled" handler="pair_switch_toggled" swapped="no"/>
-      </object>
-    </child>
   </object>
   <template class="SigloWindow" parent="GtkApplicationWindow">
     <property name="can-focus">False</property>
