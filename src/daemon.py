@@ -16,16 +16,6 @@ class daemon:
 
     def scan_for_notifications(self):
         DBusGMainLoop(set_as_default=True)
-        bus = dbus.SessionBus()
-        bus.add_match_string_non_blocking(
-            "eavesdrop=true, interface='org.freedesktop.Notifications', member='Notify'"
-        )
-        bus.add_message_filter(self.notifications)
-        mainloop = glib.MainLoop()
-        mainloop.run()
-
-    def scan_for_notifications(self):
-        DBusGMainLoop(set_as_default=True)
         monitor_bus = dbus.SessionBus(private=True)
         try:
             dbus_monitor_iface = dbus.Interface(monitor_bus.get_object('org.freedesktop.DBus', '/org/freedesktop/DBus'), dbus_interface='org.freedesktop.DBus.Monitoring')
