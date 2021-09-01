@@ -26,7 +26,7 @@ class ConnectionThread(threading.Thread):
         self.device = None
 
     def run(self):
-        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.mac)
+        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.mac, thread=True)
         self.device.services_done = self.data_received
         self.device.connect()
 
@@ -205,10 +205,9 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.current_mac = mac
         alias = row.alias
 
-        if self.conf.get_property("paired"):
-            self.disconnect_paired_device()
-
         if self.keep_paired_switch.get_active():
+            # Start daemon
+            subprocess.Popen(["systemctl", "--user", "start", "siglo"])
             self.conf.set_property("paired", "True")
 
         if self.manager is not None:
