@@ -11,7 +11,7 @@ class daemon:
     def __init__(self):
         self.conf = config()
         self.manager = InfiniTimeManager()
-        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.conf.get_property("last_paired_device"))
+        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.conf.get_property("last_paired_device"), thread=False)
         self.mainloop = glib.MainLoop()
 
     def start(self):
