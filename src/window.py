@@ -246,7 +246,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         mac = row.mac
         self.current_mac = mac
         alias = row.alias
-        print("we in here now")
 
         if self.conf.get_property("paired"):
             self.disconnect_paired_device()
@@ -420,6 +419,36 @@ class SigloWindow(Gtk.ApplicationWindow):
             else:
                 self.conf.set_property("deploy_type", "quick")
             self.rescan_button.emit("clicked")
+
+    @Gtk.Template.Callback()
+    def pair_switch_toggled(self, widget):
+        self.conf.set_property("last_paired_device", self.manager.get_mac_address())
+        print(self.manager)
+        if self.conf.get_property("paired") and self.auto_switch_paired == True:
+            self.auto_switch_paired = False
+        else:
+            if not self.conf.get_property("paired"):
+                self.conf.set_property("paired", "True")
+                if self.manager is not None:
+                    print("Pairing with", self.manager.get_mac_address())
+                    device = InfiniTimeDevice(
+                        manager=self.manager, mac_address=self.manager.get_mac_address()
+                    )
+                    device.connect(sync_time=True)
+                    subprocess.call(["systemctl", "--user", "daemon-reload"])
+                    subprocess.call(["systemctl", "--user", "restart", "siglo"])
+            else:
+                try:
+                    device = InfiniTimeDevice(
+                        manager=self.manager, mac_address=self.manager.get_mac_address()
+                    )
+                    device.disconnect()
+                except dbus.exceptions.DBusException:
+                    raise BluetoothDisabled
+                finally:
+                    subprocess.call(["systemctl", "--user", "daemon-reload"])
+                    subprocess.call(["systemctl", "--user", "stop", "siglo"])
+                    self.conf.set_property("paired", "False")
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
