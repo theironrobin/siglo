@@ -8,7 +8,7 @@ GTK app to sync InfiniTime watch with PinePhone
 Gtk >= 3.30
 
 ## Download and Install
-[Download the latest stable version from Flathub](https://flathub.org/apps/details/com.github.alexr4535.siglo) (recommended).
+[Download the latest stable version from Flathub](https://flathub.org/apps/details/com.github.alexr4535.siglo) (Warning: SMS Notifications currently broken in flatpak https://github.com/alexr4535/siglo/issues/80).
 
 ### Arch Linux
 
