@@ -97,18 +97,6 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def destroy_manager(self):
         if self.manager:
-
-            #part of workaround to keep the connection up until the app is closed
-            #//
-            try:
-                devices = self.manager.devices()
-                for d in devices:
-                    if isinstance(d,InfiniTimeDevice):
-                        d.disconnect()
-            except :
-               pass
-           #//
-
             self.manager.stop()
             self.manager = None
 
