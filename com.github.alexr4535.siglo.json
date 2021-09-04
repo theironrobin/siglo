@@ -11,7 +11,7 @@
         "--socket=fallback-x11",
         "--system-talk-name=org.bluez",
         "--talk-name=org.freedesktop.portal.Desktop",
-        "--socket=wayland",
+        "--socket=wayland"
     ],
     "cleanup" : [
         "/include",
