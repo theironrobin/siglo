@@ -1,5 +1,6 @@
 import sys
 import gi
+import dbus
 
 gi.require_version("Gtk", "3.0")
 
@@ -13,6 +14,7 @@ class Application(Gtk.Application):
         self.manager = None
         self.conf = config()
         self.conf.load_defaults()
+        self.isHidden = False
         super().__init__(
             application_id="com.github.alexr4535.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
@@ -21,7 +23,9 @@ class Application(Gtk.Application):
         win = self.props.active_window
         if not win:
             win = SigloWindow(application=self)
-        win.present()
+
+        if not self.isHidden:
+            win.present()
         win.do_scanning()
 
     def do_window_removed(self, window):
@@ -31,7 +35,16 @@ class Application(Gtk.Application):
         self.quit()
 
 
-def main(version):
+def portal_response_cb(response, results):
+    if response != 0:
+        print("Background request cancelled")
+    else:
+        if not results['background']:
+            print("Background request denied")
+        if not results['autostart']:
+            print("Autostart request denied")
+
+def main(version, isHidden):
     def gtk_style():
         css = b"""
 #multi_mac_label { font-size: 33px; }
@@ -48,4 +61,19 @@ def main(version):
 
     gtk_style()
     app = Application()
-    return app.run(sys.argv)
+
+    app.isHidden = isHidden
+
+    bus = dbus.SessionBus()
+    portal_obj = bus.get_object('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop')
+    background_iface = dbus.Interface(portal_obj, dbus_interface='org.freedesktop.portal.Background')
+    obj_path = background_iface.RequestBackground("", dbus.Dictionary({
+                                                      "reason":"Hide the Siglo window",
+                                                      "autostart":True,
+                                                      "commandline":["siglo", "--hidden"]
+                                                        }, signature='sv', variant_level=1))
+    request_iface = dbus.Interface(bus.get_object('org.freedesktop.portal.Desktop', obj_path),
+                                    dbus_interface='org.freedesktop.portal.Request')
+    request_iface.connect_to_signal("Response", portal_response_cb)
+
+    return app.run()

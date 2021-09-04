@@ -4,7 +4,7 @@ import threading
 import urllib.request
 from pathlib import Path
 import gatt
-from gi.repository import Gtk, GObject, GLib
+from gi.repository import Gtk, GObject, GLib, Gio
 from .bluetooth import (
     InfiniTimeDevice,
     InfiniTimeManager,
@@ -85,6 +85,13 @@ class SigloWindow(Gtk.ApplicationWindow):
             GObject.TYPE_PYOBJECT,
             (GObject.TYPE_PYOBJECT,),
         )
+
+        show_action = Gio.SimpleAction.new("show", None)
+        show_action.connect("activate", self.show_win)
+        self.add_action(show_action)
+
+    def show_win(self, p1, p2):
+        self.show()
 
     def disconnect_paired_device(self):
         try:
@@ -199,14 +206,17 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.watch_battery.set_text(battery)
 
     @Gtk.Template.Callback()
+    def on_delete_siglo_win(self, win, event):
+        win.hide()
+        return True
+
+    @Gtk.Template.Callback()
     def on_watches_listbox_row_activated(self, widget, row):
         mac = row.mac
         self.current_mac = mac
         alias = row.alias
 
         if self.keep_paired_switch.get_active():
-            # Start daemon
-            subprocess.Popen(["systemctl", "--user", "start", "siglo"])
             self.conf.set_property("paired", "True")
 
         if self.manager is not None:

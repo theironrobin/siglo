@@ -25,6 +25,7 @@
     <property name="can-focus">False</property>
     <property name="default-width">600</property>
     <property name="default-height">300</property>
+    <signal name="delete-event" handler="on_delete_siglo_win" swapped="no"/>
     <signal name="set-focus" handler="on_window_focus" swapped="no"/>
     <child>
       <object class="GtkStack" id="main_stack">

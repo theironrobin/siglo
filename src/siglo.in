@@ -6,6 +6,12 @@ import sys
 import signal
 import gettext
 import argparse
+import dbus
+
+from dbus.mainloop.glib import DBusGMainLoop
+
+import gi
+from gi.repository import Gio,GLib
 
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
@@ -17,26 +23,27 @@ gettext.install('siglo', localedir)
 
 def main():
     p = argparse.ArgumentParser(description="app to sync InfiniTime watch")
-    p.add_argument('--start', '-d', required=False, action='store_true', help="start daemon")
-    p.add_argument('--stop', '-x', required=False, action='store_true', help="stop daemon")
+    p.add_argument('--hidden', required=False, action='store_true', help="Hide window at startup")
     args = p.parse_args()
-    from siglo import daemon
-    d = daemon.daemon()
 
-    if args.start:
-        d.start()
-    elif args.stop:
-        d.stop()
-    else:
-        import gi
+    resource = Gio.Resource.load(os.path.join(pkgdatadir, 'siglo.gresource'))
+    resource._register()
 
-        from gi.repository import Gio
-        resource = Gio.Resource.load(os.path.join(pkgdatadir, 'siglo.gresource'))
-        resource._register()
+    #check if a Siglo instance is already running
+    DBusGMainLoop(set_as_default=True)
+    bus = dbus.SessionBus()
+    try:
+        win_obj = bus.get_object('com.github.alexr4535.siglo','/com/github/alexr4535/siglo/window/1')
+        action_iface = dbus.Interface(win_obj, dbus_interface="org.gtk.Actions")
+        action_iface.Activate("show",[],{})
+        sys.exit(0)
+    except Exception as e:
+        pass
 
-        from siglo import main
-        sys.exit(main.main(VERSION))
+    from siglo import main
+    sys.exit(main.main(VERSION, args.hidden))
 
 if __name__ == '__main__':
     main()
+
 
