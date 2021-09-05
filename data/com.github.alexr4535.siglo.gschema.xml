@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist gettext-domain="siglo">
-	<schema id="org.gnome.siglo" path="/org/gnome/siglo/">
+	<schema id="com.github.alexr4535.siglo" path="/com/github/alexr4535/siglo/">
 	</schema>
 </schemalist>

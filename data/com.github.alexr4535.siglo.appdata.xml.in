@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop">
+	<id>com.github.alexr4535.siglo.desktop</id>
+	<name>Siglo</name>
+	<summary>Linux Companion App for PineTime</summary>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>MPL-2.0</project_license>
+	<description>
+	  <p>
+	    GTK app to sync InfiniTime watch with PinePhone
+	  </p>
+	</description>
+	<url type="homepage">https://github.com/alexr4535/siglo</url>
+  	<screenshots>
+  	  <screenshot>
+  	    <image type="source">https://ironrobin.net/images/siglo-screenshot.png</image>
+  	  </screenshot>
+  	</screenshots>
+  	<releases>
+  	  <release version="0.8.12" date="2021-08-06"/>
+  	</releases>
+    <content_rating type="oars-1.1" />
+    <custom>
+      <value key="Purism::form_factor">workstation</value>
+      <value key="Purism::form_factor">mobile</value>
+    </custom>
+
+</component>

@@ -20,17 +20,6 @@
         <property name="can-focus">False</property>
       </object>
     </child>
-    <child>
-      <object class="GtkCheckMenuItem" id="pair_switch">
-        <property name="visible">True</property>
-        <property name="sensitive">False</property>
-        <property name="can-focus">False</property>
-        <property name="tooltip-text" translatable="yes">Sync time and recieve notifications even after app closes</property>
-        <property name="label" translatable="yes">Pair Device (Beta)</property>
-        <property name="use-underline">True</property>
-        <signal name="toggled" handler="pair_switch_toggled" swapped="no"/>
-      </object>
-    </child>
   </object>
   <template class="SigloWindow" parent="GtkApplicationWindow">
     <property name="can-focus">False</property>
@@ -72,7 +61,7 @@
               <object class="GtkImage">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="resource">/org/gnome/siglo/watch.svg</property>
+                <property name="resource">/com/github/alexr4535/siglo/watch.svg</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -130,7 +119,7 @@
               <object class="GtkImage">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="resource">/org/gnome/siglo/watch-error.svg</property>
+                <property name="resource">/com/github/alexr4535/siglo/watch-error.svg</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -217,20 +206,73 @@
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkLabel">
+                  <object class="GtkBox">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="halign">start</property>
-                    <property name="margin-bottom">4</property>
-                    <property name="label" translatable="yes">Watches</property>
-                    <style>
-                      <class name="heading"/>
-                    </style>
+                    <property name="margin-bottom">5</property>
+                    <property name="spacing">10</property>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="margin-bottom">4</property>
+                        <property name="label" translatable="yes">Watches</property>
+                        <style>
+                          <class name="heading"/>
+                        </style>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkBox">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="spacing">10</property>
+                        <child>
+                          <object class="GtkLabel">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <property name="halign">start</property>
+                            <property name="label" translatable="yes">Keep paired</property>
+                            <style>
+                              <class name="heading"/>
+                            </style>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">0</property>
+                          </packing>
+                        </child>
+                        <child>
+                          <object class="GtkSwitch" id="keep_paired_switch">
+                            <property name="visible">True</property>
+                            <property name="can-focus">True</property>
+                          </object>
+                          <packing>
+                            <property name="expand">False</property>
+                            <property name="fill">True</property>
+                            <property name="position">1</property>
+                          </packing>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="pack-type">end</property>
+                        <property name="position">3</property>
+                      </packing>
+                    </child>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">0</property>
+                    <property name="position">1</property>
                   </packing>
                 </child>
                 <child>
@@ -263,7 +305,7 @@
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">2</property>
                   </packing>
                 </child>
               </object>
@@ -348,7 +390,7 @@
                                   <object class="GtkImage">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="resource">/org/gnome/siglo/watch-icon.svg</property>
+                                    <property name="resource">/com/github/alexr4535/siglo/watch-icon.svg</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -787,7 +829,7 @@
                       <object class="GtkImage" id="firmware_picture1">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="resource">/org/gnome/siglo/watch-error.svg</property>
+                        <property name="resource">/com/github/alexr4535/siglo/watch-error.svg</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -840,7 +882,7 @@
                       <object class="GtkImage" id="firmware_picture">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="resource">/org/gnome/siglo/watch-progress.svg</property>
+                        <property name="resource">/com/github/alexr4535/siglo/watch-progress.svg</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -873,23 +915,6 @@
                         <property name="position">2</property>
                       </packing>
                     </child>
-                    <child>
-                      <object class="GtkButton" id="ota_cancel_button">
-                        <property name="label" translatable="yes">Cancel</property>
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="receives-default">True</property>
-                        <property name="halign">end</property>
-                        <property name="valign">center</property>
-                        <property name="hexpand">True</property>
-                        <signal name="clicked" handler="ota_cancel_button_clicked" swapped="no"/>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">3</property>
-                      </packing>
-                    </child>
                   </object>
                   <packing>
                     <property name="name">ok</property>
@@ -906,7 +931,7 @@
                       <object class="GtkImage" id="firmware_picture2">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="resource">/org/gnome/siglo/watch-check.svg</property>
+                        <property name="resource">/com/github/alexr4535/siglo/watch-check.svg</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -1188,26 +1213,6 @@ To make the firmware persistent go to the settings on the watch and go to the fi
                     <property name="expand">False</property>
                     <property name="fill">False</property>
                     <property name="position">3</property>
-                  </packing>
-                </child>
-                <child>
-                  <object class="GtkButton" id="sync_time_button">
-                    <property name="label" translatable="yes">Time Sync</property>
-                    <property name="width-request">-1</property>
-                    <property name="height-request">-1</property>
-                    <property name="visible">True</property>
-                    <property name="can-focus">True</property>
-                    <property name="receives-default">True</property>
-                    <property name="halign">center</property>
-                    <property name="valign">start</property>
-                    <property name="margin-top">10</property>
-                    <property name="vexpand">True</property>
-                    <signal name="clicked" handler="sync_time_button_clicked" swapped="no"/>
-                  </object>
-                  <packing>
-                    <property name="expand">True</property>
-                    <property name="fill">True</property>
-                    <property name="position">4</property>
                   </packing>
                 </child>
               </object>
