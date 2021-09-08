@@ -20,6 +20,11 @@ def main():
     p.add_argument('--start', '-d', required=False, action='store_true', help="start daemon")
     p.add_argument('--stop', '-x', required=False, action='store_true', help="stop daemon")
     args = p.parse_args()
+    
+    from siglo import config
+    config = config.config()
+    config.load_defaults()
+
     from siglo import daemon
     d = daemon.daemon()
 
