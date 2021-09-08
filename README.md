@@ -13,7 +13,7 @@ Gtk >= 3.30
 ### Arch Linux
 
 ```sh
-sudo pacman -S --needed meson python-pip base-devel bluez bluez-utils dbus-python
+sudo pacman -S --needed meson python-pip base-devel bluez bluez-utils dbus-python python-gobject
 pip3 install gatt pyxdg
 ```
 
