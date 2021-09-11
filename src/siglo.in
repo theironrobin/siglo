@@ -25,6 +25,10 @@ def main():
     p = argparse.ArgumentParser(description="app to sync InfiniTime watch")
     p.add_argument('--hidden', required=False, action='store_true', help="Hide window at startup")
     args = p.parse_args()
+    
+    from siglo import config
+    config = config.config()
+    config.load_defaults()
 
     resource = Gio.Resource.load(os.path.join(pkgdatadir, 'siglo.gresource'))
     resource._register()
