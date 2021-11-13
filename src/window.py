@@ -26,7 +26,9 @@ class ConnectionThread(threading.Thread):
         self.device = None
 
     def run(self):
-        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.mac, thread=True)
+        self.device = InfiniTimeDevice(
+            manager=self.manager, mac_address=self.mac, thread=True
+        )
         self.device.services_done = self.data_received
         self.device.connect()
 
@@ -162,19 +164,22 @@ class SigloWindow(Gtk.ApplicationWindow):
             print(e)
             self.main_stack.set_visible_child_name("nodevice")
             self.destroy_manager()
-
-        if len(self.manager.get_device_set()) > 0:
-            self.main_stack.set_visible_child_name("watches")
-            self.header_stack.set_visible_child_name("watches")
-        else:
+        try:
+            if len(self.manager.get_device_set()) > 0:
+                self.main_stack.set_visible_child_name("watches")
+                self.header_stack.set_visible_child_name("watches")
+            else:
+                self.main_stack.set_visible_child_name("nodevice")
+            for mac in self.manager.get_device_set():
+                print("Found {}".format(mac))
+                row = self.make_watch_row(self.manager.aliases[mac], mac)
+                row.mac = mac
+                row.alias = self.manager.aliases[mac]
+                self.watches_listbox.add(row)
+        except AttributeError as e:
+            print(e)
             self.main_stack.set_visible_child_name("nodevice")
-
-        for mac in self.manager.get_device_set():
-            print("Found {}".format(mac))
-            row = self.make_watch_row(self.manager.aliases[mac], mac)
-            row.mac = mac
-            row.alias = self.manager.aliases[mac]
-            self.watches_listbox.add(row)
+            self.destroy_manager()
         self.populate_tagbox()
 
     def depopulate_listbox(self):
@@ -348,7 +353,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             else:
                 self.conf.set_property("deploy_type", "quick")
             self.rescan_button.emit("clicked")
-
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
