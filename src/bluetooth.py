@@ -94,7 +94,7 @@ class InfiniTimeManager(gatt.DeviceManager):
         GObject.timeout_add(timeout, self.stop)
 
     def device_discovered(self, device):
-        for prefix in ["InfiniTime", "Pinetime-JF", "PineTime"]:
+        for prefix in ["InfiniTime", "Pinetime-JF", "PineTime", "Y7S"]:
             if device.alias().startswith(prefix):
                 self.scan_result = True
                 self.aliases[device.mac_address] = device.alias()
