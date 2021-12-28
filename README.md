@@ -10,6 +10,14 @@ Gtk >= 3.30
 ## Download and Install
 [Download the latest stable version from Flathub](https://flathub.org/apps/details/com.github.alexr4535.siglo) (Warning: SMS Notifications currently broken in flatpak https://github.com/alexr4535/siglo/issues/80).
 
+### Alpine
+Works for Alpine and other Alpine-based distribution, such as [postmarketOS](https://postmarketos.org/).
+
+```sh
+sudo apk add gettext glib-dev meson py3-dbus py3-pip python3 
+pip3 install gatt pyxdg
+```
+
 ### Arch Linux
 
 ```sh
