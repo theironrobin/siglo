@@ -8,7 +8,7 @@ RUN apt update && apt install -y \
     apt install -y xvfb && \
     rm -rf /var/lib/apt/lists/* && apt clean
 
-RUN pip3 install gatt pyxdg requests black
+RUN pip3 install gatt requests black
 
 COPY . /siglo
 
