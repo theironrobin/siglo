@@ -2,48 +2,167 @@ import gatt
 
 import gi.repository.GLib as glib
 import dbus
+import dbus.service
+import sys
 from dbus.mainloop.glib import DBusGMainLoop
 from .bluetooth import InfiniTimeManager, InfiniTimeDevice, NoAdapterFound
 from .config import config
 
+UID         =  'com.github.alexr4535.siglo.Daemon'
+UID_AS_PATH = '/com/github/alexr4535/siglo/Daemon'
 
-class daemon:
-    def __init__(self):
+def main():
+    DBusGMainLoop(set_as_default=True)
+    try:
+        bus_name = dbus.service.BusName(
+            UID, bus=dbus.SessionBus(), do_not_queue=True
+        )
+    except dbus.exceptions.NameExistsException:
+        print(f'Service with id {UID} is already running')
+        exit(1)
+    loop = glib.MainLoop()
+    siglo_daemon = daemon(bus_name)
+    siglo_daemon.main_loop = loop
+
+    try:
+        loop.run()
+    except KeyboardInterrupt:
+        print('KeyboardInterrupt received')
+    except Exception as e:
+        print('Unhandled exception: `{}`'.format(str(e)))
+    finally:
+        loop.quit()
+
+class daemon(dbus.service.Object):
+    def __init__(self, bus_name):
+        super().__init__(
+            bus_name, UID_AS_PATH
+        )
         self.conf = config()
-        self.manager = InfiniTimeManager()
-        self.device = InfiniTimeDevice(manager=self.manager, mac_address=self.conf.get_property("last_paired_device"), thread=False)
-        self.mainloop = glib.MainLoop()
-
-    def start(self):
-        self.device.connect()
-        self.scan_for_notifications()
-
-    def stop(self):
-        self.mainloop.quit()
-        self.device.disconnect()
-
-    def scan_for_notifications(self):
-        DBusGMainLoop(set_as_default=True)
-        monitor_bus = dbus.SessionBus(private=True)
+        self.main_loop = None
         try:
-            dbus_monitor_iface = dbus.Interface(monitor_bus.get_object('org.freedesktop.DBus', '/org/freedesktop/DBus'), dbus_interface='org.freedesktop.DBus.Monitoring')
-            dbus_monitor_iface.BecomeMonitor(["interface='org.freedesktop.Notifications', member='Notify'"], 0)
-        except dbus.exceptions.DBusException as e:
-            print(e)
-            return
-        monitor_bus.add_message_filter(self.notifications)
-        self.mainloop.run()
+            self.manager = InfiniTimeManager()
+            self.manager.daemon = self
+        except (gatt.errors.NotReady, BluetoothDisabled):
+            print("Bluetooth is disabled")
+        except NoAdapterFound:
+            print("No bluetooth adapter found")
 
-    def notifications(self, bus, message):
-        alert_dict = {}
-        for arg in message.get_args_list():
-            if isinstance(arg, dbus.Dictionary):
-                if arg["desktop-entry"] == "sm.puri.Chatty":
-                    alert_dict["category"] = "SMS"
-                    alert_dict["sender"] = message.get_args_list()[3]
-                    alert_dict["message"] = message.get_args_list()[4]
-        alert_dict_empty = not alert_dict
-        if len(alert_dict) > 0:
-            print(alert_dict)
-            self.device.send_notification(alert_dict)
+    @dbus.service.method(
+        dbus_interface=UID,
+        in_signature='d', out_signature=''
+    )
+    def Scan(self,timeout_sec):
+        print("Start scanning")
+        if not self.manager:
+            # create manager if not present yet
+            try:
+                self.manager = InfiniTimeManager()
+                self.manager.daemon = self
+            except (gatt.errors.NotReady, BluetoothDisabled):
+                print("Bluetooth is disabled")
+                self.ScanResponse("Bluetooth is disabled")
+            except NoAdapterFound:
+                print("No bluetooth adapter found")
+                self.ScanResponse("No bluetooth adapter found")
+        if not self.manager:
+            self.ScanResponse("Can't create mananger")
+            return
+
+        self.manager.scan_result = False
+        try:
+            self.manager.scan_for_infinitime(timeout_sec)
+            #self.ScanTimeout()
+        except (gatt.errors.NotReady, gatt.errors.Failed) as e:
+            print(e)
+
+    def destroy_manager(self):
+        if self.manager:
+            self.manager.stop()
+            self.manager = None
+
+    @dbus.service.method(
+        dbus_interface=UID,
+        in_signature='', out_signature='s'
+    )
+    def GetConnectedDevice(self):
+        try:
+            return self.device.mac
+        except:
+            return ''
+
+    @dbus.service.method(
+        dbus_interface=UID,
+        in_signature='', out_signature='a{sv}'
+    )
+    def GetDevices(self):
+        try:
+            return self.manager.aliases
+        except:
+            return {}
+
+    @dbus.service.method(
+        dbus_interface=UID+".Service",
+        in_signature='', out_signature='d'
+    )
+    def GetPowerLevel(self):
+        try:
+            return self.device.battery
+        except:
+            return -1.0
+
+    @dbus.service.method(
+        dbus_interface=UID+".Service",
+        in_signature='', out_signature='s'
+    )
+    def GetFirmwareVersion(self):
+        try:
+            return bytes(self.device.firmware).decode()
+        except:
+            return "n/a"
+
+    @dbus.service.method(
+        dbus_interface=UID,
+        in_signature='', out_signature='b'
+    )
+    def IsConnected(self):
+        try:
+            return self.device.is_connected
+        except:
+            return False
+
+    @dbus.service.method(
+        dbus_interface=UID,
+        in_signature='s', out_signature=''
+    )
+    def Connect(self, mac_address: str):
+        #self.manager.start()
+        self.device = InfiniTimeDevice(self.manager, mac_address)
+        self.device.connect()
+
+    @dbus.service.method(
+        dbus_interface=UID,
+        in_signature='', out_signature=''
+    )
+    def Quit(self):
+        self.destroy_manager()
+        self.main_loop.quit()
+
+    @dbus.service.method(
+        dbus_interface=UID,
+        in_signature='', out_signature=''
+    )
+    def Disconnect(self):
+        try:
+            #self.manager.stop()
+            self.device.disconnect()
+        except Exception as e:
+            print(e)
+
+    @dbus.service.signal(
+        dbus_interface=UID,
+        signature=''
+    )
+    def ServicesResolved(self):
+        pass
 

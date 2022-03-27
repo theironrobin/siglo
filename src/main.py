@@ -10,7 +10,6 @@ from .config import config
 
 class Application(Gtk.Application):
     def __init__(self):
-        self.manager = None
         self.conf = config()
         self.conf.load_defaults()
         super().__init__(
@@ -22,12 +21,9 @@ class Application(Gtk.Application):
         if not win:
             win = SigloWindow(application=self)
         win.present()
-        win.do_scanning()
 
     def do_window_removed(self, window):
         win = self.props.active_window
-        if win:
-            win.destroy_manager()
         self.quit()
 
 

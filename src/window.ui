@@ -2,29 +2,10 @@
 <!-- Generated with glade 3.38.2 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
-  <object class="GtkMenu" id="settings_menu">
-    <property name="visible">True</property>
-    <property name="can-focus">False</property>
-    <child>
-      <object class="GtkCheckMenuItem" id="deploy_type_switch">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-        <property name="label" translatable="yes">Manual OTA File</property>
-        <property name="use-underline">True</property>
-        <signal name="toggled" handler="deploy_type_toggled" swapped="no"/>
-      </object>
-    </child>
-    <child>
-      <object class="GtkSeparatorMenuItem">
-        <property name="visible">True</property>
-        <property name="can-focus">False</property>
-      </object>
-    </child>
-  </object>
   <template class="SigloWindow" parent="GtkApplicationWindow">
     <property name="can-focus">False</property>
     <property name="default-width">600</property>
-    <property name="default-height">300</property>
+    <property name="default-height">460</property>
     <signal name="set-focus" handler="on_window_focus" swapped="no"/>
     <child>
       <object class="GtkStack" id="main_stack">
@@ -206,73 +187,20 @@
                 <property name="can-focus">False</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkBox">
+                  <object class="GtkLabel">
                     <property name="visible">True</property>
                     <property name="can-focus">False</property>
-                    <property name="margin-bottom">5</property>
-                    <property name="spacing">10</property>
-                    <child>
-                      <object class="GtkLabel">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="halign">start</property>
-                        <property name="margin-bottom">4</property>
-                        <property name="label" translatable="yes">Watches</property>
-                        <style>
-                          <class name="heading"/>
-                        </style>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="position">0</property>
-                      </packing>
-                    </child>
-                    <child>
-                      <object class="GtkBox">
-                        <property name="visible">True</property>
-                        <property name="can-focus">False</property>
-                        <property name="spacing">10</property>
-                        <child>
-                          <object class="GtkLabel">
-                            <property name="visible">True</property>
-                            <property name="can-focus">False</property>
-                            <property name="halign">start</property>
-                            <property name="label" translatable="yes">Keep paired</property>
-                            <style>
-                              <class name="heading"/>
-                            </style>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">0</property>
-                          </packing>
-                        </child>
-                        <child>
-                          <object class="GtkSwitch" id="keep_paired_switch">
-                            <property name="visible">True</property>
-                            <property name="can-focus">True</property>
-                          </object>
-                          <packing>
-                            <property name="expand">False</property>
-                            <property name="fill">True</property>
-                            <property name="position">1</property>
-                          </packing>
-                        </child>
-                      </object>
-                      <packing>
-                        <property name="expand">False</property>
-                        <property name="fill">True</property>
-                        <property name="pack-type">end</property>
-                        <property name="position">3</property>
-                      </packing>
-                    </child>
+                    <property name="halign">start</property>
+                    <property name="margin-bottom">4</property>
+                    <property name="label" translatable="yes">Watches</property>
+                    <style>
+                      <class name="heading"/>
+                    </style>
                   </object>
                   <packing>
                     <property name="expand">False</property>
                     <property name="fill">True</property>
-                    <property name="position">1</property>
+                    <property name="position">0</property>
                   </packing>
                 </child>
                 <child>
@@ -314,12 +242,6 @@
                 <property name="fill">True</property>
                 <property name="position">0</property>
               </packing>
-            </child>
-            <child>
-              <placeholder/>
-            </child>
-            <child>
-              <placeholder/>
             </child>
           </object>
           <packing>
@@ -777,7 +699,46 @@
                       </packing>
                     </child>
                     <child>
-                      <placeholder/>
+                      <object class="GtkButton" id="disconnect_button">
+                        <property name="visible">True</property>
+                        <property name="can-focus">True</property>
+                        <property name="receives-default">True</property>
+                        <signal name="clicked" handler="on_disconnect_clicked" swapped="no"/>
+                        <child>
+                          <object class="GtkStack" id="disconnect_stack">
+                            <property name="visible">True</property>
+                            <property name="can-focus">False</property>
+                            <child>
+                              <object class="GtkLabel">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="label" translatable="yes">Disconnect</property>
+                              </object>
+                              <packing>
+                                <property name="name">disconnect_label</property>
+                                <property name="title" translatable="yes">page0</property>
+                              </packing>
+                            </child>
+                            <child>
+                              <object class="GtkSpinner">
+                                <property name="visible">True</property>
+                                <property name="can-focus">False</property>
+                                <property name="active">True</property>
+                              </object>
+                              <packing>
+                                <property name="name">disconnect_spinner</property>
+                                <property name="title" translatable="yes">page1</property>
+                                <property name="position">1</property>
+                              </packing>
+                            </child>
+                          </object>
+                        </child>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">2</property>
+                      </packing>
                     </child>
                   </object>
                 </child>
@@ -1275,58 +1236,10 @@ To make the firmware persistent go to the settings on the watch and go to the fi
         <property name="title">Siglo</property>
         <property name="show-close-button">True</property>
         <child>
-          <object class="GtkStack" id="header_stack">
+          <object class="GtkRevealer" id="header_stack_revealer">
             <property name="visible">True</property>
             <property name="can-focus">False</property>
-            <property name="hhomogeneous">False</property>
-            <property name="vhomogeneous">False</property>
             <property name="transition-type">crossfade</property>
-            <child>
-              <object class="GtkMenuButton">
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="focus-on-click">False</property>
-                <property name="receives-default">True</property>
-                <property name="popup">settings_menu</property>
-                <property name="use-popover">False</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-              <packing>
-                <property name="name">main</property>
-                <property name="title" translatable="yes">main</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkButton" id="back_to_devices">
-                <property name="label" translatable="yes">Back</property>
-                <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-                <signal name="clicked" handler="on_back_to_devices_clicked" swapped="no"/>
-              </object>
-              <packing>
-                <property name="name">watch</property>
-                <property name="title" translatable="yes">Watch</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkBox">
-                <property name="visible">True</property>
-                <property name="can-focus">False</property>
-                <property name="orientation">vertical</property>
-                <child>
-                  <placeholder/>
-                </child>
-              </object>
-              <packing>
-                <property name="name">scan</property>
-                <property name="title" translatable="yes">scan</property>
-                <property name="position">2</property>
-              </packing>
-            </child>
             <child>
               <object class="GtkButton">
                 <property name="visible">True</property>
@@ -1341,15 +1254,29 @@ To make the firmware persistent go to the settings on the watch and go to the fi
                   </object>
                 </child>
               </object>
-              <packing>
-                <property name="name">watches</property>
-                <property name="title" translatable="yes">watches</property>
-                <property name="position">3</property>
-              </packing>
             </child>
           </object>
         </child>
       </object>
     </child>
   </template>
+  <object class="GtkMenu" id="settings_menu">
+    <property name="visible">True</property>
+    <property name="can-focus">False</property>
+    <child>
+      <object class="GtkCheckMenuItem" id="deploy_type_switch">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+        <property name="label" translatable="yes">Manual OTA File</property>
+        <property name="use-underline">True</property>
+        <signal name="toggled" handler="deploy_type_toggled" swapped="no"/>
+      </object>
+    </child>
+    <child>
+      <object class="GtkSeparatorMenuItem">
+        <property name="visible">True</property>
+        <property name="can-focus">False</property>
+      </object>
+    </child>
+  </object>
 </interface>

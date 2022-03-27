@@ -2,6 +2,7 @@ import subprocess
 import configparser
 import threading
 import urllib.request
+import dbus
 from pathlib import Path
 import gatt
 from gi.repository import Gtk, GObject, GLib
@@ -16,37 +17,11 @@ from .unpacker import Unpacker
 from .quick_deploy import *
 from .config import config
 
-
-class ConnectionThread(threading.Thread):
-    def __init__(self, manager, mac, callback):
-        threading.Thread.__init__(self)
-        self.mac = mac
-        self.manager = manager
-        self.callback = callback
-        self.device = None
-
-    def run(self):
-        self.device = InfiniTimeDevice(
-            manager=self.manager, mac_address=self.mac, thread=True
-        )
-        self.device.services_done = self.data_received
-        self.device.connect()
-
-    def data_received(self):
-        firmware = bytes(self.device.firmware).decode()
-        if self.device.battery == -1:
-            battery = "n/a"
-        else:
-            battery = "{}%".format(self.device.battery)
-        GLib.idle_add(self.callback, [firmware, battery])
-
-
 @Gtk.Template(resource_path="/com/github/alexr4535/siglo/window.ui")
 class SigloWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "SigloWindow"
     # Navigation
     main_stack = Gtk.Template.Child()
-    header_stack = Gtk.Template.Child()
 
     # Watches view
     watches_listbox = Gtk.Template.Child()
@@ -61,7 +36,9 @@ class SigloWindow(Gtk.ApplicationWindow):
     firmware_run = Gtk.Template.Child()
     firmware_file = Gtk.Template.Child()
     firmware_run_file = Gtk.Template.Child()
-    keep_paired_switch = Gtk.Template.Child()
+    disconnect_button = Gtk.Template.Child()
+    disconnect_stack = Gtk.Template.Child()
+    header_stack_revealer = Gtk.Template.Child()
 
     # Flasher
     dfu_stack = Gtk.Template.Child()
@@ -71,7 +48,6 @@ class SigloWindow(Gtk.ApplicationWindow):
     def __init__(self, **kwargs):
         self.ble_dfu = None
         self.ota_file = None
-        self.manager = None
         self.current_mac = None
         self.asset = None
         self.asset_download_url = None
@@ -88,19 +64,22 @@ class SigloWindow(Gtk.ApplicationWindow):
             (GObject.TYPE_PYOBJECT,),
         )
 
-    def disconnect_paired_device(self):
         try:
-            devices = self.manager.devices()
-            for d in devices:
-                if d.mac_address == self.manager.get_mac_address() and d.is_connected():
-                    d.disconnect()
-        finally:
-            self.conf.set_property("paired", "False")
+            self.bus = dbus.SessionBus()
+            self.daemon_obj = self.bus.get_object('com.github.alexr4535.siglo.Daemon', '/com/github/alexr4535/siglo/Daemon')
+            self.daemon_iface = dbus.Interface(self.daemon_obj,dbus_interface='com.github.alexr4535.siglo.Daemon')
+            self.daemon_service_iface = dbus.Interface(self.daemon_obj,dbus_interface='com.github.alexr4535.siglo.Daemon.Service')
+        except :
+            print("Could not talk to Siglo Daemon, exiting.")
+            self.quit()
 
-    def destroy_manager(self):
-        if self.manager:
-            self.manager.stop()
-            self.manager = None
+        self.daemon_iface.connect_to_signal("ServicesResolved",self.services_resolved)
+
+        if self.daemon_iface.IsConnected():
+            self.current_mac = self.daemon_iface.GetConnectedDevice()
+            self.services_resolved()
+        else:
+            self.do_scanning()
 
     def make_watch_row(self, name, mac):
         row = Gtk.ListBoxRow()
@@ -130,57 +109,50 @@ class SigloWindow(Gtk.ApplicationWindow):
         value_mac = Gtk.Label(label=mac, xalign=0.0)
         grid.attach(value_mac, 2, 1, 1, 1)
 
+
         arrow = Gtk.Image.new_from_icon_name("go-next-symbolic", Gtk.IconSize.BUTTON)
-        grid.attach(arrow, 4, 0, 1, 2)
+        spinner = Gtk.Spinner()
+        spinner.start()
+        stack = Gtk.Stack()
+        stack.add_named(arrow,"arrow")
+        stack.add_named(spinner,"spinner")
+        grid.attach(stack, 4, 0, 1, 2)
 
         row.show_all()
         return row
 
-    def do_scanning(self):
-        print("Start scanning")
-        self.main_stack.set_visible_child_name("scan")
-        self.header_stack.set_visible_child_name("scan")
-        if not self.manager:
-            # create manager if not present yet
-            try:
-                self.manager = InfiniTimeManager()
-            except (gatt.errors.NotReady, BluetoothDisabled):
-                print("Bluetooth is disabled")
-                self.main_stack.set_visible_child_name("nodevice")
-            except NoAdapterFound:
-                print("No bluetooth adapter found")
-                self.main_stack.set_visible_child_name("nodevice")
-        if not self.manager:
-            return
-
-        if self.conf.get_property("paired"):
-            self.disconnect_paired_device()
-
-        self.depopulate_listbox()
-        self.manager.scan_result = False
+    def scanning_complete(self):
+        #self.main_stack.set_visible_child_name("nodevice")
+        #self.destroy_manager()
+        self.header_stack_revealer.set_reveal_child(True)
         try:
-            self.manager.scan_for_infinitime()
-        except (gatt.errors.NotReady, gatt.errors.Failed) as e:
-            print(e)
-            self.main_stack.set_visible_child_name("nodevice")
-            self.destroy_manager()
-        try:
-            if len(self.manager.get_device_set()) > 0:
+            devices = self.daemon_iface.GetDevices()
+            if len(devices.values()) > 0:
                 self.main_stack.set_visible_child_name("watches")
-                self.header_stack.set_visible_child_name("watches")
             else:
                 self.main_stack.set_visible_child_name("nodevice")
-            for mac in self.manager.get_device_set():
+            for mac in devices.keys():
                 print("Found {}".format(mac))
-                row = self.make_watch_row(self.manager.aliases[mac], mac)
+                row = self.make_watch_row(devices[mac], mac)
                 row.mac = mac
-                row.alias = self.manager.aliases[mac]
+                row.alias = devices[mac]
                 self.watches_listbox.add(row)
         except AttributeError as e:
             print(e)
             self.main_stack.set_visible_child_name("nodevice")
-            self.destroy_manager()
         self.populate_tagbox()
+
+    def error_handler(self, error):
+        print("ich bin der error handler")
+        print(error)
+
+    def do_scanning(self):
+        self.main_stack.set_sensitive(True)
+        print("Start scanning")
+        self.main_stack.set_visible_child_name("scan")
+
+        self.depopulate_listbox()
+        self.daemon_iface.Scan(1.5, reply_handler=self.scanning_complete, error_handler=self.error_handler)
 
     def depopulate_listbox(self):
         children = self.watches_listbox.get_children()
@@ -197,11 +169,19 @@ class SigloWindow(Gtk.ApplicationWindow):
         for asset in get_assets_by_tag(self.tag, self.full_list):
             self.ota_pick_asset_combobox.append_text(asset)
 
-    def callback_device_connect(self, data):
-        firmware, battery = data
+    def services_resolved(self):
+        self.watch_firmware.set_text(self.daemon_service_iface.GetFirmwareVersion())
+        self.watch_battery.set_text(str(int(self.daemon_service_iface.GetPowerLevel())) + " %")
 
-        self.watch_firmware.set_text(firmware)
-        self.watch_battery.set_text(battery)
+        self.watch_name.set_text(self.daemon_iface.GetDevices()[self.current_mac])
+        self.watch_address.set_text(self.current_mac)
+        self.disconnect_stack.set_visible_child_name("disconnect_label")
+        self.header_stack_revealer.set_reveal_child(False)
+        self.main_stack.set_visible_child_name("watch")
+
+    def connecting_complete(self):
+        print("connecting complete")
+        #Wait for the services to be resolved and continue in self.services_resolved
 
     @Gtk.Template.Callback()
     def on_watches_listbox_row_activated(self, widget, row):
@@ -209,25 +189,19 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.current_mac = mac
         alias = row.alias
 
-        if self.keep_paired_switch.get_active():
-            # Start daemon
-            subprocess.Popen(["systemctl", "--user", "start", "siglo"])
-            self.conf.set_property("paired", "True")
+        row.get_children()[0].get_child_at(4,1).set_visible_child_name("spinner")
 
-        if self.manager is not None:
-            thread = ConnectionThread(self.manager, mac, self.callback_device_connect)
-            thread.daemon = True
-            thread.start()
-
-        self.watch_name.set_text(alias)
-        self.watch_address.set_text(mac)
-        self.main_stack.set_visible_child_name("watch")
-        self.header_stack.set_visible_child_name("watch")
+        self.current_mac = mac
+        self.daemon_iface.Connect(mac,
+                                  reply_handler=self.connecting_complete,
+                                  error_handler=self.error_handler
+                                  )
 
     @Gtk.Template.Callback()
-    def on_back_to_devices_clicked(self, *args):
-        self.main_stack.set_visible_child_name("watches")
-        self.header_stack.set_visible_child_name("watches")
+    def on_disconnect_clicked(self,button):
+        self.daemon_iface.Disconnect(reply_handler=self.do_scanning,error_handler=self.error_handler)
+        self.main_stack.set_sensitive(False)
+        self.disconnect_stack.set_visible_child_name("disconnect_spinner")
 
     @Gtk.Template.Callback()
     def ota_pick_tag_combobox_changed_cb(self, widget):
@@ -295,6 +269,8 @@ class SigloWindow(Gtk.ApplicationWindow):
         )
         self.ota_file = local_filename
 
+        self.daemon_iface.Disconnect()
+        self.daemon_iface.Quit()
         self.start_flash()
 
     def start_flash(self):
@@ -306,13 +282,21 @@ class SigloWindow(Gtk.ApplicationWindow):
             print(e)
             pass
 
+        dfu_manager = None
+        try:
+            dfu_manager = InfiniTimeManager()
+        except (gatt.errors.NotReady, BluetoothDisabled):
+            print("Bluetooth is disabled")
+        except NoAdapterFound:
+            print("No bluetooth adapter found")
+
         self.ble_dfu = InfiniTimeDFU(
             mac_address=self.current_mac,
-            manager=self.manager,
+            manager=dfu_manager,
             window=self,
             firmware_path=binfile,
             datfile_path=datfile,
-            verbose=False,
+            verbose=True,
         )
         self.ble_dfu.on_failure = self.on_flash_failed
         self.ble_dfu.on_success = self.on_flash_done
