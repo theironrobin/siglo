@@ -5,15 +5,16 @@ import struct
 from gi.repository import GObject, Gio
 from .config import config
 from .notification_service import NotificationService
+from .music_service import MusicService
 
 BTSVC_TIME = "00001805-0000-1000-8000-00805f9b34fb"
 BTSVC_INFO = "0000180a-0000-1000-8000-00805f9b34fb"
 BTSVC_BATT = "0000180f-0000-1000-8000-00805f9b34fb"
 BTSVC_ALERT = "00001811-0000-1000-8000-00805f9b34fb"
+BTSVC_MUSIC = "00000000-78fc-48fe-8e23-433b3a1942d0"
 BTCHAR_FIRMWARE = "00002a26-0000-1000-8000-00805f9b34fb"
 BTCHAR_CURRENTTIME = "00002a2b-0000-1000-8000-00805f9b34fb"
 BTCHAR_BATTLEVEL = "00002a19-0000-1000-8000-00805f9b34fb"
-
 
 def get_current_time():
     now = datetime.datetime.now()
@@ -150,6 +151,8 @@ class InfiniTimeDevice(gatt.Device):
                 self.battsvc = svc
             elif svc.uuid == BTSVC_ALERT:
                 self.alertsvc = svc
+            elif svc.uuid == BTSVC_MUSIC:
+                self.musicsvc = svc
 
         if self.timesvc:
             currenttime = next(
@@ -185,6 +188,12 @@ class InfiniTimeDevice(gatt.Device):
         
             # Get device firmware
             self.battery = int(battery_level.read_value()[0])
+
+        if musicsvc:
+            MusicService().start_service(self, musicsvc)
+
+    def characteristic_value_updated(self, characteristic, value):
+        MusicService().characteristic_value_updated(characteristic, value)
 
         self.manager.daemon.ServicesResolved()
 

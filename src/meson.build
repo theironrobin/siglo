@@ -37,6 +37,7 @@ siglo_sources = [
   'ota/util.py',
   'ota/unpacker.py',
   'notification_service.py',
+  'music_service.py'
 ]
 
 install_data(siglo_sources, install_dir: moduledir)
