@@ -1,16 +1,8 @@
 
 import dbus
 import platform
-from dbus.mainloop.glib import DBusGMainLoop
 
-class Singleton(type):
-    _instances = {}
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-class MusicService(metaclass=Singleton):
+class MusicService():
 
     UUID_STATUS = '00000002-78fc-48fe-8e23-433b3a1942d0'
     UUID_EVENT = '00000001-78fc-48fe-8e23-433b3a1942d0'
@@ -33,59 +25,35 @@ class MusicService(metaclass=Singleton):
     EVENT_VOLUP = (0x05).to_bytes(1, byteorder='big')
     EVENT_VOLDOWN = (0x06).to_bytes(1, byteorder='big')
 
-    VOLUME_STEP = 0.1 #10%
+    VOLUME_STEP = 0.05 #5%
 
     MPRIS_IFACE = 'org.mpris.MediaPlayer2.Player'
 
-    def __init__(self):
-        self.btsvc = None
-
-        self.status_chrc = None
-        self.event_chrc = None
-        self.artist_chrc = None
-        self.track_chrc = None
-        self.album_chrc = None
-        self.position_chrc = None
-        self.total_length_chrc = None
-        self.track_number_chrc = None
-        self.track_total_chrc = None
-        self.playback_speed_chrc = None
-        self.repeat_chrc = None
-        self.shuffle_chrc = None
-
-        self.bus = None
-        self.dbus_iface = None
+    def __init__(self, service):
+        self.musicsvc = service
 
         self.active_player = None
         self.active_player_name = None
         self.player_iface = None
         self.player_prop_iface = None
 
-        self.monitor_bus = None
-        self.dbus_monitor_iface = None
-
-    def start_service(self, device, service):
-
-        DBusGMainLoop(set_as_default=True)
         self.monitor_bus = dbus.SessionBus(private=True)
         self.dbus_monitor_iface = dbus.Interface(self.monitor_bus.get_object('org.freedesktop.DBus', '/org/freedesktop/DBus'), dbus_interface='org.freedesktop.DBus.Monitoring')
         self.dbus_monitor_iface.BecomeMonitor(["interface='org.freedesktop.DBus', member='NameOwnerChanged'"], 0)
         self.monitor_bus.add_message_filter(self.monitor_cb)
 
-        self.btsvc = service
-
-        self.status_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_STATUS)
-        self.event_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_EVENT)
-        self.artist_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_ARTIST)
-        self.track_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_TRACK)
-        self.album_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_ALBUM)
-        self.position_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_POSITION)
-        self.total_length_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_TOTAL_LENGTH)
-        self.track_number_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_TRACK_NUMBER)
-        self.track_total_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_TRACK_TOTAL)
-        self.playback_speed_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_PLAYBACK_SPEED)
-        self.repeat_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_REPEAT)
-        self.shuffle_chrc = next(c for c in service.characteristics if c.uuid == self.UUID_SHUFFLE)
+        self.status_chrc = self.get_chrc(self.UUID_STATUS)
+        self.event_chrc = self.get_chrc(self.UUID_EVENT)
+        self.artist_chrc = self.get_chrc(self.UUID_ARTIST)
+        self.track_chrc = self.get_chrc(self.UUID_TRACK)
+        self.album_chrc = self.get_chrc(self.UUID_ALBUM)
+        self.position_chrc = self.get_chrc(self.UUID_POSITION)
+        self.total_length_chrc = self.get_chrc(self.UUID_TOTAL_LENGTH)
+        self.track_number_chrc = self.get_chrc(self.UUID_TRACK_NUMBER)
+        self.track_total_chrc = self.get_chrc(self.UUID_TRACK_TOTAL)
+        self.playback_speed_chrc = self.get_chrc(self.UUID_PLAYBACK_SPEED)
+        self.repeat_chrc = self.get_chrc(self.UUID_REPEAT)
+        self.shuffle_chrc = self.get_chrc(self.UUID_SHUFFLE)
 
         self.event_chrc.enable_notifications()
 
@@ -94,6 +62,13 @@ class MusicService(metaclass=Singleton):
 
         #if a player is already running, get it
         self.get_player()
+
+    def get_chrc(self,UUID):
+        return next(
+            c
+            for c in self.musicsvc.characteristics
+            if c.uuid == UUID
+        )
 
     def monitor_cb(self, bus, msg):
         args = msg.get_args_list()

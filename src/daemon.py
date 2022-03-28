@@ -11,8 +11,21 @@ from .config import config
 UID         =  'com.github.alexr4535.siglo.Daemon'
 UID_AS_PATH = '/com/github/alexr4535/siglo/Daemon'
 
+def portal_cb(response, results):
+    if response != 0:
+        print("Background request cancelled")
+        sys.exit(512)
+    else:
+        if not results['background']:
+            print("Background request denied")
+            sys.exit(513)
+        #if not results['autostart']:
+        #    print("Autostart request denied")
+
 def main():
     DBusGMainLoop(set_as_default=True)
+
+    #claim bus name
     try:
         bus_name = dbus.service.BusName(
             UID, bus=dbus.SessionBus(), do_not_queue=True
@@ -20,6 +33,21 @@ def main():
     except dbus.exceptions.NameExistsException:
         print(f'Service with id {UID} is already running')
         exit(1)
+
+    #request to run in the background
+    bus = dbus.SessionBus()
+    portal_obj = bus.get_object('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop')
+    background_iface = dbus.Interface(portal_obj, dbus_interface='org.freedesktop.portal.Background')
+    obj_path = background_iface.RequestBackground("", dbus.Dictionary({
+                                                      "reason":"Pinetime service daemon",
+                                                      "autostart":False,
+                                                      "dbus-activatable":True,
+                                                      "commandline":["siglo", "--daemon"]
+                                                        }, signature='sv', variant_level=1))
+    request_iface = dbus.Interface(bus.get_object('org.freedesktop.portal.Desktop', obj_path),
+                                    dbus_interface='org.freedesktop.portal.Request')
+    request_iface.connect_to_signal("Response", portal_cb)
+
     loop = glib.MainLoop()
     siglo_daemon = daemon(bus_name)
     siglo_daemon.main_loop = loop
@@ -136,7 +164,7 @@ class daemon(dbus.service.Object):
         in_signature='s', out_signature=''
     )
     def Connect(self, mac_address: str):
-        #self.manager.start()
+        #self.manager.run()
         self.device = InfiniTimeDevice(self.manager, mac_address)
         self.device.connect()
 

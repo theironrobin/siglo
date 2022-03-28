@@ -61,13 +61,7 @@ class InfiniTimeManager(gatt.DeviceManager):
         self.device_set = []
         self.aliases = dict()
         self.daemon = None
-        if not self.conf.get_property("paired"):
-            self.scan_result = False
-            self.adapter_name = get_default_adapter()
-            self.conf.set_property("adapter", self.adapter_name)
-        else:
-            self.scan_result = True
-            self.adapter_name = self.conf.get_property("adapter")
+        self.adapter_name = get_default_adapter()
         self.mac_address = None
         super().__init__(self.adapter_name)
 
@@ -80,8 +74,6 @@ class InfiniTimeManager(gatt.DeviceManager):
         return self.device_set
 
     def get_adapter_name(self):
-        if self.conf.get_property("paired"):
-            return self.conf.get_property("adapter")
         return get_default_adapter()
 
     def set_mac_address(self, mac_address):
@@ -137,7 +129,6 @@ class InfiniTimeDevice(gatt.Device):
         self.is_connected = False
 
     def characteristic_write_value_succeeded(self, characteristic):
-        #self.disconnect()
         pass
 
     def services_resolved(self):
@@ -189,14 +180,16 @@ class InfiniTimeDevice(gatt.Device):
             # Get device firmware
             self.battery = int(battery_level.read_value()[0])
 
-        if musicsvc:
-            MusicService().start_service(self, musicsvc)
-
-    def characteristic_value_updated(self, characteristic, value):
-        MusicService().characteristic_value_updated(characteristic, value)
+        if self.musicsvc:
+            self.musicsvc_obj = MusicService(self.musicsvc)
 
         self.manager.daemon.ServicesResolved()
 
+    def characteristic_value_updated(self, characteristic, value):
+        try:
+            self.musicsvc_obj.characteristic_value_updated(characteristic, value)
+        except:
+            pass
 
 class BluetoothDisabled(Exception):
     pass

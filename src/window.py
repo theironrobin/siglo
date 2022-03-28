@@ -180,7 +180,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.main_stack.set_visible_child_name("watch")
 
     def connecting_complete(self):
-        print("connecting complete")
+        print("connecting complete, resolving services...")
         #Wait for the services to be resolved and continue in self.services_resolved
 
     @Gtk.Template.Callback()
@@ -246,34 +246,32 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def firmware_run_file_clicked_cb(self, widget):
-        self.dfu_stack.set_visible_child_name("ok")
-        self.main_stack.set_visible_child_name("firmware")
-
         self.firmware_mode = "manual"
 
         self.start_flash()
 
     @Gtk.Template.Callback()
     def on_firmware_run_clicked(self, widget):
-        self.dfu_stack.set_visible_child_name("ok")
-        self.main_stack.set_visible_child_name("firmware")
-
         self.firmware_mode = "auto"
-
-        file_name = "/tmp/" + self.asset
-
-        print("Downloading {}".format(self.asset_download_url))
-
-        local_filename, headers = urllib.request.urlretrieve(
-            self.asset_download_url, file_name
-        )
-        self.ota_file = local_filename
 
         self.daemon_iface.Disconnect()
         self.daemon_iface.Quit()
         self.start_flash()
 
     def start_flash(self):
+        self.dfu_stack.set_visible_child_name("ok")
+        self.main_stack.set_visible_child_name("firmware")
+
+        if self.firmware_mode == "auto":
+            file_name = "/tmp/" + self.asset
+
+            print("Downloading {}".format(self.asset_download_url))
+
+            local_filename, headers = urllib.request.urlretrieve(
+                self.asset_download_url, file_name
+            )
+            self.ota_file = local_filename
+
         unpacker = Unpacker()
         try:
             binfile, datfile = unpacker.unpack_zipfile(self.ota_file)

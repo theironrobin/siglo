@@ -14,7 +14,7 @@
         "--socket=wayland",
         "--socket=session-bus",
         "--own-name=com.github.alexr4535.siglo",
-        "--own-name=com.github.alexr4535.siglo.Daemon",
+        "--own-name=com.github.alexr4535.siglo.Daemon"
     ],
     "cleanup" : [
         "/include",
