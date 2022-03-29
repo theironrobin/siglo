@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.38.2 -->
+<!-- Generated with glade 3.39.0 -->
 <interface>
   <requires lib="gtk+" version="3.24"/>
   <template class="SigloWindow" parent="GtkApplicationWindow">
@@ -1227,6 +1227,68 @@ To make the firmware persistent go to the settings on the watch and go to the fi
             <property name="position">6</property>
           </packing>
         </child>
+        <child>
+          <object class="GtkBox" id="view_no_permission">
+            <property name="visible">True</property>
+            <property name="can-focus">False</property>
+            <property name="margin-top">16</property>
+            <property name="margin-bottom">16</property>
+            <property name="orientation">vertical</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="margin-top">32</property>
+                <property name="margin-bottom">32</property>
+                <property name="label" translatable="yes">Missing Permission</property>
+                <style>
+                  <class name="heading"/>
+                </style>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can-focus">False</property>
+                <property name="label" translatable="yes">Background permission is required
+Use Settings &gt; Applications &gt; Siglo
+or use Flatseal</property>
+                <property name="justify">center</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="retry_permission_button">
+                <property name="label" translatable="yes">Retry</property>
+                <property name="visible">True</property>
+                <property name="can-focus">True</property>
+                <property name="receives-default">True</property>
+                <property name="margin-bottom">32</property>
+                <signal name="clicked" handler="on_retry_permission_button_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="pack-type">end</property>
+                <property name="position">2</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="name">no_permission</property>
+            <property name="title" translatable="yes">No Permission</property>
+            <property name="position">7</property>
+          </packing>
+        </child>
       </object>
     </child>
     <child type="titlebar">
@@ -1241,17 +1303,47 @@ To make the firmware persistent go to the settings on the watch and go to the fi
             <property name="can-focus">False</property>
             <property name="transition-type">crossfade</property>
             <child>
-              <object class="GtkButton">
+              <object class="GtkStack" id="header_stack">
                 <property name="visible">True</property>
-                <property name="can-focus">True</property>
-                <property name="receives-default">True</property>
-                <signal name="clicked" handler="rescan_button_clicked" swapped="no"/>
+                <property name="can-focus">False</property>
                 <child>
-                  <object class="GtkImage">
+                  <object class="GtkButton" id="header_rescan_button">
                     <property name="visible">True</property>
-                    <property name="can-focus">False</property>
-                    <property name="icon-name">view-refresh-symbolic</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <signal name="clicked" handler="rescan_button_clicked" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">view-refresh-symbolic</property>
+                      </object>
+                    </child>
                   </object>
+                  <packing>
+                    <property name="name">rescan</property>
+                    <property name="title" translatable="yes">Rescan</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkButton" id="return_button">
+                    <property name="visible">True</property>
+                    <property name="can-focus">True</property>
+                    <property name="receives-default">True</property>
+                    <signal name="clicked" handler="on_return_button_clicked" swapped="no"/>
+                    <child>
+                      <object class="GtkImage">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="icon-name">go-previous-symbolic</property>
+                      </object>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="name">return</property>
+                    <property name="title" translatable="yes">Return</property>
+                    <property name="position">1</property>
+                  </packing>
                 </child>
               </object>
             </child>

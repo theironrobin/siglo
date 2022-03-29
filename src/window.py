@@ -39,6 +39,8 @@ class SigloWindow(Gtk.ApplicationWindow):
     disconnect_button = Gtk.Template.Child()
     disconnect_stack = Gtk.Template.Child()
     header_stack_revealer = Gtk.Template.Child()
+    header_rescan_button = Gtk.Template.Child()
+    header_stack = Gtk.Template.Child()
 
     # Flasher
     dfu_stack = Gtk.Template.Child()
@@ -63,10 +65,10 @@ class SigloWindow(Gtk.ApplicationWindow):
             GObject.TYPE_PYOBJECT,
             (GObject.TYPE_PYOBJECT,),
         )
+        self.request_background_permission()
 
+    def resume_state(self):
         try:
-            self.bus = dbus.SessionBus()
-            self.daemon_obj = self.bus.get_object('com.github.alexr4535.siglo.Daemon', '/com/github/alexr4535/siglo/Daemon')
             self.daemon_iface = dbus.Interface(self.daemon_obj,dbus_interface='com.github.alexr4535.siglo.Daemon')
             self.daemon_service_iface = dbus.Interface(self.daemon_obj,dbus_interface='com.github.alexr4535.siglo.Daemon.Service')
         except :
@@ -74,12 +76,41 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.quit()
 
         self.daemon_iface.connect_to_signal("ServicesResolved",self.services_resolved)
+        self.daemon_iface.connect_to_signal("ScanError",self.scan_error)
 
         if self.daemon_iface.IsConnected():
+            print("resuming connection with [" + self.daemon_iface.GetConnectedDevice() + "]")
             self.current_mac = self.daemon_iface.GetConnectedDevice()
             self.services_resolved()
         else:
             self.do_scanning()
+
+    def scan_error(self,error):
+        if error == "no_bluetooth":
+            print("Bluetooth disabled")
+            self.main_stack.set_visible_child_name("nodevice")
+        elif error == "no_adapter":
+            print("No bluetooth adapter found")
+            self.main_stack.set_visible_child_name("nodevice")
+        else:
+            print("Undefined scan error")
+
+    def request_background_permission(self):
+        try:
+            self.bus = dbus.SessionBus()
+            self.daemon_obj = self.bus.get_object('com.github.alexr4535.siglo.Daemon', '/com/github/alexr4535/siglo/Daemon')
+            self.daemon_permission_iface = dbus.Interface(self.daemon_obj,dbus_interface='com.github.alexr4535.siglo.Daemon.Permission')
+        except :
+            print("Could not talk to Siglo Daemon, exiting.")
+            self.quit()
+        self.daemon_permission_iface.connect_to_signal("BackgroundPermissionGranted",self.background_permission_granted)
+        self.daemon_permission_iface.RequestBackgroundPermission()
+
+    def background_permission_granted(self, response):
+        if response:
+            self.resume_state()
+        else:
+            self.main_stack.set_visible_child_name("no_permission")
 
     def make_watch_row(self, name, mac):
         row = Gtk.ListBoxRow()
@@ -122,8 +153,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         return row
 
     def scanning_complete(self):
-        #self.main_stack.set_visible_child_name("nodevice")
-        #self.destroy_manager()
         self.header_stack_revealer.set_reveal_child(True)
         try:
             devices = self.daemon_iface.GetDevices()
@@ -140,19 +169,25 @@ class SigloWindow(Gtk.ApplicationWindow):
         except AttributeError as e:
             print(e)
             self.main_stack.set_visible_child_name("nodevice")
-        self.populate_tagbox()
 
     def error_handler(self, error):
         print("ich bin der error handler")
         print(error)
 
     def do_scanning(self):
+        self.header_stack_revealer.set_reveal_child(False)
+        self.header_stack.set_visible_child_name("rescan")
         self.main_stack.set_sensitive(True)
+        self.header_rescan_button.set_sensitive(True)
+
         print("Start scanning")
         self.main_stack.set_visible_child_name("scan")
 
         self.depopulate_listbox()
-        self.daemon_iface.Scan(1.5, reply_handler=self.scanning_complete, error_handler=self.error_handler)
+        self.daemon_iface.Scan(1.5,
+                                reply_handler=self.scanning_complete,
+                                error_handler=self.error_handler
+        )
 
     def depopulate_listbox(self):
         children = self.watches_listbox.get_children()
@@ -170,6 +205,10 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.ota_pick_asset_combobox.append_text(asset)
 
     def services_resolved(self):
+        self.populate_tagbox()
+
+        self.main_stack.set_sensitive(True)
+        print("Services resolved")
         self.watch_firmware.set_text(self.daemon_service_iface.GetFirmwareVersion())
         self.watch_battery.set_text(str(int(self.daemon_service_iface.GetPowerLevel())) + " %")
 
@@ -181,10 +220,16 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def connecting_complete(self):
         print("connecting complete, resolving services...")
-        #Wait for the services to be resolved and continue in self.services_resolved
+        #Wait for the services to be resolved, the daemon will call self.services_resolved
+
+    @Gtk.Template.Callback()
+    def on_retry_permission_button_clicked(self, button):
+        self.request_background_permission()
 
     @Gtk.Template.Callback()
     def on_watches_listbox_row_activated(self, widget, row):
+        self.main_stack.set_sensitive(False)
+        self.header_rescan_button.set_sensitive(False)
         mac = row.mac
         self.current_mac = mac
         alias = row.alias
@@ -195,11 +240,14 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.daemon_iface.Connect(mac,
                                   reply_handler=self.connecting_complete,
                                   error_handler=self.error_handler
-                                  )
+        )
 
     @Gtk.Template.Callback()
     def on_disconnect_clicked(self,button):
-        self.daemon_iface.Disconnect(reply_handler=self.do_scanning,error_handler=self.error_handler)
+        self.daemon_iface.Disconnect(
+                                    reply_handler=self.do_scanning,
+                                    error_handler=self.error_handler
+        )
         self.main_stack.set_sensitive(False)
         self.disconnect_stack.set_visible_child_name("disconnect_spinner")
 
@@ -219,6 +267,9 @@ class SigloWindow(Gtk.ApplicationWindow):
         else:
             self.firmware_run.set_sensitive(False)
             self.asset_download_url = None
+
+    def on_return_button_clicked(self, button):
+        self.do_scanning()
 
     @Gtk.Template.Callback()
     def firmware_file_file_set_cb(self, widget):
@@ -351,6 +402,8 @@ class SigloWindow(Gtk.ApplicationWindow):
         )
 
     def show_complete(self, success):
+        self.header_stack.set_visible_child_name("return")
+        self.header_stack_revealer.set_reveal_child(True)
         if success:
             self.rescan_button.set_sensitive("True")
             self.main_info.set_text("OTA Update Complete")

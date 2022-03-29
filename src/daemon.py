@@ -11,17 +11,6 @@ from .config import config
 UID         =  'com.github.alexr4535.siglo.Daemon'
 UID_AS_PATH = '/com/github/alexr4535/siglo/Daemon'
 
-def portal_cb(response, results):
-    if response != 0:
-        print("Background request cancelled")
-        sys.exit(512)
-    else:
-        if not results['background']:
-            print("Background request denied")
-            sys.exit(513)
-        #if not results['autostart']:
-        #    print("Autostart request denied")
-
 def main():
     DBusGMainLoop(set_as_default=True)
 
@@ -33,20 +22,6 @@ def main():
     except dbus.exceptions.NameExistsException:
         print(f'Service with id {UID} is already running')
         exit(1)
-
-    #request to run in the background
-    bus = dbus.SessionBus()
-    portal_obj = bus.get_object('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop')
-    background_iface = dbus.Interface(portal_obj, dbus_interface='org.freedesktop.portal.Background')
-    obj_path = background_iface.RequestBackground("", dbus.Dictionary({
-                                                      "reason":"Pinetime service daemon",
-                                                      "autostart":False,
-                                                      "dbus-activatable":True,
-                                                      "commandline":["siglo", "--daemon"]
-                                                        }, signature='sv', variant_level=1))
-    request_iface = dbus.Interface(bus.get_object('org.freedesktop.portal.Desktop', obj_path),
-                                    dbus_interface='org.freedesktop.portal.Request')
-    request_iface.connect_to_signal("Response", portal_cb)
 
     loop = glib.MainLoop()
     siglo_daemon = daemon(bus_name)
@@ -68,13 +43,8 @@ class daemon(dbus.service.Object):
         )
         self.conf = config()
         self.main_loop = None
-        try:
-            self.manager = InfiniTimeManager()
-            self.manager.daemon = self
-        except (gatt.errors.NotReady, BluetoothDisabled):
-            print("Bluetooth is disabled")
-        except NoAdapterFound:
-            print("No bluetooth adapter found")
+        self.background_permission_granted = False
+        self.manager = None
 
     @dbus.service.method(
         dbus_interface=UID,
@@ -89,12 +59,11 @@ class daemon(dbus.service.Object):
                 self.manager.daemon = self
             except (gatt.errors.NotReady, BluetoothDisabled):
                 print("Bluetooth is disabled")
-                self.ScanResponse("Bluetooth is disabled")
+                self.ScanError("no_bluetooth")
             except NoAdapterFound:
                 print("No bluetooth adapter found")
-                self.ScanResponse("No bluetooth adapter found")
+                self.ScanError("no_adapter")
         if not self.manager:
-            self.ScanResponse("Can't create mananger")
             return
 
         self.manager.scan_result = False
@@ -164,9 +133,12 @@ class daemon(dbus.service.Object):
         in_signature='s', out_signature=''
     )
     def Connect(self, mac_address: str):
-        #self.manager.run()
-        self.device = InfiniTimeDevice(self.manager, mac_address)
-        self.device.connect()
+        try:
+            self.device = InfiniTimeDevice(self.manager, mac_address)
+            self.device.connect()
+        except:
+            raise dbus.exceptions.DBusException("Scan before connecting")
+
 
     @dbus.service.method(
         dbus_interface=UID,
@@ -182,8 +154,8 @@ class daemon(dbus.service.Object):
     )
     def Disconnect(self):
         try:
-            #self.manager.stop()
             self.device.disconnect()
+            self.destroy_manager()
         except Exception as e:
             print(e)
 
@@ -194,3 +166,55 @@ class daemon(dbus.service.Object):
     def ServicesResolved(self):
         pass
 
+    @dbus.service.method(
+        dbus_interface=UID+".Permission",
+        in_signature='', out_signature=''
+    )
+    def RequestBackgroundPermission(self):
+        if self.background_permission_granted:
+            self.BackgroundPermissionGranted(True)
+        else:
+            bus = dbus.SessionBus()
+            portal_obj = bus.get_object('org.freedesktop.portal.Desktop', '/org/freedesktop/portal/desktop')
+            background_iface = dbus.Interface(portal_obj, dbus_interface='org.freedesktop.portal.Background')
+
+            obj_path = background_iface.RequestBackground("", dbus.Dictionary({
+                                                              "reason":"Pinetime service daemon",
+                                                              "autostart":False,
+                                                              "dbus-activatable":True, #used on autostart
+                                                              "commandline":["siglo", "--daemon"] #used on autostart
+                                                                }, signature='sv', variant_level=1))
+
+            request_iface = dbus.Interface(bus.get_object('org.freedesktop.portal.Desktop', obj_path),
+                                            dbus_interface='org.freedesktop.portal.Request')
+            request_iface.connect_to_signal("Response", self.request_cb)
+
+    @dbus.service.signal(
+        dbus_interface=UID+".Permission",
+        signature='b'
+    )
+    def BackgroundPermissionGranted(self, response):
+        return response
+
+    def request_cb(self, response, result):
+        if response != 0:
+            print("Background request denied")
+            self.BackgroundPermissionGranted(False)
+            self.Quit()
+
+        else:
+            self.BackgroundPermissionGranted(True)
+            self.background_permission_granted = True
+
+        # else:
+        #     if not results['background']:
+        #         print("Background request denied")
+        #     if not results['autostart']:
+        #         print("Autostart request denied")
+
+    @dbus.service.signal(
+        dbus_interface=UID,
+        signature='s'
+    )
+    def ScanError(self, response):
+        return response
