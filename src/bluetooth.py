@@ -122,6 +122,7 @@ class InfiniTimeDevice(gatt.Device):
         super().connect_failed(error)
         self.successful_connection = False
         print("[%s] Connection failed: %s" % (self.mac_address, str(error)))
+        self.daemon.Error("connect","connect failed")
 
     def disconnect_succeeded(self):
         super().disconnect_succeeded()

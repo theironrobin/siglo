@@ -59,10 +59,10 @@ class daemon(dbus.service.Object):
                 self.manager.daemon = self
             except (gatt.errors.NotReady, BluetoothDisabled):
                 print("Bluetooth is disabled")
-                self.ScanError("no_bluetooth")
+                self.Error("scan","no_bluetooth")
             except NoAdapterFound:
                 print("No bluetooth adapter found")
-                self.ScanError("no_adapter")
+                self.Error("scan","no_adapter")
         if not self.manager:
             return
 
@@ -137,7 +137,9 @@ class daemon(dbus.service.Object):
             self.device = InfiniTimeDevice(self.manager, mac_address)
             self.device.connect()
         except:
-            raise dbus.exceptions.DBusException("Scan before connecting")
+            self.Error("connect","error while trying to connect")
+            raise dbus.exceptions.DBusException("Error connecting")
+
 
 
     @dbus.service.method(
@@ -214,7 +216,8 @@ class daemon(dbus.service.Object):
 
     @dbus.service.signal(
         dbus_interface=UID,
-        signature='s'
+        signature='ss'
     )
-    def ScanError(self, response):
-        return response
+    def Error(self,source, response):
+        print("Error from %s: %s" % (source,response))
+        return

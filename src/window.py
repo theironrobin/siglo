@@ -76,7 +76,7 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.quit()
 
         self.daemon_iface.connect_to_signal("ServicesResolved",self.services_resolved)
-        self.daemon_iface.connect_to_signal("ScanError",self.scan_error)
+        self.daemon_iface.connect_to_signal("Error",self.error_signal)
 
         if self.daemon_iface.IsConnected():
             print("resuming connection with [" + self.daemon_iface.GetConnectedDevice() + "]")
@@ -85,15 +85,23 @@ class SigloWindow(Gtk.ApplicationWindow):
         else:
             self.do_scanning()
 
-    def scan_error(self,error):
-        if error == "no_bluetooth":
-            print("Bluetooth disabled")
-            self.main_stack.set_visible_child_name("nodevice")
-        elif error == "no_adapter":
-            print("No bluetooth adapter found")
-            self.main_stack.set_visible_child_name("nodevice")
+    def error_signal(self,origin, error):
+        if origin == "scan":
+            if error == "no_bluetooth":
+                print("Bluetooth disabled")
+                self.main_stack.set_visible_child_name("nodevice")
+            elif error[source] == "no_adapter":
+                print("No bluetooth adapter found")
+                self.main_stack.set_visible_child_name("nodevice")
+            else:
+                print("Undefined scan error")
+        elif origin == "connect":
+            print(error)
+            self.main_stack.set_sensitive(True)
+            self.header_rescan_button.set_sensitive(True)
+            self.do_scanning()
         else:
-            print("Undefined scan error")
+            print("unspecified connect error")
 
     def request_background_permission(self):
         try:
@@ -171,7 +179,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.main_stack.set_visible_child_name("nodevice")
 
     def error_handler(self, error):
-        print("ich bin der error handler")
         print(error)
 
     def do_scanning(self):
