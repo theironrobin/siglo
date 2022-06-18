@@ -41,7 +41,7 @@ class ConnectionThread(threading.Thread):
         GLib.idle_add(self.callback, [firmware, battery])
 
 
-@Gtk.Template(resource_path="/com/github/alexr4535/siglo/window.ui")
+@Gtk.Template(resource_path="/com/github/theironrobin/siglo/window.ui")
 class SigloWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "SigloWindow"
     # Navigation
@@ -114,7 +114,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         grid.set_margin_right(8)
         row.add(grid)
 
-        icon = Gtk.Image.new_from_resource("/com/github/alexr4535/siglo/watch-icon.svg")
+        icon = Gtk.Image.new_from_resource("/com/github/theironrobin/siglo/watch-icon.svg")
         grid.attach(icon, 0, 0, 1, 2)
 
         label_alias = Gtk.Label(label="Name", xalign=1.0)

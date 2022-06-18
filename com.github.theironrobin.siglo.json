@@ -1,5 +1,5 @@
 {
-    "app-id" : "com.github.alexr4535.siglo",
+    "app-id" : "com.github.theironrobin.siglo",
     "runtime" : "org.gnome.Platform",
     "runtime-version" : "40",
     "sdk" : "org.gnome.Sdk",
@@ -32,7 +32,7 @@
             "sources" : [
                 {
                     "type" : "git",
-                    "url" : "https://github.com/alexr4535/siglo",
+                    "url" : "https://github.com/theironrobin/siglo",
                     "tag" : "v0.9.6"
                 }
             ]

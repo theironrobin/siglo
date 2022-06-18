@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <gresources>
-  <gresource prefix="/com/github/alexr4535/siglo">
+  <gresource prefix="/com/github/theironrobin/siglo">
     <file>window.ui</file>
     <file>watch.svg</file>
     <file>watch-icon.svg</file>

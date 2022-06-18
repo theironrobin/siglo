@@ -61,7 +61,7 @@
               <object class="GtkImage">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="resource">/com/github/alexr4535/siglo/watch.svg</property>
+                <property name="resource">/com/github/theironrobin/siglo/watch.svg</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -119,7 +119,7 @@
               <object class="GtkImage">
                 <property name="visible">True</property>
                 <property name="can-focus">False</property>
-                <property name="resource">/com/github/alexr4535/siglo/watch-error.svg</property>
+                <property name="resource">/com/github/theironrobin/siglo/watch-error.svg</property>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -390,7 +390,7 @@
                                   <object class="GtkImage">
                                     <property name="visible">True</property>
                                     <property name="can-focus">False</property>
-                                    <property name="resource">/com/github/alexr4535/siglo/watch-icon.svg</property>
+                                    <property name="resource">/com/github/theironrobin/siglo/watch-icon.svg</property>
                                   </object>
                                   <packing>
                                     <property name="left-attach">0</property>
@@ -829,7 +829,7 @@
                       <object class="GtkImage" id="firmware_picture1">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="resource">/com/github/alexr4535/siglo/watch-error.svg</property>
+                        <property name="resource">/com/github/theironrobin/siglo/watch-error.svg</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -882,7 +882,7 @@
                       <object class="GtkImage" id="firmware_picture">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="resource">/com/github/alexr4535/siglo/watch-progress.svg</property>
+                        <property name="resource">/com/github/theironrobin/siglo/watch-progress.svg</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
@@ -931,7 +931,7 @@
                       <object class="GtkImage" id="firmware_picture2">
                         <property name="visible">True</property>
                         <property name="can-focus">False</property>
-                        <property name="resource">/com/github/alexr4535/siglo/watch-check.svg</property>
+                        <property name="resource">/com/github/theironrobin/siglo/watch-check.svg</property>
                       </object>
                       <packing>
                         <property name="expand">True</property>
