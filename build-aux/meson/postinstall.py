@@ -19,3 +19,4 @@ if not destdir:
     call(['glib-compile-schemas', path.join(datadir, 'glib-2.0', 'schemas')])
 
 
+

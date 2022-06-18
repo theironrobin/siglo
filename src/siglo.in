@@ -6,6 +6,10 @@ import sys
 import signal
 import gettext
 import argparse
+import dbus
+
+from dbus.mainloop.glib import DBusGMainLoop
+from gi.repository import GLib
 
 VERSION = '@VERSION@'
 pkgdatadir = '@pkgdatadir@'
@@ -15,23 +19,19 @@ sys.path.insert(1, pkgdatadir)
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 gettext.install('siglo', localedir)
 
+from siglo import daemon
+
 def main():
     p = argparse.ArgumentParser(description="app to sync InfiniTime watch")
-    p.add_argument('--start', '-d', required=False, action='store_true', help="start daemon")
-    p.add_argument('--stop', '-x', required=False, action='store_true', help="stop daemon")
+    p.add_argument('--daemon', '-d', required=False, action='store_true', help="start daemon")
     args = p.parse_args()
     
     from siglo import config
     config = config.config()
     config.load_defaults()
-
-    from siglo import daemon
-    d = daemon.daemon()
-
-    if args.start:
-        d.start()
-    elif args.stop:
-        d.stop()
+    #sys.exit(daemon.main())
+    if args.daemon:
+        sys.exit(daemon.main())
     else:
         import gi
 

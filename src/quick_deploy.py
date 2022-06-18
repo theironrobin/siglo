@@ -28,20 +28,23 @@ def get_quick_deploy_list():
     except requests.exceptions.ConnectionError:
         return []
     d = json.loads(r.content)
-    quick_deploy_list = []
-    for item in d:
-        for asset in item["assets"]:
-            if (
-                asset["content_type"] == "application/zip"
-                and item["tag_name"] not in version_blacklist
-            ):
-                helper_dict = {
-                    "tag_name": item["tag_name"],
-                    "name": asset["name"],
-                    "browser_download_url": asset["browser_download_url"],
-                }
-                quick_deploy_list.append(helper_dict)
-    return quick_deploy_list
+    try:
+        quick_deploy_list = []
+        for item in d:
+            for asset in item["assets"]:
+                if (
+                    asset["content_type"] == "application/zip"
+                    and item["tag_name"] not in version_blacklist
+                ):
+                    helper_dict = {
+                        "tag_name": item["tag_name"],
+                        "name": asset["name"],
+                        "browser_download_url": asset["browser_download_url"],
+                    }
+                    quick_deploy_list.append(helper_dict)
+        return quick_deploy_list
+    except:
+        return []
 
 
 def get_tags(full_list):

@@ -1,0 +1,3 @@
+[D-BUS Service]
+Name=com.github.alexr4535.siglo.Daemon
+Exec=@bindir@/siglo --daemon
