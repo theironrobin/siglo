@@ -14,7 +14,7 @@ class Application(Gtk.Application):
         self.conf = config()
         self.conf.load_defaults()
         super().__init__(
-            application_id="com.github.alexr4535.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
+            application_id="com.github.theironrobin.siglo", flags=Gio.ApplicationFlags.FLAGS_NONE
         )
 
     def do_activate(self):

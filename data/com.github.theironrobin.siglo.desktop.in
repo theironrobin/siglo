@@ -5,5 +5,5 @@ Terminal=false
 Type=Application
 Categories=GTK;
 StartupNotify=true
-Icon=com.github.alexr4535.siglo
+Icon=com.github.theironrobin.siglo
 X-Purism-FormFactor=Workstation;Mobile;

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
-	<id>com.github.alexr4535.siglo.desktop</id>
+	<id>com.github.theironrobin.siglo.desktop</id>
 	<name>Siglo</name>
 	<summary>Sync PineTime with your PinePhone</summary>
 	<metadata_license>CC0-1.0</metadata_license>
@@ -23,7 +23,7 @@
 	<categories>
 		<category>Utility</category>
 	</categories>
-	<url type="homepage">https://github.com/alexr4535/siglo</url>
+	<url type="homepage">https://github.com/theironrobin/siglo</url>
   	<screenshots>
 	  <screenshot>
   	    <image type="source">https://ironrobin.net/images/siglo-screenshot-1.png</image>	

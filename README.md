@@ -8,7 +8,7 @@ GTK app to sync InfiniTime watch with PinePhone
 Gtk >= 3.30
 
 ## Download and Install
-[Download the latest stable version from Flathub](https://flathub.org/apps/details/com.github.alexr4535.siglo) (Warning: SMS Notifications currently broken in flatpak https://github.com/alexr4535/siglo/issues/80).
+[Download the latest stable version from Flathub](https://flathub.org/apps/details/com.github.theironrobin.siglo) (Warning: SMS Notifications currently broken in flatpak https://github.com/theironrobin/siglo/issues/80).
 
 ### Alpine
 Works for Alpine and other Alpine-based distribution, such as [postmarketOS](https://postmarketos.org/).
@@ -42,7 +42,7 @@ pip3 install gatt pyxdg requests black
 ## Build/Install
 
 ```
-git clone https://github.com/alexr4535/siglo.git
+git clone https://github.com/theironrobin/siglo.git
 cd siglo
 mkdir build
 meson build/
@@ -77,7 +77,7 @@ Once the container is running, you can launch the app:
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 flatpak install --user flathub org.gnome.Sdk//40 org.gnome.Platform//40
 
-flatpak-builder --user --install --repo=repo --force-clean build-dir/ com.github.alexr4535.siglo.json
+flatpak-builder --user --install --repo=repo --force-clean build-dir/ com.github.theironrobin.siglo.json
 ```
 
 ### Cross-compiling for PinePhone
@@ -89,8 +89,8 @@ sudo dnf install qemu-system-arm qemu-user-static
 flatpak remote-add --user --if-not-exists flathub https://flathub.org/repo/flathub.flatpakrepo
 flatpak install --user flathub org.gnome.Sdk/aarch64/40 org.gnome.Platform/aarch64/40
 
-flatpak-builder --arch=aarch64 --repo=repo --force-clean build-dir com.github.alexr4535.siglo.json
-flatpak build-bundle --arch=aarch64 ./repo/ siglo.flatpak com.github.alexr4535.siglo
+flatpak-builder --arch=aarch64 --repo=repo --force-clean build-dir com.github.theironrobin.siglo.json
+flatpak build-bundle --arch=aarch64 ./repo/ siglo.flatpak com.github.theironrobin.siglo
 ```
 
 Transfer the `siglo.flatpak` file on the PinePhone and install it with the following command:
