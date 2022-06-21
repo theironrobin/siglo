@@ -15,7 +15,7 @@ Works for Alpine and other Alpine-based distribution, such as [postmarketOS](htt
 
 ```sh
 sudo apk add gettext glib-dev meson py3-dbus py3-pip python3 
-pip3 install gatt pyxdg
+pip3 install gatt 
 ```
 
 ### Arch Linux
