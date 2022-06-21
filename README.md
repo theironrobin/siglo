@@ -22,7 +22,7 @@ pip3 install gatt pyxdg
 
 ```sh
 sudo pacman -S --needed meson python-pip base-devel bluez bluez-utils dbus-python python-gobject
-pip3 install gatt pyxdg
+pip3 install gatt
 ```
 
 ### Fedora
@@ -36,7 +36,7 @@ pip3 install gatt
 
 ```sh
 sudo apt install libgtk-3-dev python3-pip meson python3-dbus gtk-update-icon-cache desktop-file-utils gettext appstream-util libglib2.0-dev
-pip3 install gatt pyxdg requests black
+pip3 install gatt requests black
 ```
 
 ## Build/Install

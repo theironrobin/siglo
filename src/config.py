@@ -1,7 +1,7 @@
 import configparser
-import xdg.BaseDirectory
 import distutils
 import distutils.util
+import os
 from pathlib import Path
 
 
@@ -13,8 +13,10 @@ class config:
         "paired": "False",
         "adapter": "None",
     }
-    config_dir = xdg.BaseDirectory.xdg_config_home
-    config_file = config_dir + "/siglo.ini"
+    config_dir = os.environ.get("XDG_CONFIG_HOME") or os.path.join(
+        os.path.expanduser("~"), ".config"
+    )
+    config_file = os.path.join(config_dir, "siglo.ini")
 
     def load_defaults(self):
         if not Path(self.config_dir).is_dir():
