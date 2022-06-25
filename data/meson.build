@@ -15,7 +15,7 @@ if desktop_utils.found()
 endif
 
 install_data(join_paths('icons', 'com.github.theironrobin.siglo.svg'),
-  install_dir: join_paths(get_option('datadir'), 'icons')
+  install_dir: join_paths(get_option('datadir'), 'icons/hicolor/scalable/apps')
 )
 
 install_data('siglo.service', install_dir: '/etc/systemd/user/')
