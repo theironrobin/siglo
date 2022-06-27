@@ -4,7 +4,7 @@ import threading
 import urllib.request
 from pathlib import Path
 import gatt
-from gi.repository import Gtk, GObject, GLib
+from gi.repository import Gtk, GObject, GLib, Handy
 from .bluetooth import (
     InfiniTimeDevice,
     InfiniTimeManager,
@@ -44,6 +44,8 @@ class ConnectionThread(threading.Thread):
 @Gtk.Template(resource_path="/com/github/theironrobin/siglo/window.ui")
 class SigloWindow(Gtk.ApplicationWindow):
     __gtype_name__ = "SigloWindow"
+
+    Handy.init()
     # Navigation
     main_stack = Gtk.Template.Child()
     header_stack = Gtk.Template.Child()

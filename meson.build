@@ -5,6 +5,8 @@ project('siglo',
                    ],
 )
 
+dependency('libhandy-1', version: '>= 1.0.0')
+
 i18n = import('i18n')
 
 

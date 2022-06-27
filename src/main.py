@@ -2,8 +2,9 @@ import sys
 import gi
 
 gi.require_version("Gtk", "3.0")
+gi.require_version('Handy', '1')
 
-from gi.repository import Gtk, Gio, Gdk
+from gi.repository import Gtk, Gio, Gdk, Handy
 from .window import SigloWindow
 from .config import config
 
