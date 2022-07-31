@@ -11,6 +11,7 @@ BTSVC_BATT = "0000180f-0000-1000-8000-00805f9b34fb"
 BTSVC_ALERT = "00001811-0000-1000-8000-00805f9b34fb"
 BTCHAR_FIRMWARE = "00002a26-0000-1000-8000-00805f9b34fb"
 BTCHAR_CURRENTTIME = "00002a2b-0000-1000-8000-00805f9b34fb"
+BTCHAR_LOCALTIME = "00002a0f-0000-1000-8000-00805f9b34fb"
 BTCHAR_NEWALERT = "00002a46-0000-1000-8000-00805f9b34fb"
 BTCHAR_BATTLEVEL = "00002a19-0000-1000-8000-00805f9b34fb"
 
@@ -21,7 +22,7 @@ def get_current_time():
     # https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Characteristics/org.bluetooth.characteristic.current_time.xml
     return bytearray(
         struct.pack(
-            "HBBBBBBBB",
+            "<HBBBBBBBB",
             now.year,
             now.month,
             now.day,
@@ -31,6 +32,20 @@ def get_current_time():
             now.weekday() + 1,  # numbered 1-7
             int(now.microsecond / 1e6 * 256),  # 1/256th of a second
             0b0001,  # adjust reason
+        )
+    )
+
+def get_local_time():
+    now = datetime.datetime.now()
+
+    utcOffset = now.astimezone().utcoffset().seconds
+
+    return bytearray(
+        struct.pack(
+            "<BB",
+            int(utcOffset / 3600 * 4),
+            0 # dst, no nice way to find out in python: "timezone.dst(dt): Always returns None." [docs.python.org]
+
         )
     )
 
@@ -162,6 +177,20 @@ class InfiniTimeDevice(gatt.Device):
 
             # Update watch time on connection
             currenttime.write_value(get_current_time())
+
+            # this characteristic is not implemented in all versions
+            try:
+                localtime = next(
+                    c
+                    for c in timesvc.characteristics
+                    if c.uuid == BTCHAR_LOCALTIME
+                )
+
+            # means we did not find a local time characteristic
+            except StopIteration:
+                pass
+            else:
+                localtime.write_value(get_local_time())
 
         self.firmware = b"n/a"
         if infosvc:
