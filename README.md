@@ -5,17 +5,20 @@ GTK app to sync InfiniTime watch with PinePhone
 'siglo' means century in Spanish
 
 ## Requirements
+
 Gtk >= 3.30
 
 ## Download and Install
+
 [Download the latest stable version from Flathub](https://flathub.org/apps/details/com.github.theironrobin.siglo) (Warning: SMS Notifications currently broken in flatpak https://github.com/theironrobin/siglo/issues/80).
 
 ### Alpine
+
 Works for Alpine and other Alpine-based distribution, such as [postmarketOS](https://postmarketos.org/).
 
 ```sh
-sudo apk add gettext glib-dev meson py3-dbus py3-pip python3 
-pip3 install gatt 
+sudo apk add desktop-file-utils gettext glib-dev meson py3-dbus py3-pip python3 
+pip3 install gatt
 ```
 
 ### Arch Linux
@@ -52,7 +55,7 @@ sudo ninja install
 
 ### Mocked Testing with Docker
 
-While you won't get bluetooth connectivity, you can get some high-level vetting in a container, which
+While you won't get Bluetooth connectivity, you can get some high-level vetting in a container, which
 will open the way forward to better CI testing on GitHub.
 
 The [`Dockerfile`](Dockerfile) contains all required dependencies, in addition to
@@ -99,7 +102,7 @@ Transfer the `siglo.flatpak` file on the PinePhone and install it with the follo
 sudo flatpak install ./siglo.flatpak
 ```
 
-##
+---
 
 If this project helped you, you can buy me a cup of coffee :)
 <br/><br/>
