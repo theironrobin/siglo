@@ -14,8 +14,8 @@ Gtk >= 3.30
 Works for Alpine and other Alpine-based distribution, such as [postmarketOS](https://postmarketos.org/).
 
 ```sh
-sudo apk add gettext glib-dev meson py3-dbus py3-pip python3 
-pip3 install gatt 
+sudo apk add desktop-file-utils gettext glib-dev meson py3-dbus py3-pip python3 
+pip3 install gatt
 ```
 
 ### Arch Linux
