@@ -309,7 +309,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu = InfiniTimeDFU(
             mac_address=self.current_mac,
             manager=self.manager,
-            window=self,
+            update_progress_bar=self.update_progress_bar,
             firmware_path=binfile,
             datfile_path=datfile,
             verbose=False,
