@@ -1,6 +1,6 @@
 {
-    "app-id" : "com.github.theironrobin.siglo",
-    "runtime" : "org.gnome.Platform",   
+    "id" : "com.github.theironrobin.siglo",
+    "runtime" : "org.gnome.Platform",
     "runtime-version" : "44",
     "sdk" : "org.gnome.Sdk",
     "command" : "siglo",
