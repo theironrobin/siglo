@@ -129,6 +129,7 @@ dmypy.json
 .pyre/
 
 # Flatpak
+.flatpak/
 .flatpak-builder/
 build-dir/
 repo/
