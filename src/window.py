@@ -330,6 +330,8 @@ class SigloWindow(Gtk.ApplicationWindow):
     def on_dfu_retry_clicked(self, widget):
         if self.firmware_mode == "auto":
             self.on_firmware_run_clicked(widget)
+        elif self.firmware_mode == "manual":
+            self.firmware_run_file_clicked_cb(widget)
 
     @Gtk.Template.Callback()
     def flash_it_button_clicked(self, widget):
