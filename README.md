@@ -6,7 +6,7 @@ GTK app to sync InfiniTime watch with PinePhone
 
 ## Requirements
 
-Gtk >= 3.30
+Gtk >= 4.0
 
 ## Download and Install
 
@@ -38,7 +38,7 @@ pip3 install gatt
 ### Ubuntu
 
 ```sh
-sudo apt install libgtk-3-dev python3-pip meson python3-dbus gtk-update-icon-cache desktop-file-utils gettext appstream-util libglib2.0-dev
+sudo apt install libgtk-4-dev python3-pip meson python3-dbus gtk-update-icon-cache desktop-file-utils gettext appstream-util libglib2.0-dev
 pip3 install gatt requests black
 ```
 

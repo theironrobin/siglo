@@ -1,12 +1,16 @@
-FROM ubuntu:21.04
+FROM ubuntu:22.04
 
 ENV DEBIAN_FRONTEND="noninteractive" TZ=" America/Los_Angeles"
 
 # xvfb is used to mock out the display for testing and is not required for real builds
-RUN apt update && apt install -y \
-    libgtk-3-dev python3-pip meson python3-dbus gtk-update-icon-cache desktop-file-utils gettext appstream-util libglib2.0-dev && \
-    apt install -y xvfb && \
-    rm -rf /var/lib/apt/lists/* && apt clean
+RUN apt-get update && \
+    apt-get install -y \
+        libgtk-4-dev python3-pip meson python3-dbus gtk-update-icon-cache \
+        desktop-file-utils gettext appstream-util libglib2.0-dev \
+        xvfb \
+    && \
+    rm -rf /var/lib/apt/lists/* && \
+    apt-get clean
 
 RUN pip3 install gatt requests black
 
@@ -14,9 +18,10 @@ COPY . /siglo
 
 WORKDIR /siglo
 
-RUN pwd && ls && mkdir -p ./build && \
-    meson --reconfigure ./build/ && \
-    cd ./build && ninja install
+RUN rm -rf build && \
+    meson setup build && \
+    cd ./build && \
+    ninja install
 
 CMD ["/bin/bash"]
 

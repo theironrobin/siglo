@@ -110,9 +110,9 @@ class SigloWindow(Gtk.ApplicationWindow):
         grid.set_column_spacing(8)
         grid.set_margin_top(8)
         grid.set_margin_bottom(8)
-        grid.set_margin_left(8)
-        grid.set_margin_right(8)
-        row.add(grid)
+        grid.set_margin_start(8)
+        grid.set_margin_end(8)
+        row.set_child(grid)
 
         icon = Gtk.Image.new_from_resource("/com/github/theironrobin/siglo/watch-icon.svg")
         grid.attach(icon, 0, 0, 1, 2)
@@ -130,10 +130,9 @@ class SigloWindow(Gtk.ApplicationWindow):
         value_mac = Gtk.Label(label=mac, xalign=0.0)
         grid.attach(value_mac, 2, 1, 1, 1)
 
-        arrow = Gtk.Image.new_from_icon_name("go-next-symbolic", Gtk.IconSize.BUTTON)
+        arrow = Gtk.Image.new_from_icon_name("go-next-symbolic")
         grid.attach(arrow, 4, 0, 1, 2)
 
-        row.show_all()
         return row
 
     def do_scanning(self):
@@ -175,7 +174,7 @@ class SigloWindow(Gtk.ApplicationWindow):
                 row = self.make_watch_row(self.manager.aliases[mac], mac)
                 row.mac = mac
                 row.alias = self.manager.aliases[mac]
-                self.watches_listbox.add(row)
+                self.watches_listbox.append(row)
         except AttributeError as e:
             print(e)
             self.main_stack.set_visible_child_name("nodevice")
@@ -183,8 +182,7 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.populate_tagbox()
 
     def depopulate_listbox(self):
-        children = self.watches_listbox.get_children()
-        for child in children:
+        while child := self.watches_listbox.get_last_child():
             self.watches_listbox.remove(child)
 
     def populate_tagbox(self):
@@ -236,22 +234,22 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     @Gtk.Template.Callback()
     def ota_pick_asset_combobox_changed_cb(self, widget):
-        self.asset = self.ota_pick_asset_combobox.get_active_text()
-        if self.asset is not None:
-            self.firmware_run.set_sensitive(True)
-            self.asset_download_url = get_download_url(
-                self.asset, self.tag, self.full_list
-            )
-        else:
-            self.firmware_run.set_sensitive(False)
-            self.asset_download_url = None
+        self.asset = self.ota_pick_asset_combobox.get_active_text() or None
+        self.firmware_run.set_sensitive(self.asset)
+        self.asset_download_url = self.asset and get_download_url(
+            self.asset, self.tag, self.full_list
+        )
 
     @Gtk.Template.Callback()
-    def firmware_file_file_set_cb(self, widget):
-        print("File set!")
-        filename = widget.get_filename()
-        self.ota_file = filename
-        self.firmware_run_file.set_sensitive(True)
+    def firmware_file_clicked(self, widget):
+        def callback(dialog, result):
+            file = dialog.open_finish(result)
+            filename = file.get_path()
+            widget.set_label(filename)
+            self.ota_file = filename
+            self.firmware_run_file.set_sensitive(True)
+
+        Gtk.FileDialog().open(self, None, callback)
 
     @Gtk.Template.Callback()
     def rescan_button_clicked(self, widget):
