@@ -1,7 +1,7 @@
 {
-    "app-id" : "com.github.theironrobin.siglo",
+    "id" : "com.github.theironrobin.siglo",
     "runtime" : "org.gnome.Platform",
-    "runtime-version" : "42",
+    "runtime-version" : "44",
     "sdk" : "org.gnome.Sdk",
     "command" : "siglo",
     "finish-args" : [
@@ -10,7 +10,8 @@
         "--share=ipc",
         "--socket=fallback-x11",
         "--system-talk-name=org.bluez",
-        "--socket=wayland"
+        "--socket=wayland",
+        "--device=dri"
     ],
     "cleanup" : [
         "/include",
