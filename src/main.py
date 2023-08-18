@@ -1,7 +1,7 @@
 import sys
 import gi
 
-gi.require_version("Gtk", "3.0")
+gi.require_version("Gtk", "4.0")
 
 from gi.repository import Gtk, Gio, Gdk
 from .window import SigloWindow
@@ -32,20 +32,5 @@ class Application(Gtk.Application):
 
 
 def main(version):
-    def gtk_style():
-        css = b"""
-#multi_mac_label { font-size: 33px; }
-#bluetooth_button { background-color: blue;
-                    background-image: none; }
-        """
-        style_provider = Gtk.CssProvider()
-        style_provider.load_from_data(css)
-        Gtk.StyleContext.add_provider_for_screen(
-            Gdk.Screen.get_default(),
-            style_provider,
-            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
-        )
-
-    gtk_style()
     app = Application()
     return app.run(sys.argv)
