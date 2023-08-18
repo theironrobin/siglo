@@ -262,15 +262,6 @@ class SigloWindow(Gtk.ApplicationWindow):
         subprocess.Popen(["gnome-control-center", "bluetooth"])
 
     @Gtk.Template.Callback()
-    def ota_file_selected(self, widget):
-        filename = widget.get_filename()
-        self.ota_file = filename
-        self.main_info.set_text("File: " + filename.split("/")[-1])
-        self.ota_picked_box.set_visible(True)
-        self.ota_selection_box.set_visible(False)
-        self.ota_picked_box.set_sensitive(True)
-
-    @Gtk.Template.Callback()
     def firmware_run_file_clicked_cb(self, widget):
         self.dfu_stack.set_visible_child_name("ok")
         self.main_stack.set_visible_child_name("firmware")
@@ -332,29 +323,6 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.on_firmware_run_clicked(widget)
         elif self.firmware_mode == "manual":
             self.firmware_run_file_clicked_cb(widget)
-
-    @Gtk.Template.Callback()
-    def flash_it_button_clicked(self, widget):
-        if self.deploy_type == "quick":
-            file_name = "/tmp/" + self.asset
-            local_filename, headers = urllib.request.urlretrieve(
-                self.asset_download_url, file_name
-            )
-            self.ota_file = local_filename
-
-    @Gtk.Template.Callback()
-    def deploy_type_toggled(self, widget):
-        if (
-            self.conf.get_property("deploy_type") == "manual"
-            and self.auto_switch_deploy_type
-        ):
-            self.auto_switch_deploy_type = False
-        else:
-            if self.conf.get_property("deploy_type") == "quick":
-                self.conf.set_property("deploy_type", "manual")
-            else:
-                self.conf.set_property("deploy_type", "quick")
-            self.rescan_button.emit("clicked")
 
     def update_progress_bar(self):
         self.dfu_progress_bar.set_fraction(
