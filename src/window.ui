@@ -946,7 +946,7 @@
                         <property name="halign">start</property>
                         <property name="margin-top">16</property>
                         <property name="margin-bottom">16</property>
-                        <property name="label" translatable="yes">The firmware update has completed sucessfully. 
+                        <property name="label" translatable="yes">The firmware update has completed sucessfully.
 
 To make the firmware persistent go to the settings on the watch and go to the firmware page to validate the flashing or do a roll-back.</property>
                         <property name="wrap">True</property>
@@ -962,9 +962,54 @@ To make the firmware persistent go to the settings on the watch and go to the fi
                     </child>
                   </object>
                   <packing>
-                    <property name="name">done</property>
+                    <property name="name">done-fw</property>
                     <property name="title" translatable="yes">done</property>
                     <property name="position">2</property>
+                  </packing>
+                </child>
+                <child>
+                  <object class="GtkBox">
+                    <property name="visible">True</property>
+                    <property name="can-focus">False</property>
+                    <property name="orientation">vertical</property>
+                    <child>
+                      <object class="GtkImage" id="firmware_picture3">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="resource">/com/github/theironrobin/siglo/watch-check.svg</property>
+                      </object>
+                      <packing>
+                        <property name="expand">True</property>
+                        <property name="fill">True</property>
+                        <property name="position">0</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <object class="GtkLabel">
+                        <property name="visible">True</property>
+                        <property name="can-focus">False</property>
+                        <property name="halign">start</property>
+                        <property name="margin-top">16</property>
+                        <property name="margin-bottom">16</property>
+                        <property name="label" translatable="yes">The resource update has completed sucessfully.
+
+Please restart the device before using apps or watch faces that require the new resources.</property>
+                        <property name="wrap">True</property>
+                      </object>
+                      <packing>
+                        <property name="expand">False</property>
+                        <property name="fill">True</property>
+                        <property name="position">1</property>
+                      </packing>
+                    </child>
+                    <child>
+                      <placeholder/>
+                    </child>
+                  </object>
+                  <packing>
+                    <property name="name">done-resources</property>
+                    <property name="title" translatable="yes">done</property>
+                    <property name="position">3</property>
                   </packing>
                 </child>
               </object>

@@ -34,6 +34,7 @@ siglo_sources = [
   'window.py',
   'bluetooth.py',
   'ble_dfu.py',
+  'ble_fs.py',
   'ota/util.py',
   'ota/unpacker.py',
 ]

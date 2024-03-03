@@ -12,6 +12,7 @@ from .bluetooth import (
     NoAdapterFound,
 )
 from .ble_dfu import InfiniTimeDFU
+from .ble_fs import InfiniTimeFS
 from .unpacker import Unpacker
 from .quick_deploy import *
 from .config import config
@@ -70,11 +71,13 @@ class SigloWindow(Gtk.ApplicationWindow):
 
     def __init__(self, **kwargs):
         self.ble_dfu = None
+        self.ble_fs = None
         self.ota_file = None
         self.manager = None
         self.current_mac = None
         self.asset = None
         self.asset_download_url = None
+        self.asset_type = None
         self.tag = None
         self.conf = config()
         super().__init__(**kwargs)
@@ -242,6 +245,9 @@ class SigloWindow(Gtk.ApplicationWindow):
             self.asset_download_url = get_download_url(
                 self.asset, self.tag, self.full_list
             )
+            self.asset_type = get_type(
+                self.asset, self.tag, self.full_list
+            )
         else:
             self.firmware_run.set_sensitive(False)
             self.asset_download_url = None
@@ -295,12 +301,15 @@ class SigloWindow(Gtk.ApplicationWindow):
         )
         self.ota_file = local_filename
 
-        self.start_flash()
+        if (self.asset_type == "resources"):
+            self.start_resources_transfer()
+        else:
+            self.start_fw_flash()
 
-    def start_flash(self):
+    def start_fw_flash(self):
         unpacker = Unpacker()
         try:
-            binfile, datfile = unpacker.unpack_zipfile(self.ota_file)
+            binfile, datfile = unpacker.unpack_fw_zipfile(self.ota_file)
         except Exception as e:
             print("ERR")
             print(e)
@@ -317,14 +326,41 @@ class SigloWindow(Gtk.ApplicationWindow):
         self.ble_dfu.on_failure = self.on_flash_failed
         self.ble_dfu.on_success = self.on_flash_done
         self.ble_dfu.input_setup()
-        self.dfu_progress_text.set_text(self.get_prog_text())
+        self.dfu_progress_text.set_text(self.ble_dfu.get_prog_text())
         self.ble_dfu.connect()
+
+    def start_resources_transfer(self):
+        unpacker = Unpacker()
+        try:
+            resource_files, manifest = unpacker.unpack_resources_zipfile(self.ota_file)
+        except Exception as e:
+            print("ERR")
+            print(e)
+            pass
+
+        self.ble_fs = InfiniTimeFS(
+            mac_address=self.current_mac,
+            manager=self.manager,
+            window=self,
+            resource_files=resource_files,
+            manifest=manifest,
+            version=self.tag,
+            verbose=False,
+        )
+        self.ble_fs.on_failure = self.on_flash_failed
+        self.ble_fs.on_success = self.on_flash_done
+        self.ble_fs.input_setup()
+        self.dfu_progress_text.set_text(self.ble_fs.get_prog_text())
+        self.ble_fs.connect()
 
     def on_flash_failed(self):
         self.dfu_stack.set_visible_child_name("fail")
 
     def on_flash_done(self):
-        self.dfu_stack.set_visible_child_name("done")
+        if (self.asset_type == "resources"):
+            self.dfu_stack.set_visible_child_name("done-resources")
+        else:
+            self.dfu_stack.set_visible_child_name("done-fw")
 
     @Gtk.Template.Callback()
     def on_dfu_retry_clicked(self, widget):
@@ -354,19 +390,9 @@ class SigloWindow(Gtk.ApplicationWindow):
                 self.conf.set_property("deploy_type", "quick")
             self.rescan_button.emit("clicked")
 
-    def update_progress_bar(self):
-        self.dfu_progress_bar.set_fraction(
-            self.ble_dfu.total_receipt_size / self.ble_dfu.image_size
-        )
-        self.dfu_progress_text.set_text(self.get_prog_text())
-
-    def get_prog_text(self):
-        return (
-            str(self.ble_dfu.total_receipt_size)
-            + " / "
-            + str(self.ble_dfu.image_size)
-            + " bytes received"
-        )
+    def update_progress_bar(self, text, fraction):
+        self.dfu_progress_bar.set_fraction(fraction)
+        self.dfu_progress_text.set_text(text)
 
     def show_complete(self, success):
         if success:
