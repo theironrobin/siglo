@@ -28,6 +28,11 @@ def get_quick_deploy_list():
     except requests.exceptions.ConnectionError:
         return []
     d = json.loads(r.content)
+
+    if not isinstance(d, list):
+        print("Error: %s" % d["message"])
+        raise Exception("unable to download asset list")
+
     quick_deploy_list = []
     for item in d:
         for asset in item["assets"]:
@@ -35,12 +40,18 @@ def get_quick_deploy_list():
                 asset["content_type"] == "application/zip"
                 and item["tag_name"] not in version_blacklist
             ):
+                if asset["name"].startswith("infinitime-resources"):
+                    type = "resources"
+                else:
+                    type = "firmware"
                 helper_dict = {
                     "tag_name": item["tag_name"],
                     "name": asset["name"],
                     "browser_download_url": asset["browser_download_url"],
+                    "type": type,
                 }
                 quick_deploy_list.append(helper_dict)
+
     return quick_deploy_list
 
 
@@ -63,3 +74,8 @@ def get_download_url(name, tag, full_list):
     for element in full_list:
         if tag == element["tag_name"] and name == element["name"]:
             return element["browser_download_url"]
+
+def get_type(name, tag, full_list):
+    for element in full_list:
+        if tag == element["tag_name"] and name == element["name"]:
+            return element["type"]

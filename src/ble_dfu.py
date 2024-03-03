@@ -141,7 +141,7 @@ class InfiniTimeDFU(gatt.Device):
                 print("[WARN ] PacketReceiptNotification failed")
                 print("        acknowledged {} : expected {}".format(ack_size, self.total_receipt_size))
                 self.disconnect()
-            self.window.update_progress_bar()
+            self.window.update_progress_bar(self.get_prog_text(), self.total_receipt_size / self.image_size)
             if self.verbose:
                 print("[INFO ] receipt count", str(self.packet_recipt_count))
                 print("[INFO ] receipt size", self.total_receipt_size, "out of", self.image_size)
@@ -270,6 +270,14 @@ class InfiniTimeDFU(gatt.Device):
         # Open the DAT file and create array of its contents
         init_bin_array = array("B", open(self.datfile_path, "rb").read())
         return init_bin_array
+
+    def get_prog_text(self):
+        return (
+            str(self.total_receipt_size)
+            + " / "
+            + str(self.image_size)
+            + " bytes received"
+        )
 
 class Caffeinator():
     def __init__(self):

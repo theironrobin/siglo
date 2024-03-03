@@ -5,6 +5,16 @@ import re
 def bytes_to_uint32_le(bytes):
     return  (int(bytes[3], 16) << 24) | (int(bytes[2], 16) << 16) | (int(bytes[1], 16) <<  8) | (int(bytes[0], 16) <<  0)
 
+def uint64_to_bytes_le(uint64):
+    return [(uint64 >> 0)  & 0xff,
+            (uint64 >> 8)  & 0xff,
+            (uint64 >> 16) & 0xff,
+            (uint64 >> 24) & 0xff,
+            (uint64 >> 32) & 0xff,
+            (uint64 >> 40) & 0xff,
+            (uint64 >> 48) & 0xff,
+            (uint64 >> 56) & 0xff]
+
 def uint32_to_bytes_le(uint32):
     return [(uint32 >> 0)  & 0xff, 
             (uint32 >> 8)  & 0xff, 
